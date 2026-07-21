@@ -3,10 +3,15 @@ from sqlalchemy import Integer
 from sqlalchemy import String
 from sqlalchemy import Text
 from sqlalchemy import DateTime
+from sqlalchemy import Enum
 
+from app.leads.enums.lead_status import (
+    LeadStatus,
+)
 from datetime import datetime
 
 from app.database.database import Base
+from sqlalchemy.orm import relationship
 
 
 class Lead(Base):
@@ -28,8 +33,9 @@ class Lead(Base):
     industry = Column(String(100), nullable=True)
 
     status = Column(
-        String(50),
-        default="NEW"
+        Enum(LeadStatus),
+        nullable=False,
+        default=LeadStatus.NEW,
     )
 
     notes = Column(Text)
@@ -37,4 +43,28 @@ class Lead(Base):
     created_at = Column(
         DateTime,
         default=datetime.utcnow
+    )
+
+    research = relationship(
+        "LeadResearch",
+        back_populates="lead",
+        cascade="all, delete-orphan"
+    )
+
+    emails = relationship(
+        "Email",
+        back_populates="lead",
+        cascade="all, delete-orphan",
+    )
+
+    contacts = relationship(
+        "Contact",
+        back_populates="lead",
+        cascade="all, delete-orphan",
+    )
+
+    conversations = relationship(
+        "Conversation",
+        back_populates="lead",
+        cascade="all, delete-orphan",
     )

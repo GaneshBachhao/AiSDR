@@ -1,0 +1,10 @@
+from enum import Enum
+
+
+class OpportunityType(str, Enum):
+    CONSULTING = "CONSULTING"
+    IMPLEMENTATION = "IMPLEMENTATION"
+    TRAINING = "TRAINING"
+    ASSESSMENT = "ASSESSMENT"
+    SUPPORT = "SUPPORT"
+    SUBSCRIPTION = "SUBSCRIPTION"

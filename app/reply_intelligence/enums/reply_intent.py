@@ -1,0 +1,25 @@
+from enum import Enum
+
+
+class ReplyIntent(str, Enum):
+    """
+    Intent detected from a customer's reply.
+    """
+
+    INTERESTED = "INTERESTED"
+
+    NOT_INTERESTED = "NOT_INTERESTED"
+
+    MEETING_REQUEST = "MEETING_REQUEST"
+
+    NEEDS_INFORMATION = "NEEDS_INFORMATION"
+
+    FOLLOW_UP_LATER = "FOLLOW_UP_LATER"
+
+    OUT_OF_OFFICE = "OUT_OF_OFFICE"
+
+    ALREADY_USING_AI = "ALREADY_USING_AI"
+
+    ALREADY_CUSTOMER = "ALREADY_CUSTOMER"
+
+    UNKNOWN = "UNKNOWN"

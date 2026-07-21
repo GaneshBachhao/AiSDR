@@ -1,0 +1,12 @@
+from enum import Enum
+
+
+class EngagementStrategy(str, Enum):
+    DISCOVERY_CALL = "DISCOVERY_CALL"
+    AI_ASSESSMENT = "AI_ASSESSMENT"
+    WORKSHOP = "WORKSHOP"
+    PROOF_OF_CONCEPT = "PROOF_OF_CONCEPT"
+    PILOT = "PILOT"
+    DEMO = "DEMO"
+    CONSULTATION = "CONSULTATION"
+    NURTURE = "NURTURE"
