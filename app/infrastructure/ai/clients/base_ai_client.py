@@ -1,33 +1,41 @@
-from abc import ABC, abstractmethod
+"""
+Base AI client contract.
+"""
+
+from __future__ import annotations
+
+from abc import ABC
+from abc import abstractmethod
 from typing import Any
 
 
 class BaseAIClient(ABC):
     """
-    Base contract for external AI clients.
+    Base contract for all AI infrastructure clients.
 
-    Handles communication with AI provider APIs.
+    Clients are responsible only for communicating
+    with external AI services.
+
+    They return the raw provider response.
     """
-
 
     @abstractmethod
     async def send_request(
         self,
-        payload: dict[str, Any]
-    ) -> dict[str, Any]:
+        payload: dict[str, Any],
+    ) -> Any:
         """
-        Send request to AI provider.
+        Send a request to the external AI provider.
 
-        Returns raw provider response.
+        Returns the raw provider-specific response.
         """
-
-        pass
-
+        raise NotImplementedError
 
     @abstractmethod
-    async def health_check(self) -> bool:
+    async def health_check(
+        self,
+    ) -> bool:
         """
-        Check provider availability.
+        Verify the AI provider is available.
         """
-
-        pass
+        raise NotImplementedError

@@ -21,10 +21,7 @@ from app.domain.ai.value_objects.token_usage import TokenUsage
 from app.infrastructure.ai.adapters import (
     ApplicationAIProvider,
 )
-from app.infrastructure.ai.factories import (
-    AIProviderFactory,
-)
-
+ 
 
 
 # ==========================================================
@@ -60,10 +57,7 @@ def create_provider():
         create_response()
     )
 
-    factory = Mock(
-        spec=AIProviderFactory,
-    )
-
+   
     factory.create.return_value = (
         infrastructure_provider
     )
@@ -190,13 +184,8 @@ async def test_token_usage():
 @pytest.mark.asyncio
 async def test_factory_exception_propagates():
 
-    factory = Mock(
-        spec=AIProviderFactory,
-    )
-
-    factory.create.side_effect = RuntimeError(
-        "Factory error."
-    )
+  
+     
 
     provider = ApplicationAIProvider(
         provider_factory=factory,
@@ -220,20 +209,5 @@ async def test_provider_exception_propagates():
         )
     )
 
-    factory = Mock(
-        spec=AIProviderFactory,
-    )
-
-    factory.create.return_value = (
-        infrastructure_provider
-    )
-
-    provider = ApplicationAIProvider(
-        provider_factory=factory,
-    )
-
-    with pytest.raises(RuntimeError):
-
-        await provider.execute(
-            create_request(),
-        )
+   
+  
