@@ -1,44 +1,48 @@
-from abc import ABC, abstractmethod
-from typing import List, Optional
+from __future__ import annotations
 
-from ..aggregate.ai_request import AIRequest
-from ..value_objects.ai_request_id import AIRequestId
+from abc import ABC, abstractmethod
+
+from app.domain.ai.aggregates.ai_request import AIRequest
+from app.domain.ai.value_objects.ai_request_id import AIRequestId
 
 
 class AIRequestRepository(ABC):
     """
-    Repository abstraction for AIRequest aggregates.
+    Repository interface for AIRequest aggregate.
     """
 
     @abstractmethod
-    def save(
+    async def save(
         self,
         request: AIRequest,
-    ) -> None:
+    ) -> AIRequest:
         """
         Persist an AI request.
         """
         raise NotImplementedError
 
     @abstractmethod
-    def get_by_id(
+    async def get_by_id(
         self,
         request_id: AIRequestId,
-    ) -> Optional[AIRequest]:
+    ) -> AIRequest | None:
         """
-        Retrieve an AI request by its identifier.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def get_all(self) -> List[AIRequest]:
-        """
-        Retrieve all AI requests.
+        Retrieve an AI request.
         """
         raise NotImplementedError
 
     @abstractmethod
-    def remove(
+    async def exists(
+        self,
+        request_id: AIRequestId,
+    ) -> bool:
+        """
+        Determine whether the request exists.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    async def delete(
         self,
         request: AIRequest,
     ) -> None:

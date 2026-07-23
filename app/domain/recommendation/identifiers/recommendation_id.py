@@ -1,18 +1,8 @@
-# app/domain/recommendation/identifiers/recommendation_id.py
-
-from __future__ import annotations
-
-from dataclasses import dataclass, field
-from uuid import UUID, uuid4
+from app.domain.shared.identifiers import Identifier
 
 
-@dataclass(frozen=True)
-class RecommendationId:
+class RecommendationId(Identifier):
     """
-    Strongly typed identifier for Recommendation aggregates.
+    Strongly typed identifier for Recommendation.
     """
-
-    value: UUID = field(default_factory=uuid4)
-
-    def __str__(self) -> str:
-        return str(self.value)
+    pass

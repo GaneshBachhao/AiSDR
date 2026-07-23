@@ -1,29 +1,22 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
 class MaxTokens:
     """
-    Represents the maximum number of tokens.
+    Value object representing the maximum number of tokens.
     """
 
-    def __init__(self, value: int):
+    value: int = 1024
 
-        if value <= 0:
+    MIN = 1
+    MAX = 32768
+
+    def __post_init__(self) -> None:
+
+        if not self.MIN <= self.value <= self.MAX:
             raise ValueError(
-                "Maximum tokens must be greater than zero."
+                "Max tokens out of allowed range."
             )
-
-        self._value = value
-
-    @property
-    def value(self):
-        return self._value
-
-    def __eq__(self, other):
-        return (
-            isinstance(other, MaxTokens)
-            and self.value == other.value
-        )
-
-    def __hash__(self):
-        return hash(self._value)
-
-    def __int__(self):
-        return self._value

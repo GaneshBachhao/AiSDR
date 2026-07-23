@@ -1,40 +1,35 @@
-from ..aggregate.ai_request import AIRequest
-from ..enums.ai_request_status import AIRequestStatus
-from ..exceptions.ai_exception import AIException
+from app.domain.ai.aggregates.ai_request import AIRequest
 
 
 class AIValidationService:
     """
-    Domain service responsible for validating AI requests.
+    Domain validation service for AI requests.
     """
 
-    def validate_execution(
-        self,
+    @staticmethod
+    def validate(
         request: AIRequest,
     ) -> None:
         """
         Validate an AI request before execution.
         """
 
-        if request.status != AIRequestStatus.PENDING:
-            raise AIException(
-                "Only pending AI requests can be executed."
+        if not request.prompt.value:
+            raise ValueError(
+                "Prompt cannot be empty."
             )
 
-        if not request.messages:
-            raise AIException(
-                "AI request must contain at least one message."
+        if not request.provider.value:
+            raise ValueError(
+                "Provider is required."
             )
 
-    def validate_response(
-        self,
-        request: AIRequest,
-    ) -> None:
-        """
-        Validate that a response exists.
-        """
+        if not request.model.value:
+            raise ValueError(
+                "Model is required."
+            )
 
-        if not request.has_response():
-            raise AIException(
-                "AI request does not contain a response."
+        if not request.can_execute:
+            raise ValueError(
+                "AI request cannot be executed."
             )

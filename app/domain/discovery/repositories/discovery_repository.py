@@ -8,7 +8,7 @@ from app.domain.discovery.entities.discovery_session import (
 from app.domain.discovery.value_objects.discovery_id import (
     DiscoveryId,
 )
-from app.domain.lead.value_objects.lead_id import (
+from app.domain.lead.identifiers.lead_id import (
     LeadId,
 )
 

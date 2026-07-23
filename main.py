@@ -5,7 +5,7 @@ from fastapi import FastAPI
 import app.models
 
 from app.api.routes import lead_router
-from app.api.routes.ai_router import router as ai_router
+from app.api.routers.ai_router import router as ai_router
 
 from app.core.config import settings
 from app.core.logger import logger

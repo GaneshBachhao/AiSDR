@@ -1,17 +1,12 @@
 from enum import Enum
 
 
-class AIRequestStatus(Enum):
+class AIRequestStatus(str, Enum):
     """
-    Lifecycle states of an AI request.
+    Represents the lifecycle of an AI request.
     """
 
-    PENDING = "PENDING"
-
-    RUNNING = "RUNNING"
-
-    COMPLETED = "COMPLETED"
-
-    FAILED = "FAILED"
-
-    CANCELLED = "CANCELLED"
+    CREATED = "created"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    FAILED = "failed"

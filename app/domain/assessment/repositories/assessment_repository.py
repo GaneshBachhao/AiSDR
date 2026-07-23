@@ -1,23 +1,30 @@
+# app/domain/assessment/repositories/assessment_repository.py
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
 from app.domain.assessment.entities.assessment import Assessment
-from app.domain.assessment.value_objects.assessment_id import (
+from app.domain.assessment.identifiers.assessment_id import (
     AssessmentId,
 )
-from app.domain.discovery.value_objects.discovery_id import (
-    DiscoveryId,
+from app.domain.discovery.identifiers.discovery_session_id import (
+    DiscoverySessionId,
 )
 
 
 class AssessmentRepository(ABC):
     """
-    Repository interface for the Assessment aggregate.
+    Repository contract for the Assessment aggregate.
+
+    This contract belongs to the Domain layer.
+
+    Repository implementations are provided by the
+    Infrastructure layer.
     """
 
     @abstractmethod
-    def save(
+    async def save(
         self,
         assessment: Assessment,
     ) -> Assessment:
@@ -27,7 +34,7 @@ class AssessmentRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_by_id(
+    async def get_by_id(
         self,
         assessment_id: AssessmentId,
     ) -> Assessment | None:
@@ -37,27 +44,28 @@ class AssessmentRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_by_discovery(
+    async def get_by_discovery(
         self,
-        discovery_id: DiscoveryId,
+        discovery_session_id: DiscoverySessionId,
     ) -> Assessment | None:
         """
-        Retrieve an assessment associated with a discovery session.
+        Retrieve the assessment associated with a
+        discovery session.
         """
         raise NotImplementedError
 
     @abstractmethod
-    def exists(
+    async def exists(
         self,
         assessment_id: AssessmentId,
     ) -> bool:
         """
-        Check whether an assessment exists.
+        Determine whether an assessment exists.
         """
         raise NotImplementedError
 
     @abstractmethod
-    def delete(
+    async def delete(
         self,
         assessment: Assessment,
     ) -> None:

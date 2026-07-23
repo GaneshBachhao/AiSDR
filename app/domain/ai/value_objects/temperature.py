@@ -1,32 +1,22 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
 class Temperature:
     """
-    Represents AI generation temperature.
+    Value object representing LLM temperature.
     """
+
+    value: float = 0.7
 
     MIN = 0.0
     MAX = 2.0
 
-    def __init__(self, value: float):
+    def __post_init__(self) -> None:
 
-        if not (self.MIN <= value <= self.MAX):
+        if not self.MIN <= self.value <= self.MAX:
             raise ValueError(
-                f"Temperature must be between {self.MIN} and {self.MAX}."
+                "Temperature must be between 0.0 and 2.0."
             )
-
-        self._value = float(value)
-
-    @property
-    def value(self):
-        return self._value
-
-    def __eq__(self, other):
-        return (
-            isinstance(other, Temperature)
-            and self.value == other.value
-        )
-
-    def __hash__(self):
-        return hash(self._value)
-
-    def __float__(self):
-        return self._value

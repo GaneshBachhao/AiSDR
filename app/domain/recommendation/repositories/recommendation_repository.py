@@ -2,24 +2,29 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from app.domain.assessment.value_objects.assessment_id import (
+from app.domain.assessment.identifiers.assessment_id import (
     AssessmentId,
 )
 from app.domain.recommendation.entities.recommendation import (
     Recommendation,
 )
-from app.domain.recommendation.value_objects.recommendation_id import (
+from app.domain.recommendation.identifiers.recommendation_id import (
     RecommendationId,
 )
 
 
 class RecommendationRepository(ABC):
     """
-    Repository interface for the Recommendation aggregate.
+    Repository contract for the Recommendation aggregate.
+
+    This contract belongs to the Domain layer.
+
+    Repository implementations are provided by the
+    Infrastructure layer.
     """
 
     @abstractmethod
-    def save(
+    async def save(
         self,
         recommendation: Recommendation,
     ) -> Recommendation:
@@ -29,7 +34,7 @@ class RecommendationRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_by_id(
+    async def get_by_id(
         self,
         recommendation_id: RecommendationId,
     ) -> Recommendation | None:
@@ -39,17 +44,18 @@ class RecommendationRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_by_assessment(
+    async def get_by_assessment(
         self,
         assessment_id: AssessmentId,
     ) -> Recommendation | None:
         """
-        Retrieve the recommendation associated with an assessment.
+        Retrieve the recommendation associated
+        with an assessment.
         """
         raise NotImplementedError
 
     @abstractmethod
-    def exists(
+    async def exists(
         self,
         recommendation_id: RecommendationId,
     ) -> bool:
@@ -59,7 +65,7 @@ class RecommendationRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def delete(
+    async def delete(
         self,
         recommendation: Recommendation,
     ) -> None:

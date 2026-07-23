@@ -1,6 +1,9 @@
 ﻿uploads
 ui
 tests
+    repositories
+        test_lead_repository.py
+        __init__.py
     reply_intelligence
         test_reply_prompt_builder.py
         test_reply_parser.py
@@ -9,16 +12,25 @@ tests
     recommendation
         test_recommendation_service.py
     pipelines
+        test_research_pipeline.py
         test_recommendation_stage.py
         test_qualification_stage.py
         test_pipeline_orchestrator.py
+        test_orchestrator.py
         test_lead_creation_stage.py
         test_end_to_end_pipeline.py
         test_email_persistence_stage.py
         test_email_dispatch_stage.py
+        test_discovery_pipeline.py
         test_contact_discovery_stage.py
         test_company_intelligence_stage.py
         test_ai_email_generation_stage.py
+        __init__.py
+    models
+        test_lead_model.py
+        test_email_model.py
+        test_contact_model.py
+        __init__.py
     meetings
         test_meeting_service.py
         test_meeting_schema.py
@@ -30,7 +42,12 @@ tests
         test_sector_matcher.py
         test_research_enrichment.py
         test_catalog_service.py
+        __init__.py
     integrations
+        llm
+            test_provider_factory.py
+            test_gemini_client.py
+            __init__.py
         gmail
             test_mime_builder.py
             test_gmail_models.py
@@ -40,24 +57,83 @@ tests
         test_tavily_client.py
         test_interested_reply_workflow.py
         __init__.py
+    helpers
+        mock_data.py
+        assertions.py
+        __init__.py
+    fixtures
+        recommendation.py
+        qualification.py
+        lead.py
+        generated_email.py
+        contact.py
+        company_profile.py
+        candidate.py
+        __init__.py
+    factories
+        lead_factory.py
+        contact_factory.py
+        company_factory.py
+        __init__.py
     execution
     emails
+        services
+            test_email_service.py
+            test_email_dispatch_service.py
+            __init__.py
+        providers
+            test_email_provider_factory.py
+            __init__.py
         test_provider_factory.py
         test_gmail_provider.py
         test_email_service.py
         test_email_send_request_schema.py
         test_email_dispatch_service.py
+        __init__.py
+    domain
+        recommendation
+            test_recommendation.py
+            __init__.py
+        qualification
+            test_qualification.py
+            __init__.py
+        lead
+            test_lead_factory.py
+            test_lead_entity.py
+            __init__.py
+        company_intelligence
+            test_company_profile.py
+            __init__.py
+        __init__.py
+    data
+        sample_recommendation.json
+        sample_email.txt
+        sample_company_profile.json
     conversations
         test_conversation_service.py
         test_conversation_schema.py
         test_conversation_repository.py
     contacts
+        services
+            test_contact_service.py
+            __init__.py
         test_contact_service.py
         test_contact_schema.py
         test_contact_repository.py
         test_contact_model.py
+        __init__.py
     company_intelligence
+        services
+            test_company_intelligence_service.py
+            __init__.py
+        providers
+            test_gemini_provider.py
+            __init__.py
+        parsers
+            test_company_profile_parser.py
+            __init__.py
         test_company_profile_parser.py
+        __init__.py
     automation
         test_workflow_executor.py
         test_update_lead_handler.py
@@ -69,13 +145,27 @@ tests
         lead
             validators
                 test_create_lead_validator.py
+                __init__.py
+            services
+                test_lead_application_service.py
+                __init__.py
             handlers
                 test_create_lead_handler.py
+                __init__.py
             commands
                 test_create_lead.py
                 __init__.py
+            test_lead_service.py
             test_create_lead_command.py
             __init__.py
+        discovery
+            test_discover_companies_validator.py
+            test_discover_companies_mapper.py
+            test_discover_companies_handler.py
+        company_intelligence
+            test_enrich_company_validator.py
+            test_enrich_company_handler.py
+            test_company_profile_mapper.py
         common
             validation
                 test_validation.py
@@ -93,10 +183,17 @@ tests
             behaviors
                 test_behaviors.py
             demo.txt
+        assessment
+        __init__.py
     ai
+        services
+            test_email_generation_service.py
+            __init__.py
         test_email_prompt_builder.py
         test_email_generation_service.py
+        __init__.py
     conftest.py
+    __init__.py
 src
     explainability
         templates
@@ -519,6 +616,9 @@ app
             repositories
                 workflow_repository.py
                 __init__.py
+            identifiers
+                workflow_id.py
+                __init__.py
             exceptions
                 workflow_step_exception.py
                 workflow_exception.py
@@ -582,6 +682,9 @@ app
             repositories
                 report_repository.py
                 __init__.py
+            identifiers
+                report_id.py
+                __init__.py
             exceptions
                 report_section_exception.py
                 report_exception.py
@@ -611,7 +714,6 @@ app
             value_objects
                 technology_stack.py
                 roi.py
-                recommendation_id.py
                 implementation_risk.py
                 dependency.py
                 cost_estimate.py
@@ -622,6 +724,9 @@ app
                 __init__.py
             repositories
                 recommendation_repository.py
+                __init__.py
+            identifiers
+                recommendation_id.py
                 __init__.py
             exceptions
                 recommendation_exception.py
@@ -681,6 +786,9 @@ app
             repositories
                 discovery_repository.py
                 __init__.py
+            identifiers
+                discovery_session_id.py
+                __init__.py
             exceptions
                 invalid_discovery_state.py
                 discovery_exception.py
@@ -713,6 +821,8 @@ app
             repositories
                 company_repository.py
                 __init__.py
+            identifiers
+                company_id.py
             exceptions
                 company_exception.py
                 __init__.py
@@ -753,6 +863,9 @@ app
                 __init__.py
             repositories
                 assessment_repository.py
+                __init__.py
+            identifiers
+                assessment_id.py
                 __init__.py
             exceptions
                 invalid_assessment_state.py
@@ -820,6 +933,7 @@ app
             __init__.py
     discovery
         services
+            lead_processing_service.py
             discovery_service.py
             __init__.py
         schemas
@@ -994,6 +1108,12 @@ app
             commands
                 __init__.py
             __init__.py
+        qualification
+            qualify_company.py
+            __init__.py
+        pipeline
+            run_sales_pipeline.py
+            __init__.py
         lead
             validators
                 create_lead_validator.py
@@ -1001,6 +1121,7 @@ app
             queries
                 __init__.py
             mappers
+                lead_mapper.py
                 __init__.py
             handlers
                 create_lead_handler.py
@@ -1012,19 +1133,46 @@ app
                 create_lead.py
                 __init__.py
             __init__.py
+        email
+            send_email.py
+            generate_email.py
+            __init__.py
         discovery
             validators
+                discover_companies_validator.py
                 __init__.py
             queries
                 __init__.py
             mappers
+                discovery_mapper.py
                 __init__.py
             handlers
+                discover_companies_handler.py
                 __init__.py
             dto
+                discovery_response_dto.py
+                discovery_request_dto.py
                 __init__.py
             commands
+                discover_companies.py
                 __init__.py
+            __init__.py
+        contact
+            discover_contacts.py
+            __init__.py
+        company_intelligence
+            validators
+                enrich_company_validator.py
+            mappers
+                company_profile_mapper.py
+            Handlers
+                enrich_company_handler.py
+            dto
+                enrich_company_response_dto.py
+                enrich_company_request_dto.py
+            commands
+                enrich_company.py
+            enrich_company.py
             __init__.py
         common
             validation
@@ -1052,10 +1200,16 @@ app
                 email_sender.py
                 ai_provider.py
                 __init__.py
+            handler
+                handler_result.py
+                handler_context.py
+                base_handler.py
+                __init__.py
             exceptions
                 validation_exception.py
                 unauthorized_exception.py
                 not_found_exception.py
+                handler_exception.py
                 forbidden_exception.py
                 error_code.py
                 conflict_exception.py
@@ -1065,7 +1219,6 @@ app
                 response_dto.py
                 request_dto.py
                 paged_result.py
-                operation_result.py
                 base_dto.py
                 ai.py
                 __init__.py
@@ -1080,28 +1233,75 @@ app
                 logging_behavior.py
                 behavior.py
                 __init__.py
+            exceptions.py
             __init__.py
         assessment
             validators
+                generate_assessment_validator.py
                 __init__.py
             queries
                 __init__.py
             mappers
+                assessment_mapper.py
                 __init__.py
             handlers
+                generate_assessment_handler.py
                 __init__.py
             dto
+                assessment_dto.py
                 __init__.py
             commands
+                generate_assessment.py
                 __init__.py
             __init__.py
         __init__.py
     api
-        routes
+        utils
+            request_context.py
+            __init__.py
+        security
+            auth.py
+            api_key.py
+            __init__.py
+        schemas
+            pipeline_response.py
+            health_response.py
+            error_response.py
+            __init__.py
+        routers
+            recommendation_router.py
+            qualification_router.py
+            pipeline_router.py
             lead_router.py
+            health_router.py
+            email_router.py
             discovery_router.py
+            contact_router.py
+            company_intelligence_router.py
             ai_router.py
             __init__.py
+        responses
+            api_response.py
+            __init__.py
+        openapi
+            custom_openapi.py
+            __init__.py
+        middleware
+            timing.py
+            request_id.py
+            logging.py
+            exception_handler.py
+            __init__.py
+        dependencies
+            settings.py
+            services.py
+            database.py
+            __init__.py
+        tags.py
+        router.py
+        metadata.py
+        main.py
+        lifespan.py
         __init__.py
     ai
         tools
@@ -1141,8 +1341,11 @@ test_agent.py
 pytest.ini
 main.py
 FolderStructure.ps1
+create_project_structure.ps1
 create_app_layer.ps1.txt
 create_app_layer.ps1
+application_files.txt
+application.txt
 AiSDR_project_structure.txt
 aisdr.db
 .env

@@ -5,7 +5,7 @@ Responsible for modeling AI interactions,
 requests, responses, and execution lifecycle.
 """
 
-from .aggregate import AIRequest
+from .aggregates import AIRequest
 
 from .entities import (
     AIMessage,
