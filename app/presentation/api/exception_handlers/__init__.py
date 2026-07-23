@@ -1,0 +1,18 @@
+"""
+Presentation exception handlers.
+"""
+
+from fastapi import FastAPI
+
+from .domain_handler import register_domain_exception_handlers
+from .infrastructure_handler import register_infrastructure_exception_handlers
+from .validation_handler import register_validation_exception_handlers
+
+
+def register_exception_handlers(app: FastAPI) -> None:
+    """
+    Register all application exception handlers.
+    """
+    register_validation_exception_handlers(app)
+    register_domain_exception_handlers(app)
+    register_infrastructure_exception_handlers(app)
