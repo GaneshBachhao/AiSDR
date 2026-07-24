@@ -1,92 +1,50 @@
 """
-Discovery Mapper
-
-Maps between Application objects and Discovery schemas.
+Discovery domain/application mapper.
 """
 
-from app.application.discovery.commands.discover_companies import (
-    DiscoverCompaniesCommand,
+from __future__ import annotations
+
+from app.application.discovery.dto.discovery_dto import (
+    DiscoveryDTO,
 )
 
-from app.application.discovery.dto.discovery_request_dto import (
-    DiscoveryRequestDTO,
-)
-
-from app.application.discovery.dto.discovery_response_dto import (
-    DiscoveryCompanyDTO,
-    DiscoveryResponseDTO,
-)
-
-from app.discovery.schemas.discovery_schema import (
-    DiscoveryRequest,
-    DiscoveryResult,
+from app.domain.discovery.entities.discovery_session import (
+    DiscoverySession,
 )
 
 
 class DiscoveryMapper:
     """
-    Mapper for Discovery module.
+    Maps DiscoverySession aggregate
+    to application DTO.
     """
 
     @staticmethod
-    def command_to_dto(
-        command: DiscoverCompaniesCommand,
-    ) -> DiscoveryRequestDTO:
+    def to_dto(
+        session: DiscoverySession,
+    ) -> DiscoveryDTO:
+        """
+        Convert DiscoverySession into DiscoveryDTO.
+        """
 
-        return DiscoveryRequestDTO(
-
-            industry=command.industry,
-
-            location=command.location,
-
-            max_results=command.max_results,
-        )
-
-    @staticmethod
-    def dto_to_schema(
-        dto: DiscoveryRequestDTO,
-    ) -> DiscoveryRequest:
-
-        return DiscoveryRequest(
-
-            industry=dto.industry,
-
-            location=dto.location,
-
-            max_results=dto.max_results,
-        )
-
-    @staticmethod
-    def results_to_response(
-        results: list[
-            DiscoveryResult
-        ],
-    ) -> DiscoveryResponseDTO:
-
-        return DiscoveryResponseDTO(
-
-            companies=[
-
-                DiscoveryCompanyDTO(
-
-                    company_name=item.company_name,
-
-                    website=item.website,
-
-                    industry=item.industry,
-
-                    location=item.location,
-
-                    source=item.source,
-
-                    description=item.description,
-
-                    employee_range=item.employee_range,
-
-                    linkedin_url=item.linkedin_url,
-                )
-
-                for item in results
-
-            ]
+        return DiscoveryDTO(
+            id=session.id.value,
+            lead_id=session.lead_id.value,
+            company_id=session.company_id,
+            status=session.status.value,
+            summary=session.summary,
+            notes=session.notes,
+            response_count=len(session.responses),
+            pain_points=[
+                str(item)
+                for item in session.pain_points
+            ],
+            business_goals=[
+                str(item)
+                for item in session.business_goals
+            ],
+            technologies=[
+                str(item)
+                for item in session.technologies
+            ],
         )
