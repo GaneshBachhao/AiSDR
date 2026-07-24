@@ -1,47 +1,31 @@
 """
-Discovery Response DTO
-
-Returned by the Discovery Application Handler.
+Discovery response application DTO.
 """
 
-from pydantic import BaseModel, ConfigDict
+from __future__ import annotations
+
+from uuid import UUID
+
+from app.application.common.dto.response_dto import (
+    ResponseDTO,
+)
 
 
-class DiscoveryCompanyDTO(BaseModel):
+class DiscoveryResponseDTO(ResponseDTO):
     """
-    Represents a discovered company.
-    """
-
-    model_config = ConfigDict(
-        frozen=True,
-        extra="forbid",
-    )
-
-    company_name: str
-
-    website: str | None = None
-
-    industry: str | None = None
-
-    location: str | None = None
-
-    source: str
-
-    description: str | None = None
-
-    employee_range: str | None = None
-
-    linkedin_url: str | None = None
-
-
-class DiscoveryResponseDTO(BaseModel):
-    """
-    Collection of discovered companies.
+    Application representation of discovery response.
     """
 
-    model_config = ConfigDict(
-        frozen=True,
-        extra="forbid",
-    )
+    id: UUID
 
-    companies: list[DiscoveryCompanyDTO]
+    question_id: str
+
+    question: str
+
+    answer: str
+
+    response_type: str
+
+    confidence: float
+
+    remarks: str | None = None
