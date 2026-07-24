@@ -1,48 +1,30 @@
 """
-Dependency Injection - Database.
+Database dependency registrations.
 """
 
 from __future__ import annotations
 
-from sqlalchemy.ext.asyncio import (
-    AsyncSession,
-    async_sessionmaker,
-)
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.infrastructure.persistence.database import (
-    create_engine,
-    create_session_factory,
-)
-
-from app.infrastructure.persistence.unit_of_work.sqlalchemy_unit_of_work import (
-    SQLAlchemyUnitOfWork,
+from app.infrastructure.configuration.database_settings import DatabaseSettings
+from app.infrastructure.persistence.database.engine import (
+    get_session_factory,
 )
 
 
-class DatabaseContainer:
+class DatabaseProvider:
     """
-    Creates database infrastructure.
+    Provides database dependencies.
     """
 
     def __init__(
         self,
-        connection_string: str,
+        settings: DatabaseSettings,
     ) -> None:
+        self._session_factory = get_session_factory(settings)
 
-        self.engine = create_engine(
-            connection_string,
-        )
-
-        self.session_factory: async_sessionmaker[
-            AsyncSession
-        ] = create_session_factory(
-            self.engine,
-        )
-
-    def unit_of_work(
-        self,
-    ) -> SQLAlchemyUnitOfWork:
-
-        return SQLAlchemyUnitOfWork(
-            self.session_factory,
-        )
+    def session(self) -> AsyncSession:
+        """
+        Creates a new AsyncSession.
+        """
+        return self._session_factory()

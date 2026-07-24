@@ -1,56 +1,67 @@
 """
-SQLAlchemy implementation of Unit of Work.
+SQLAlchemy Unit of Work.
 """
 
 from __future__ import annotations
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from app.infrastructure.persistence.repositories.ai.sqlalchemy_ai_request_repository import (
-    SQLAlchemyAIRequestRepository,
+    SqlAlchemyAIRequestRepository,
+)
+from app.infrastructure.persistence.repositories.assessment.sqlalchemy_assessment_repository import (
+    SqlAlchemyAssessmentRepository,
+)
+from app.infrastructure.persistence.repositories.discovery.sqlalchemy_discovery_repository import (
+    SqlAlchemyDiscoveryRepository,
+)
+from app.infrastructure.persistence.repositories.lead.sqlalchemy_lead_repository import (
+    SqlAlchemyLeadRepository,
+)
+from app.infrastructure.persistence.repositories.recommendation.sqlalchemy_recommendation_repository import (
+    SqlAlchemyRecommendationRepository,
 )
 
 from .base_unit_of_work import BaseUnitOfWork
 
 
-class SQLAlchemyUnitOfWork(BaseUnitOfWork):
+class SqlAlchemyUnitOfWork(BaseUnitOfWork):
     """
-    SQLAlchemy transactional Unit of Work.
+    SQLAlchemy implementation of Unit of Work.
     """
 
     def __init__(
         self,
-        session_factory: async_sessionmaker[AsyncSession],
+        session: AsyncSession,
     ) -> None:
 
-        self._session_factory = session_factory
-        self._session: AsyncSession | None = None
+        self._session = session
 
-    async def __aenter__(self) -> "SQLAlchemyUnitOfWork":
+        self.leads = SqlAlchemyLeadRepository(session)
+        self.assessments = SqlAlchemyAssessmentRepository(session)
+        self.discoveries = SqlAlchemyDiscoveryRepository(session)
+        self.recommendations = SqlAlchemyRecommendationRepository(session)
+        self.ai_requests = SqlAlchemyAIRequestRepository(session)
 
-        self._session = self._session_factory()
-
-        self.ai_requests = SQLAlchemyAIRequestRepository(
-            self._session,
-        )
-
+    async def __aenter__(self):
         return self
 
-    async def commit(
+    async def __aexit__(
         self,
+        exc_type,
+        exc,
+        tb,
     ) -> None:
 
-        await self._session.commit()
-
-    async def rollback(
-        self,
-    ) -> None:
-
-        await self._session.rollback()
-
-    async def close(
-        self,
-    ) -> None:
+        if exc:
+            await self.rollback()
+        else:
+            await self.commit()
 
         await self._session.close()
+
+    async def commit(self) -> None:
+        await self._session.commit()
+
+    async def rollback(self) -> None:
+        await self._session.rollback()

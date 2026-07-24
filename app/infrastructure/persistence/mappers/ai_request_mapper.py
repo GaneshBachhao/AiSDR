@@ -1,95 +1,60 @@
 """
-Mapper between AIRequest aggregate and AIRequestModel.
+AIRequest Domain <-> ORM mapper.
 """
 
 from __future__ import annotations
 
 from app.domain.ai.aggregates.ai_request import AIRequest
-from app.domain.ai.entities.ai_response import AIResponse
-from app.domain.ai.enums.ai_request_status import AIRequestStatus
-from app.domain.ai.enums.finish_reason import FinishReason
-from app.domain.ai.value_objects.ai_request_id import AIRequestId
-from app.domain.ai.value_objects.max_tokens import MaxTokens
-from app.domain.ai.value_objects.model_name import ModelName
-from app.domain.ai.value_objects.prompt import Prompt
-from app.domain.ai.value_objects.provider_name import ProviderName
-from app.domain.ai.value_objects.response_id import ResponseId
-from app.domain.ai.value_objects.temperature import Temperature
-from app.domain.ai.value_objects.token_usage import TokenUsage
+from app.infrastructure.persistence.models.ai_request_model import AIRequestModel
 
-from app.infrastructure.persistence.models.ai_request_model import (
-    AIRequestModel,
-)
+from .base_mapper import BaseMapper
+from .converter_registry import converter_registry
 
 
-class AIRequestMapper:
+class AIRequestMapper(BaseMapper[AIRequest, AIRequestModel]):
     """
-    Maps AIRequest aggregate to persistence model
-    and vice versa.
+    Maps AIRequest aggregate to AIRequestModel and back.
     """
 
-    @staticmethod
+    domain_type = AIRequest
+    model_type = AIRequestModel
+
     def to_model(
-        request: AIRequest,
+        self,
+        domain: AIRequest,
     ) -> AIRequestModel:
-        """
-        Convert domain aggregate to ORM model.
-        """
 
-        return AIRequestModel(
-            id=str(request.id),
-            provider=request.provider.value,
-            model=request.model.value,
-            prompt=request.prompt.value,
-            temperature=request.temperature.value,
-            max_tokens=request.max_tokens.value,
-            status=request.status.value,
-            response=(
-                request.response.content
-                if request.response
-                else None
-            ),
-            failure_reason=request.failure_reason,
-            started_at=request.started_at,
-            completed_at=request.completed_at,
-            created_at=request.created_at,
-            updated_at=request.updated_at,
-        )
+        data = self.domain_to_dict(domain)
 
-    @staticmethod
+        for key, value in data.items():
+            data[key] = converter_registry.to_database(value)
+
+        return AIRequestModel(**data)
+
     def to_domain(
+        self,
         model: AIRequestModel,
     ) -> AIRequest:
-        """
-        Convert ORM model to domain aggregate.
-        """
 
-        response = None
+        data = self.model_to_dict(model)
 
-        if model.response:
-
-            response = AIResponse(
-                id=ResponseId(),
-                content=model.response,
-                finish_reason=FinishReason.STOP,
-                token_usage=TokenUsage(),
-            )
-
-        request = AIRequest(
-            id=AIRequestId(model.id),
-            provider=ProviderName(model.provider),
-            model=ModelName(model.model),
-            prompt=Prompt(model.prompt),
-            temperature=Temperature(model.temperature),
-            max_tokens=MaxTokens(model.max_tokens),
-            status=AIRequestStatus(model.status),
-            response=response,
-            failure_reason=model.failure_reason,
-            started_at=model.started_at,
-            completed_at=model.completed_at,
+        annotations = getattr(
+            AIRequest,
+            "__annotations__",
+            {},
         )
 
-        request.created_at = model.created_at
-        request.updated_at = model.updated_at
+        for field, field_type in annotations.items():
 
-        return request
+            if field in data:
+                data[field] = converter_registry.to_domain(
+                    field_type,
+                    data[field],
+                )
+
+        filtered = self.copy_matching_fields(
+            data,
+            AIRequest,
+        )
+
+        return AIRequest(**filtered)
