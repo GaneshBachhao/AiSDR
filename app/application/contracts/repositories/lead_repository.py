@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 from app.domain.lead.entities.lead import Lead
-from app.domain.lead.value_objects.lead_id import LeadId
+from app.domain.lead.identifiers.lead_id import LeadId
 
 
 class LeadRepository(ABC):
