@@ -14,6 +14,11 @@ class RecommendationResponse(BaseModel):
     )
 
     id: UUID
+
     assessment_id: UUID
-    summary: str
+
+    status: str
+
+    executive_summary: str | None = None
+
     created_at: datetime

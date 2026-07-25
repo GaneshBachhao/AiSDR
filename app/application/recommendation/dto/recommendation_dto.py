@@ -1,61 +1,15 @@
-"""
-Recommendation DTO models.
-"""
-
 from __future__ import annotations
 
+from dataclasses import dataclass
+from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
 
-
-class SolutionDTO(BaseModel):
+@dataclass(frozen=True)
+class RecommendationDTO:
     """
-    Application representation of a proposed solution.
+    Data transfer object representing a recommendation.
     """
-
-    model_config = ConfigDict(
-        frozen=True,
-        extra="forbid",
-    )
-
-    title: str
-
-    description: str
-
-    solution_type: str
-
-    priority: str
-
-
-class RoadmapPhaseDTO(BaseModel):
-    """
-    Application representation of an implementation phase.
-    """
-
-    model_config = ConfigDict(
-        frozen=True,
-        extra="forbid",
-    )
-
-    name: str
-
-    description: str
-
-    order: int
-
-
-class RecommendationDTO(BaseModel):
-    """
-    Application representation of a Recommendation.
-
-    This DTO is independent of API contracts.
-    """
-
-    model_config = ConfigDict(
-        frozen=True,
-        extra="forbid",
-    )
 
     id: UUID
 
@@ -63,8 +17,8 @@ class RecommendationDTO(BaseModel):
 
     status: str
 
-    executive_summary: str | None = None
+    created_at: datetime
 
-    solutions: list[SolutionDTO]
+    submitted_at: datetime | None
 
-    roadmap_phases: list[RoadmapPhaseDTO]
+    approved_at: datetime | None

@@ -17,7 +17,7 @@ from app.domain.recommendation.value_objects.dependency import Dependency
 from app.domain.recommendation.value_objects.implementation_risk import (
     ImplementationRisk,
 )
-from app.domain.recommendation.value_objects.roi import ROI
+from app.domain.recommendation.value_objects.expected_roi import ROI
 from app.domain.recommendation.value_objects.technology_stack import (
     TechnologyStack,
 )

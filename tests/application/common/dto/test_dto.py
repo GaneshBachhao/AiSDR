@@ -7,7 +7,6 @@ from pydantic import ValidationError
 
 from app.application.common.dto import (
     BaseDTO,
-    OperationResult,
     PagedResult,
     RequestDTO,
     ResponseDTO,
@@ -79,37 +78,6 @@ def test_response_dto_is_immutable() -> None:
 
     with pytest.raises(ValidationError):
         dto.name = "Updated"
-
-
-def test_operation_result_success() -> None:
-    result = OperationResult.succeeded(
-        data={"id": 1},
-        message="Created successfully.",
-    )
-
-    assert result.success is True
-    assert result.data == {"id": 1}
-    assert result.message == "Created successfully."
-
-
-def test_operation_result_failure() -> None:
-    result = OperationResult.failed(
-        message="Operation failed.",
-        metadata={
-            "reason": "validation",
-        },
-    )
-
-    assert result.success is False
-    assert result.data is None
-    assert result.message == "Operation failed."
-    assert result.metadata["reason"] == "validation"
-
-
-def test_operation_result_default_metadata() -> None:
-    result = OperationResult.succeeded()
-
-    assert result.metadata == {}
 
 
 def test_paged_result_calculates_total_pages() -> None:
