@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
-from app.domain.assessment.entities.evidence import Evidence
+from app.domain.assessment.value_objects.evidence import Evidence
 from app.domain.assessment.entities.finding import Finding
 from app.domain.assessment.enums.assessment_status import AssessmentStatus
 from app.domain.assessment.enums.maturity_level import MaturityLevel

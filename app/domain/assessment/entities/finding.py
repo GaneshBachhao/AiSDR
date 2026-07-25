@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from uuid import UUID, uuid4
 
-from app.domain.assessment.entities.evidence import Evidence
+from app.domain.assessment.value_objects.evidence import Evidence
 from app.domain.assessment.enums.finding_type import FindingType
 
 
