@@ -1,16 +1,31 @@
+"""
+Lead application mapper.
+"""
+
 from __future__ import annotations
 
-from app.application.lead.dto.lead_dto import LeadDTO
-from app.domain.lead.entities.lead import Lead
+from app.application.lead.commands.create_lead import (
+    CreateLeadCommand,
+)
+
+from app.application.lead.dto.lead_dto import (
+    LeadDTO,
+)
+
+from app.domain.lead.entities.lead import (
+    Lead,
+)
 
 
 class LeadMapper:
     """
-    Maps between Lead domain entity and application models.
+    Maps between Lead domain entity and application DTOs.
     """
 
     @staticmethod
-    def to_domain(command) -> Lead:
+    def to_domain(
+        command: CreateLeadCommand,
+    ) -> Lead:
         """
         Convert CreateLeadCommand into Lead aggregate.
         """

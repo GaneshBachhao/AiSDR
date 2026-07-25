@@ -64,7 +64,9 @@ class BaseRepository(ABC, Generic[TEntity, TId]):
         """
 
     @abstractmethod
-    async def list(self) -> list[TEntity]:
+    async def list(
+        self,
+    ) -> list[TEntity]:
         """
         Returns all entities.
         """

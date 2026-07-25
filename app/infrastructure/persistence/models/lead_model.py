@@ -1,34 +1,37 @@
 """
-Lead SQLAlchemy model.
-
-Mirror of the Lead aggregate.
+Lead ORM model.
 """
 
 from __future__ import annotations
 
-from sqlalchemy import Boolean
-from sqlalchemy import Enum as SqlEnum
-from sqlalchemy import Integer
+from uuid import UUID
+
+from sqlalchemy import ForeignKey
 from sqlalchemy import String
+from sqlalchemy.dialects.postgresql import UUID as PostgreSQLUUID
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import relationship
 
-from app.domain.lead.enums.lead_source import LeadSource
-from app.domain.lead.enums.lead_status import LeadStatus
-from app.infrastructure.persistence.database.base import Base
-from app.infrastructure.persistence.database.base import EntityMixin
+from app.infrastructure.persistence.models.base_model import BaseModel
+from app.infrastructure.persistence.models.company_model import CompanyModel
 
 
-class LeadModel(Base, EntityMixin):
+class LeadModel(BaseModel):
     """
-    Persistence model for Lead aggregate.
+    Represents a sales lead.
     """
 
     __tablename__ = "leads"
 
-    company_name: Mapped[str] = mapped_column(
-        String(200),
+    company_id: Mapped[UUID] = mapped_column(
+        PostgreSQLUUID(as_uuid=True),
+        ForeignKey(
+            "companies.id",
+            ondelete="RESTRICT",
+        ),
         nullable=False,
+        index=True,
     )
 
     contact_name: Mapped[str] = mapped_column(
@@ -39,7 +42,6 @@ class LeadModel(Base, EntityMixin):
     email: Mapped[str] = mapped_column(
         String(320),
         nullable=False,
-        unique=True,
         index=True,
     )
 
@@ -48,45 +50,22 @@ class LeadModel(Base, EntityMixin):
         nullable=True,
     )
 
-    website: Mapped[str | None] = mapped_column(
-        String(500),
+    job_title: Mapped[str | None] = mapped_column(
+        String(150),
         nullable=True,
     )
 
-    source: Mapped[LeadSource] = mapped_column(
-        SqlEnum(
-            LeadSource,
-            name="lead_source",
-        ),
-        nullable=False,
-        default=LeadSource.OTHER,
+    # -------------------------------------------------------------------------
+    # Relationships
+    # -------------------------------------------------------------------------
+
+    company: Mapped[CompanyModel] = relationship(
+        back_populates="leads",
+        lazy="joined",
     )
 
-    status: Mapped[LeadStatus] = mapped_column(
-        SqlEnum(
-            LeadStatus,
-            name="lead_status",
-        ),
-        nullable=False,
-        default=LeadStatus.NEW,
-    )
-
-    #
-    # LeadScore value object
-    #
-    score: Mapped[int] = mapped_column(
-        Integer,
-        nullable=False,
-        default=0,
-    )
-
-    notes: Mapped[str | None] = mapped_column(
-        String(4000),
-        nullable=True,
-    )
-
-    is_qualified: Mapped[bool] = mapped_column(
-        Boolean,
-        nullable=False,
-        default=False,
+    discoveries: Mapped[list["DiscoveryModel"]] = relationship(
+        "DiscoveryModel",
+        back_populates="lead",
+        cascade="all, delete-orphan",
     )

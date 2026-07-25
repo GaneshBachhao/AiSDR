@@ -32,4 +32,7 @@ class SqlAlchemyLeadRepository(
         self,
         session: AsyncSession,
     ) -> None:
-        super().__init__(session)
+        super().__init__(
+            session=session,
+            mapper=self.mapper,
+        )

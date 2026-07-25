@@ -1,5 +1,3 @@
-# app/application/common/interfaces/email_sender.py
-
 """
 Email sender application port.
 

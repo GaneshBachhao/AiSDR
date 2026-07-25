@@ -13,7 +13,7 @@ class BaseUnitOfWork(ABC):
     Coordinates repositories and transaction boundaries.
     """
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> "BaseUnitOfWork":
         return self
 
     @abstractmethod

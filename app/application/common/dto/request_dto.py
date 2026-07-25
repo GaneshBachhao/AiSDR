@@ -1,5 +1,3 @@
-# app/application/common/dto/request_dto.py
-
 """
 Request DTO definitions.
 

@@ -6,8 +6,13 @@ from __future__ import annotations
 
 from abc import ABC
 from abc import abstractmethod
-from dataclasses import asdict, is_dataclass
-from typing import Any, Generic, TypeVar
+from dataclasses import asdict
+from dataclasses import is_dataclass
+from typing import Any
+from typing import Generic
+from typing import TypeVar
+
+from sqlalchemy.inspection import inspect
 
 TDomain = TypeVar("TDomain")
 TModel = TypeVar("TModel")
@@ -24,19 +29,27 @@ class BaseMapper(Generic[TDomain, TModel], ABC):
     model_type: type[TModel]
 
     @abstractmethod
-    def to_domain(self, model: TModel) -> TDomain:
+    def to_domain(
+        self,
+        model: TModel,
+    ) -> TDomain:
         """
         ORM -> Domain
         """
 
     @abstractmethod
-    def to_model(self, domain: TDomain) -> TModel:
+    def to_model(
+        self,
+        domain: TDomain,
+    ) -> TModel:
         """
         Domain -> ORM
         """
 
     @staticmethod
-    def domain_to_dict(domain: Any) -> dict[str, Any]:
+    def domain_to_dict(
+        domain: Any,
+    ) -> dict[str, Any]:
         """
         Convert a domain object into a dictionary.
 
@@ -58,14 +71,16 @@ class BaseMapper(Generic[TDomain, TModel], ABC):
         )
 
     @staticmethod
-    def model_to_dict(model: Any) -> dict[str, Any]:
+    def model_to_dict(
+        model: Any,
+    ) -> dict[str, Any]:
         """
         Convert a SQLAlchemy model into a dictionary.
         """
 
         return {
             column.name: getattr(model, column.name)
-            for column in model.__table__.columns
+            for column in inspect(model).mapper.column_attrs
         }
 
     @staticmethod
@@ -74,13 +89,25 @@ class BaseMapper(Generic[TDomain, TModel], ABC):
         destination_type: type,
     ) -> dict[str, Any]:
         """
-        Returns only keys that exist on destination_type.
+        Returns only keys that exist on destination type.
         """
 
-        annotations = getattr(destination_type, "__annotations__", {})
+        try:
+            fields = {
+                column.key
+                for column in inspect(destination_type).mapper.column_attrs
+            }
+        except Exception:
+            fields = set(
+                getattr(
+                    destination_type,
+                    "__annotations__",
+                    {},
+                ).keys()
+            )
 
         return {
             key: value
             for key, value in source.items()
-            if key in annotations
+            if key in fields
         }

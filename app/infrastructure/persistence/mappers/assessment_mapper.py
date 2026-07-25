@@ -29,7 +29,12 @@ class AssessmentMapper(BaseMapper[Assessment, AssessmentModel]):
         for key, value in data.items():
             data[key] = converter_registry.to_database(value)
 
-        return AssessmentModel(**data)
+        return AssessmentModel(
+            **self.copy_matching_fields(
+                data,
+                AssessmentModel,
+            )
+        )
 
     def to_domain(
         self,
@@ -38,10 +43,13 @@ class AssessmentMapper(BaseMapper[Assessment, AssessmentModel]):
 
         data = self.model_to_dict(model)
 
-        annotations = getattr(Assessment, "__annotations__", {})
+        annotations = getattr(
+            Assessment,
+            "__annotations__",
+            {},
+        )
 
         for field, field_type in annotations.items():
-
             if field in data:
                 data[field] = converter_registry.to_domain(
                     field_type,

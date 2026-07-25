@@ -1,5 +1,3 @@
-# app/application/common/dto/base_dto.py
-
 """
 Base DTO configuration.
 

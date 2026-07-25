@@ -25,6 +25,9 @@ class SqlAlchemyAssessmentRepository(
         str,
     ],
 ):
+    """
+    SQLAlchemy Assessment repository.
+    """
 
     model_type = AssessmentModel
     mapper = AssessmentMapper()
@@ -33,4 +36,8 @@ class SqlAlchemyAssessmentRepository(
         self,
         session: AsyncSession,
     ) -> None:
-        super().__init__(session)
+
+        super().__init__(
+            session=session,
+            mapper=self.mapper,
+        )

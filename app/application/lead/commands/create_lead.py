@@ -1,16 +1,17 @@
-# app/application/lead/commands/create_lead.py
-
 """
 Create Lead command.
 """
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from app.application.common.commands.command import (
     Command,
 )
 
 
+@dataclass
 class CreateLeadCommand(Command):
     """
     Request to create a new lead.

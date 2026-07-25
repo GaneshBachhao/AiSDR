@@ -1,31 +1,21 @@
-from abc import ABC, abstractmethod
+"""
+Assessment repository contract.
+"""
 
+from __future__ import annotations
+
+from app.application.common.interfaces.repository import (
+    Repository,
+)
 from app.domain.assessment.entities.assessment import Assessment
-from app.domain.assessment.value_objects.assessment_id import AssessmentId
+from app.domain.assessment.identifiers.assessment_id import AssessmentId
 
 
-class AssessmentRepository(ABC):
+class AssessmentRepository(
+    Repository[Assessment, AssessmentId],
+):
     """
     Assessment persistence contract.
     """
 
-    @abstractmethod
-    async def add(
-        self,
-        assessment: Assessment
-    ) -> None:
-        pass
-
-    @abstractmethod
-    async def get_by_id(
-        self,
-        assessment_id: AssessmentId
-    ) -> Assessment | None:
-        pass
-
-    @abstractmethod
-    async def update(
-        self,
-        assessment: Assessment
-    ) -> None:
-        pass
+    pass

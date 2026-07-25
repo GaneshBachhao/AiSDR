@@ -1,49 +1,21 @@
+"""
+Discovery repository contract.
+"""
+
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
-
-from app.domain.discovery.entities.discovery_session import (
-    DiscoverySession,
+from app.application.common.interfaces.repository import (
+    Repository,
 )
-
-from app.domain.discovery.identifiers.discovery_session_id import (
-    DiscoverySessionId,
-)
-
-from app.domain.lead.identifiers.lead_id import (
-    LeadId,
-)
+from app.domain.discovery.entities.discovery import Discovery
+from app.domain.discovery.identifiers.discovery_id import DiscoveryId
 
 
-class DiscoveryRepository(ABC):
+class DiscoveryRepository(
+    Repository[Discovery, DiscoveryId],
+):
     """
-    DiscoverySession persistence contract.
+    Discovery persistence contract.
     """
 
-    @abstractmethod
-    async def add(
-        self,
-        session: DiscoverySession,
-    ) -> None:
-        pass
-
-    @abstractmethod
-    async def get_by_id(
-        self,
-        session_id: DiscoverySessionId,
-    ) -> DiscoverySession | None:
-        pass
-
-    @abstractmethod
-    async def get_by_lead(
-        self,
-        lead_id: LeadId,
-    ) -> DiscoverySession | None:
-        pass
-
-    @abstractmethod
-    async def update(
-        self,
-        session: DiscoverySession,
-    ) -> None:
-        pass
+    pass

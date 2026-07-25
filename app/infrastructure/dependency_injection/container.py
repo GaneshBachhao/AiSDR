@@ -4,9 +4,14 @@ Infrastructure dependency container.
 
 from __future__ import annotations
 
-from app.infrastructure.configuration.database_settings import DatabaseSettings
+from app.infrastructure.configuration.database_settings import (
+    DatabaseSettings,
+)
 from app.infrastructure.dependency_injection.database import (
     DatabaseProvider,
+)
+from app.infrastructure.persistence.unit_of_work.sqlalchemy_unit_of_work import (
+    SqlAlchemyUnitOfWork,
 )
 
 
@@ -20,4 +25,17 @@ class Container:
         settings: DatabaseSettings,
     ) -> None:
 
-        self.database = DatabaseProvider(settings)
+        self.database = DatabaseProvider(
+            settings,
+        )
+
+    def create_unit_of_work(
+        self,
+    ) -> SqlAlchemyUnitOfWork:
+        """
+        Create SQLAlchemy Unit of Work.
+        """
+
+        return SqlAlchemyUnitOfWork(
+            self.database.session(),
+        )

@@ -1,11 +1,19 @@
+"""
+Create Lead command validator.
+"""
+
 from __future__ import annotations
 
 import re
 
-from app.application.common.validation.validation_result import ValidationResult
+from app.application.common.validation.validation_result import (
+    ValidationResult,
+)
+
 from app.application.lead.commands.create_lead import (
     CreateLeadCommand,
 )
+
 
 class CreateLeadValidator:
     """
@@ -30,6 +38,7 @@ class CreateLeadValidator:
         """
         Validate the incoming command.
         """
+
         result = ValidationResult()
 
         if not command.company_name.strip():
@@ -49,7 +58,9 @@ class CreateLeadValidator:
                 "email",
                 "Email is required.",
             )
-        elif not self.EMAIL_PATTERN.match(command.email):
+        elif not self.EMAIL_PATTERN.fullmatch(
+            command.email,
+        ):
             result.add_error(
                 "email",
                 "Invalid email address.",
@@ -57,7 +68,9 @@ class CreateLeadValidator:
 
         if (
             command.website
-            and not self.WEBSITE_PATTERN.match(command.website)
+            and not self.WEBSITE_PATTERN.fullmatch(
+                command.website,
+            )
         ):
             result.add_error(
                 "website",

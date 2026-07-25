@@ -1,5 +1,3 @@
-# app/application/common/dto/ai.py
-
 """
 AI related application DTOs.
 

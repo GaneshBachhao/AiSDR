@@ -6,7 +6,9 @@ from __future__ import annotations
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.recommendation.entities.recommendation import Recommendation
+from app.domain.recommendation.entities.recommendation import (
+    Recommendation,
+)
 from app.infrastructure.persistence.mappers.recommendation_mapper import (
     RecommendationMapper,
 )
@@ -25,6 +27,9 @@ class SqlAlchemyRecommendationRepository(
         str,
     ],
 ):
+    """
+    SQLAlchemy Recommendation repository.
+    """
 
     model_type = RecommendationModel
     mapper = RecommendationMapper()
@@ -33,4 +38,8 @@ class SqlAlchemyRecommendationRepository(
         self,
         session: AsyncSession,
     ) -> None:
-        super().__init__(session)
+
+        super().__init__(
+            session=session,
+            mapper=self.mapper,
+        )

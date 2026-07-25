@@ -1,5 +1,3 @@
-# app/application/common/interfaces/repository.py
-
 """
 Repository interface contract.
 
@@ -14,7 +12,6 @@ from typing import Generic, TypeVar
 
 
 TEntity = TypeVar("TEntity")
-
 TId = TypeVar("TId")
 
 
@@ -64,10 +61,10 @@ class Repository(ABC, Generic[TEntity, TId]):
     @abstractmethod
     async def delete(
         self,
-        entity: TEntity,
+        entity_id: TId,
     ) -> None:
         """
-        Delete an entity.
+        Delete an entity by identity.
         """
         raise NotImplementedError
 

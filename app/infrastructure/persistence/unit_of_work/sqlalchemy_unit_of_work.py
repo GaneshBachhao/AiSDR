@@ -37,13 +37,29 @@ class SqlAlchemyUnitOfWork(BaseUnitOfWork):
 
         self._session = session
 
-        self.leads = SqlAlchemyLeadRepository(session)
-        self.assessments = SqlAlchemyAssessmentRepository(session)
-        self.discoveries = SqlAlchemyDiscoveryRepository(session)
-        self.recommendations = SqlAlchemyRecommendationRepository(session)
-        self.ai_requests = SqlAlchemyAIRequestRepository(session)
+        self.leads = SqlAlchemyLeadRepository(
+            session,
+        )
 
-    async def __aenter__(self):
+        self.assessments = SqlAlchemyAssessmentRepository(
+            session,
+        )
+
+        self.discoveries = SqlAlchemyDiscoveryRepository(
+            session,
+        )
+
+        self.recommendations = SqlAlchemyRecommendationRepository(
+            session,
+        )
+
+        self.ai_requests = SqlAlchemyAIRequestRepository(
+            session,
+        )
+
+    async def __aenter__(
+        self,
+    ) -> "SqlAlchemyUnitOfWork":
         return self
 
     async def __aexit__(
@@ -60,8 +76,14 @@ class SqlAlchemyUnitOfWork(BaseUnitOfWork):
 
         await self._session.close()
 
-    async def commit(self) -> None:
+    async def commit(
+        self,
+    ) -> None:
+
         await self._session.commit()
 
-    async def rollback(self) -> None:
+    async def rollback(
+        self,
+    ) -> None:
+
         await self._session.rollback()

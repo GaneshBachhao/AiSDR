@@ -1,5 +1,15 @@
+"""
+Create Lead application handler.
+"""
+
+from __future__ import annotations
+
 from app.application.contracts.repositories.lead_repository import (
     LeadRepository,
+)
+
+from app.application.common.exceptions.validation_exception import (
+    ValidationException,
 )
 
 from app.application.lead.commands.create_lead import (
@@ -29,24 +39,37 @@ class CreateLeadHandler:
         repository: LeadRepository,
         validator: CreateLeadValidator,
         mapper: LeadMapper,
-    ):
+    ) -> None:
+
         self._repository = repository
         self._validator = validator
         self._mapper = mapper
-
 
     async def handle(
         self,
         command: CreateLeadCommand,
     ) -> LeadDTO:
+        """
+        Execute create lead workflow.
+        """
 
-        validation = self._validator.validate(command)
+        validation = self._validator.validate(
+            command,
+        )
 
         if not validation.is_valid:
-            raise ValueError(validation.errors)
+            raise ValidationException(
+                validation.errors,
+            )
 
-        lead = self._mapper.to_domain(command)
+        lead = self._mapper.to_domain(
+            command,
+        )
 
-        await self._repository.add(lead)
+        await self._repository.add(
+            lead,
+        )
 
-        return self._mapper.to_dto(lead)
+        return self._mapper.to_dto(
+            lead,
+        )

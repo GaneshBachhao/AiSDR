@@ -1,5 +1,3 @@
-# app/application/common/interfaces/unit_of_work.py
-
 """
 Unit of Work application contract.
 
@@ -9,6 +7,7 @@ Infrastructure implementations manage actual transactions.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import Self
 
 
 class UnitOfWork(ABC):
@@ -22,7 +21,7 @@ class UnitOfWork(ABC):
     @abstractmethod
     async def __aenter__(
         self,
-    ) -> UnitOfWork:
+    ) -> Self:
         """
         Begin transaction scope.
         """

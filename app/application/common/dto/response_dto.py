@@ -1,5 +1,3 @@
-# app/application/common/dto/response_dto.py
-
 """
 Response DTO definitions.
 

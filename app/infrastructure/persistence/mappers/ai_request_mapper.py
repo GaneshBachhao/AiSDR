@@ -1,19 +1,23 @@
 """
-AIRequest Domain <-> ORM mapper.
+AI Request Domain <-> ORM mapper.
 """
 
 from __future__ import annotations
 
-from app.domain.ai.aggregates.ai_request import AIRequest
-from app.infrastructure.persistence.models.ai_request_model import AIRequestModel
+from app.domain.ai.entities.ai_request import AIRequest
+from app.infrastructure.persistence.models.ai_request_model import (
+    AIRequestModel,
+)
 
 from .base_mapper import BaseMapper
 from .converter_registry import converter_registry
 
 
-class AIRequestMapper(BaseMapper[AIRequest, AIRequestModel]):
+class AIRequestMapper(
+    BaseMapper[AIRequest, AIRequestModel]
+):
     """
-    Maps AIRequest aggregate to AIRequestModel and back.
+    Maps AIRequest domain entity to AIRequestModel and back.
     """
 
     domain_type = AIRequest
@@ -29,7 +33,12 @@ class AIRequestMapper(BaseMapper[AIRequest, AIRequestModel]):
         for key, value in data.items():
             data[key] = converter_registry.to_database(value)
 
-        return AIRequestModel(**data)
+        return AIRequestModel(
+            **self.copy_matching_fields(
+                data,
+                AIRequestModel,
+            )
+        )
 
     def to_domain(
         self,
@@ -45,7 +54,6 @@ class AIRequestMapper(BaseMapper[AIRequest, AIRequestModel]):
         )
 
         for field, field_type in annotations.items():
-
             if field in data:
                 data[field] = converter_registry.to_domain(
                     field_type,

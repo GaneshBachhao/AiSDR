@@ -25,6 +25,9 @@ class SqlAlchemyDiscoveryRepository(
         str,
     ],
 ):
+    """
+    SQLAlchemy Discovery repository.
+    """
 
     model_type = DiscoveryModel
     mapper = DiscoveryMapper()
@@ -33,4 +36,8 @@ class SqlAlchemyDiscoveryRepository(
         self,
         session: AsyncSession,
     ) -> None:
-        super().__init__(session)
+
+        super().__init__(
+            session=session,
+            mapper=self.mapper,
+        )

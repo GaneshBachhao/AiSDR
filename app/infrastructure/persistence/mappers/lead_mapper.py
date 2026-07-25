@@ -29,7 +29,12 @@ class LeadMapper(BaseMapper[Lead, LeadModel]):
         for key, value in data.items():
             data[key] = converter_registry.to_database(value)
 
-        return LeadModel(**data)
+        return LeadModel(
+            **self.copy_matching_fields(
+                data,
+                LeadModel,
+            )
+        )
 
     def to_domain(
         self,
@@ -38,10 +43,13 @@ class LeadMapper(BaseMapper[Lead, LeadModel]):
 
         data = self.model_to_dict(model)
 
-        annotations = getattr(Lead, "__annotations__", {})
+        annotations = getattr(
+            Lead,
+            "__annotations__",
+            {},
+        )
 
         for field, field_type in annotations.items():
-
             if field in data:
                 data[field] = converter_registry.to_domain(
                     field_type,

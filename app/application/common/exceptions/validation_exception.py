@@ -1,5 +1,3 @@
-# app/application/common/exceptions/validation_exception.py
-
 """
 Validation exception.
 
@@ -15,20 +13,28 @@ from typing import Any
 from app.application.common.exceptions.application_exception import (
     ApplicationException,
 )
-from app.application.common.exceptions.error_code import ErrorCode
+
+from app.application.common.exceptions.error_code import (
+    ErrorCode,
+)
 
 
 class ValidationException(ApplicationException):
     """
     Raised when validation fails.
+
+    Contains structured validation details that can be
+    returned to upper layers (API/UI) without exposing
+    internal implementation details.
     """
 
     def __init__(
         self,
-        message: str,
+        message: str = "Validation failed.",
         *,
         details: Mapping[str, Any] | None = None,
     ) -> None:
+
         super().__init__(
             message=message,
             error_code=ErrorCode.VALIDATION_ERROR,

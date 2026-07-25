@@ -14,10 +14,7 @@ from .converter_registry import converter_registry
 
 
 class RecommendationMapper(
-    BaseMapper[
-        Recommendation,
-        RecommendationModel,
-    ]
+    BaseMapper[Recommendation, RecommendationModel]
 ):
     """
     Maps Recommendation aggregate to RecommendationModel and back.
@@ -36,7 +33,12 @@ class RecommendationMapper(
         for key, value in data.items():
             data[key] = converter_registry.to_database(value)
 
-        return RecommendationModel(**data)
+        return RecommendationModel(
+            **self.copy_matching_fields(
+                data,
+                RecommendationModel,
+            )
+        )
 
     def to_domain(
         self,
@@ -52,7 +54,6 @@ class RecommendationMapper(
         )
 
         for field, field_type in annotations.items():
-
             if field in data:
                 data[field] = converter_registry.to_domain(
                     field_type,

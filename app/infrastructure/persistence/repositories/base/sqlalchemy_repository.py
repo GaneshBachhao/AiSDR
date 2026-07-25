@@ -32,9 +32,11 @@ class SqlAlchemyRepository(
     def __init__(
         self,
         session: AsyncSession,
+        mapper: object,
     ) -> None:
 
         self._session = session
+        self.mapper = mapper
 
     async def get_by_id(
         self,
@@ -96,7 +98,7 @@ class SqlAlchemyRepository(
         self,
     ) -> list[TEntity]:
 
-        result = await self._session.execute(
+        result = await the_session.execute(
             select(self.model_type)
         )
 

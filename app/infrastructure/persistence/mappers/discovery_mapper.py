@@ -29,7 +29,12 @@ class DiscoveryMapper(BaseMapper[Discovery, DiscoveryModel]):
         for key, value in data.items():
             data[key] = converter_registry.to_database(value)
 
-        return DiscoveryModel(**data)
+        return DiscoveryModel(
+            **self.copy_matching_fields(
+                data,
+                DiscoveryModel,
+            )
+        )
 
     def to_domain(
         self,
@@ -38,10 +43,13 @@ class DiscoveryMapper(BaseMapper[Discovery, DiscoveryModel]):
 
         data = self.model_to_dict(model)
 
-        annotations = getattr(Discovery, "__annotations__", {})
+        annotations = getattr(
+            Discovery,
+            "__annotations__",
+            {},
+        )
 
         for field, field_type in annotations.items():
-
             if field in data:
                 data[field] = converter_registry.to_domain(
                     field_type,

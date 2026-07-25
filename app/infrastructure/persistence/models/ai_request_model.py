@@ -7,6 +7,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from sqlalchemy import DateTime
+from sqlalchemy import Float
 from sqlalchemy import Integer
 from sqlalchemy import String
 from sqlalchemy import Text
@@ -44,6 +45,7 @@ class AIRequestModel(Base):
     )
 
     temperature: Mapped[float] = mapped_column(
+        Float,
         nullable=False,
     )
 
@@ -57,9 +59,9 @@ class AIRequestModel(Base):
         nullable=False,
     )
 
-    # -------------------------
+    # -------------------------------------------------------------------------
     # AI Response
-    # -------------------------
+    # -------------------------------------------------------------------------
 
     response_content: Mapped[str | None] = mapped_column(
         Text,
@@ -91,18 +93,18 @@ class AIRequestModel(Base):
         nullable=True,
     )
 
-    # -------------------------
+    # -------------------------------------------------------------------------
     # Failure
-    # -------------------------
+    # -------------------------------------------------------------------------
 
     failure_reason: Mapped[str | None] = mapped_column(
         Text,
         nullable=True,
     )
 
-    # -------------------------
+    # -------------------------------------------------------------------------
     # Execution Lifecycle
-    # -------------------------
+    # -------------------------------------------------------------------------
 
     started_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
@@ -114,9 +116,9 @@ class AIRequestModel(Base):
         nullable=True,
     )
 
-    # -------------------------
+    # -------------------------------------------------------------------------
     # Audit
-    # -------------------------
+    # -------------------------------------------------------------------------
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

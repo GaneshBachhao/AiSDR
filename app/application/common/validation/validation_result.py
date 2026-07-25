@@ -1,3 +1,7 @@
+"""
+Application validation result models.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -20,16 +24,18 @@ class ValidationResult:
     """
 
     errors: list[ValidationError] = field(
-        default_factory=list
+        default_factory=list,
     )
 
     @property
-    def is_valid(self) -> bool:
+    def is_valid(
+        self,
+    ) -> bool:
         """
         Indicates whether validation succeeded.
         """
-        return not self.errors
 
+        return not self.errors
 
     def add_error(
         self,
@@ -47,14 +53,14 @@ class ValidationResult:
             )
         )
 
-
-    def has_errors(self) -> bool:
+    def has_errors(
+        self,
+    ) -> bool:
         """
         Returns True if any validation errors exist.
         """
 
         return bool(self.errors)
-
 
     def has_error(
         self,
@@ -69,8 +75,9 @@ class ValidationResult:
             for error in self.errors
         )
 
-
-    def error_messages(self) -> list[str]:
+    def error_messages(
+        self,
+    ) -> list[str]:
         """
         Returns plain validation messages.
         """
