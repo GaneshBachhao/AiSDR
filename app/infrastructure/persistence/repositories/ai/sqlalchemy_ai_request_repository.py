@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.ai.entities.ai_request import AIRequest
+from app.domain.ai.aggregates.ai_request import AIRequest
 from app.infrastructure.persistence.mappers.ai_request_mapper import (
     AIRequestMapper,
 )
@@ -26,18 +26,17 @@ class SqlAlchemyAIRequestRepository(
     ],
 ):
     """
-    SQLAlchemy AI Request repository.
+    SQLAlchemy implementation of AI Request repository.
     """
 
     model_type = AIRequestModel
-    mapper = AIRequestMapper()
+    _mapper = AIRequestMapper()
 
     def __init__(
         self,
         session: AsyncSession,
     ) -> None:
-
         super().__init__(
             session=session,
-            mapper=self.mapper,
+            mapper=self._mapper,
         )

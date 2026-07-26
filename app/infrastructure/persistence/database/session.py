@@ -1,62 +1,81 @@
 """
-Database session management.
+Database session manager.
 
-Provides SQLAlchemy engine and session factory
-for infrastructure persistence operations.
+Owns the SQLAlchemy AsyncSession factory.
 """
 
 from __future__ import annotations
 
-from collections.abc import Generator
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_sessionmaker,
+)
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
+from app.infrastructure.configuration.database_settings import (
+    DatabaseSettings,
+)
+from app.infrastructure.persistence.database.engine import (
+    get_database_engine,
+)
 
-from app.core.config.settings import settings
 
-
-class DatabaseSessionFactory:
+class DatabaseSessionManager:
     """
-    Creates database sessions.
-
-    Infrastructure layer abstraction responsible
-    for database connection lifecycle.
+    Creates AsyncSession instances using the shared engine.
     """
 
-    def __init__(self) -> None:
-        self._engine = create_engine(
-            settings.DATABASE_URL,
-            pool_pre_ping=True,
-            echo=False,
+    def __init__(
+        self,
+        settings: DatabaseSettings,
+    ) -> None:
+
+        self._engine = get_database_engine(
+            settings,
         )
 
-        self._session_factory = sessionmaker(
-            bind=self._engine,
-            autocommit=False,
+        self._session_factory = async_sessionmaker(
+            bind=self._engine.engine,
+            class_=AsyncSession,
             autoflush=False,
             expire_on_commit=False,
         )
 
-    def create_session(self) -> Session:
+    @property
+    def session_factory(
+        self,
+    ) -> async_sessionmaker[AsyncSession]:
         """
-        Create a new database session.
+        Returns the configured session factory.
         """
+
+        return self._session_factory
+
+    def create_session(
+        self,
+    ) -> AsyncSession:
+        """
+        Creates a new AsyncSession.
+        """
+
         return self._session_factory()
 
 
-database_session_factory = DatabaseSessionFactory()
+_session_manager: DatabaseSessionManager | None = None
 
 
-def get_db_session() -> Generator[Session, None, None]:
+def get_session_manager(
+    settings: DatabaseSettings,
+) -> DatabaseSessionManager:
     """
-    Database session dependency.
-
-    Ensures session cleanup after usage.
+    Returns the singleton session manager.
     """
 
-    session = database_session_factory.create_session()
+    global _session_manager
 
-    try:
-        yield session
-    finally:
-        session.close()
+    if _session_manager is None:
+
+        _session_manager = DatabaseSessionManager(
+            settings,
+        )
+
+    return _session_manager

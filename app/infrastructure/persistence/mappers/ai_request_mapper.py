@@ -4,7 +4,7 @@ AI Request Domain <-> ORM mapper.
 
 from __future__ import annotations
 
-from app.domain.ai.entities.ai_request import AIRequest
+from app.domain.ai.aggregates.ai_request import AIRequest
 from app.infrastructure.persistence.models.ai_request_model import (
     AIRequestModel,
 )

@@ -6,7 +6,9 @@ from __future__ import annotations
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.assessment.entities.assessment import Assessment
+from app.domain.assessment.entities.assessment import (
+    Assessment,
+)
 from app.infrastructure.persistence.mappers.assessment_mapper import (
     AssessmentMapper,
 )
@@ -39,5 +41,4 @@ class SqlAlchemyAssessmentRepository(
 
         super().__init__(
             session=session,
-            mapper=self.mapper,
         )

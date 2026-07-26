@@ -6,7 +6,9 @@ from __future__ import annotations
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.discovery.entities.discovery import Discovery
+from app.domain.discovery.entities.discovery import (
+    Discovery,
+)
 from app.infrastructure.persistence.mappers.discovery_mapper import (
     DiscoveryMapper,
 )
@@ -39,5 +41,4 @@ class SqlAlchemyDiscoveryRepository(
 
         super().__init__(
             session=session,
-            mapper=self.mapper,
         )

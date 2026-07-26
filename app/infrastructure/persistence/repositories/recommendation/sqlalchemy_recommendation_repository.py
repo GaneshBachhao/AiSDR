@@ -41,5 +41,4 @@ class SqlAlchemyRecommendationRepository(
 
         super().__init__(
             session=session,
-            mapper=self.mapper,
         )
