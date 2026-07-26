@@ -1,15 +1,21 @@
-from fastapi import APIRouter, status
+"""
+Lead API routes.
+"""
 
-from app.application.lead.commands.create_lead.create_lead_command import (
+from __future__ import annotations
+
+from fastapi import APIRouter
+from fastapi import status
+
+from app.application.lead.commands.create_lead import (
     CreateLeadCommand,
 )
-from app.application.lead.handlers.create_lead_handler import (
-    CreateLeadHandler,
+from app.presentation.api.dependencies.handlers import (
+    CreateLeadHandlerDependency,
 )
-from app.presentation.api.dependencies.persistence import (
-    UnitOfWorkDependency,
+from app.presentation.common.response import (
+    ApiResponse,
 )
-from app.presentation.common.response import ApiResponse
 from app.presentation.schemas.requests.lead_request import (
     CreateLeadRequest,
 )
@@ -30,7 +36,7 @@ router = APIRouter(
 )
 async def create_lead(
     request: CreateLeadRequest,
-    unit_of_work: UnitOfWorkDependency,
+    handler: CreateLeadHandlerDependency,
 ) -> ApiResponse[LeadResponse]:
     """
     Create a new lead.
@@ -42,15 +48,14 @@ async def create_lead(
         email=request.email,
         phone=request.phone,
         website=request.website,
-        notes=request.notes,
     )
-
-    handler = CreateLeadHandler(unit_of_work)
 
     lead = await handler.handle(command)
 
     return ApiResponse(
         success=True,
         message="Lead created successfully.",
-        data=LeadResponse.model_validate(lead),
+        data=LeadResponse.model_validate(
+            lead,
+        ),
     )

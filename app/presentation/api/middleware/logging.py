@@ -1,12 +1,17 @@
+"""
+Request logging middleware.
+"""
+
+from __future__ import annotations
+
+import logging
 import time
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
+from starlette.responses import Response
 
-from app.infrastructure.logging.logger import get_logger
-
-
-logger = get_logger(__name__)
+logger = logging.getLogger("aisdr")
 
 
 class LoggingMiddleware(BaseHTTPMiddleware):
@@ -14,20 +19,27 @@ class LoggingMiddleware(BaseHTTPMiddleware):
     Logs incoming requests and outgoing responses.
     """
 
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(
+        self,
+        request: Request,
+        call_next,
+    ) -> Response:
+        """
+        Process the request and log execution details.
+        """
 
         start = time.perf_counter()
 
         response = await call_next(request)
 
-        elapsed = (time.perf_counter() - start) * 1000
+        elapsed_ms = (time.perf_counter() - start) * 1000
 
         logger.info(
-            "%s %s %s %.2f ms",
+            "%s %s -> %d (%.2f ms)",
             request.method,
             request.url.path,
             response.status_code,
-            elapsed,
+            elapsed_ms,
         )
 
         return response

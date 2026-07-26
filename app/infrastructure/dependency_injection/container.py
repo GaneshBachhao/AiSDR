@@ -18,6 +18,10 @@ from app.infrastructure.persistence.unit_of_work.sqlalchemy_unit_of_work import 
 class Container:
     """
     Root infrastructure container.
+
+    The container is the application's composition root.
+    It wires together infrastructure services and exposes
+    ready-to-use dependencies to the Presentation layer.
     """
 
     def __init__(
@@ -33,9 +37,7 @@ class Container:
         self,
     ) -> SqlAlchemyUnitOfWork:
         """
-        Create SQLAlchemy Unit of Work.
+        Create a new Unit of Work.
         """
 
-        return SqlAlchemyUnitOfWork(
-            self.database.session(),
-        )
+        return self.database.unit_of_work()

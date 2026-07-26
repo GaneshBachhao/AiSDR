@@ -1,7 +1,5 @@
 """
 Unit of Work application contract.
-
-Infrastructure implementations manage actual transactions.
 """
 
 from __future__ import annotations
@@ -9,22 +7,20 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Self
 
+from app.application.contracts.repositories.lead_repository import (
+    LeadRepository,
+)
+
 
 class UnitOfWork(ABC):
     """
-    Transaction boundary contract.
-
-    Application services use this abstraction without knowing
-    the underlying database technology.
+    Coordinates repositories within a transaction.
     """
 
+    leads: LeadRepository
+
     @abstractmethod
-    async def __aenter__(
-        self,
-    ) -> Self:
-        """
-        Begin transaction scope.
-        """
+    async def __aenter__(self) -> Self:
         raise NotImplementedError
 
     @abstractmethod
@@ -34,25 +30,12 @@ class UnitOfWork(ABC):
         exc_value: BaseException | None,
         traceback: object | None,
     ) -> None:
-        """
-        End transaction scope.
-        """
         raise NotImplementedError
 
     @abstractmethod
-    async def commit(
-        self,
-    ) -> None:
-        """
-        Commit transaction.
-        """
+    async def commit(self) -> None:
         raise NotImplementedError
 
     @abstractmethod
-    async def rollback(
-        self,
-    ) -> None:
-        """
-        Rollback transaction.
-        """
+    async def rollback(self) -> None:
         raise NotImplementedError

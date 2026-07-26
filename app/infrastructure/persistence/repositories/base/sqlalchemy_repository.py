@@ -11,7 +11,10 @@ from sqlalchemy import delete
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .base_repository import BaseRepository
+from app.application.common.interfaces.repository import (
+    Repository,
+)
+
 
 TEntity = TypeVar("TEntity")
 TModel = TypeVar("TModel")
@@ -19,11 +22,11 @@ TId = TypeVar("TId")
 
 
 class SqlAlchemyRepository(
-    BaseRepository[TEntity, TId],
+    Repository[TEntity, TId],
     Generic[TEntity, TModel, TId],
 ):
     """
-    Generic SQLAlchemy repository.
+    Generic SQLAlchemy repository implementation.
     """
 
     model_type: type[TModel]
@@ -32,11 +35,8 @@ class SqlAlchemyRepository(
     def __init__(
         self,
         session: AsyncSession,
-        mapper: object,
     ) -> None:
-
         self._session = session
-        self.mapper = mapper
 
     async def get_by_id(
         self,
@@ -76,35 +76,38 @@ class SqlAlchemyRepository(
 
     async def delete(
         self,
-        entity_id: TId,
+        entity: TEntity,
     ) -> None:
+        """
+        Delete an entity.
+        """
 
-        await self._session.execute(
-            delete(self.model_type).where(
-                self.model_type.id == entity_id
-            )
-        )
+        model = self.mapper.to_model(entity)
+
+        await self._session.delete(model)
 
     async def exists(
         self,
         entity_id: TId,
     ) -> bool:
 
-        return (
-            await self.get_by_id(entity_id)
-        ) is not None
+        result = await self._session.execute(
+            select(self.model_type.id).where(
+                self.model_type.id == entity_id
+            )
+        )
+
+        return result.scalar_one_or_none() is not None
 
     async def list(
         self,
     ) -> list[TEntity]:
 
-        result = await the_session.execute(
+        result = await self._session.execute(
             select(self.model_type)
         )
 
-        models = result.scalars().all()
-
         return [
             self.mapper.to_domain(model)
-            for model in models
+            for model in result.scalars().all()
         ]

@@ -1,5 +1,54 @@
 ﻿uploads
 ui
+tools
+    testing
+        run_unit_tests.ps1
+        run_integration_tests.ps1
+        run_all_tests.ps1
+        coverage.ps1
+    scripts
+        run_worker.ps1
+        run_scheduler.ps1
+        run_api.ps1
+        lint.ps1
+        format_code.ps1
+    scaffolding
+        create_tests_structure.ps1
+        create_presentation_structure.ps1
+        create_persistence_structure.ps1
+        create_infrastructure_structure.ps1
+        create_domain_structure.ps1
+        create_application_structure.ps1
+    generators
+        generate_value_object.ps1
+        generate_service.ps1
+        generate_repository.ps1
+        generate_handler.ps1
+        generate_entity.ps1
+    documentation
+        generate_openapi.ps1
+        generate_architecture.ps1
+    docker
+        stop.ps1
+        start.ps1
+        clean.ps1
+        build.ps1
+    deployment
+        deploy_test.ps1
+        deploy_prod.ps1
+        deploy_dev.ps1
+    database
+        seed_database.ps1
+        reset_database.ps1
+        drop_database.ps1
+        create_database.ps1
+    architecture
+        release_checklist.md
+        naming_conventions.md
+        module_checklist.md
+        dependency_rules.md
+        coding_standards.md
+        architecture.md
 tests
     repositories
         test_lead_repository.py
@@ -55,7 +104,32 @@ tests
             test_gmail_client.py
             test_gmail_auth.py
         test_tavily_client.py
+        test_repository.py
+        test_openai_pipeline.py
         test_interested_reply_workflow.py
+        test_gemini_pipeline.py
+        __init__.py
+    infrastructure
+        common
+            http
+                test_timeout_policy.py
+                test_retry_policy.py
+                test_http_response.py
+                test_http_client.py
+            exceptions
+                test_http_exception.py
+        ai
+            providers
+                test_application_ai_provider.py
+            factories
+                test_ai_provider_factory.py
+                __init__.py
+            configuration
+                test_provider_settings.py
+                test_model_settings.py
+                test_ai_settings.py
+                __init__.py
+            __init__.py
         __init__.py
     helpers
         mock_data.py
@@ -90,6 +164,10 @@ tests
         test_email_send_request_schema.py
         test_email_dispatch_service.py
         __init__.py
+    e2e
+        test_execute_ai_request.py
+    doubles
+        mock_provider.py
     domain
         recommendation
             test_recommendation.py
@@ -142,6 +220,23 @@ tests
         test_automation_schema.py
         test_automation_handler_factory.py
     application
+        recommendation
+            queries
+            handlers
+                test_update_roi_handler.py
+                test_update_cost_estimate_handler.py
+                test_submit_recommendation_handler.py
+                test_get_recommendation_handler.py
+                test_create_recommendation_handler.py
+                test_approve_recommendation_handler.py
+                test_add_solution_handler.py
+                test_add_roadmap_phase_handler.py
+                test_add_implementation_risk_handler.py
+                test_add_dependency_handler.py
+                test_add_business_benefit_handler.py
+            test_recommendation_mapper.py
+            test_generate_recommendation_validator.py
+            test_generate_recommendation_handler.py
         lead
             validators
                 test_create_lead_validator.py
@@ -159,6 +254,10 @@ tests
             test_create_lead_command.py
             __init__.py
         discovery
+            handlers
+                test_start_discovery_handler.py
+                test_complete_discovery_handler.py
+                test_add_discovery_response_handler.py
             test_discover_companies_validator.py
             test_discover_companies_mapper.py
             test_discover_companies_handler.py
@@ -184,7 +283,28 @@ tests
                 test_behaviors.py
             demo.txt
         assessment
+            validators
+                test_update_assessment_score_validator.py
+                test_start_assessment_validator.py
+                test_add_finding_validator.py
+            handlers
+                test_update_assessment_score_handler.py
+                test_start_assessment_handler.py
+                test_add_finding_handler.py
+        ai
+            validators
+                test_execute_ai_request_validator.py
+            services
+                test_ai_execution_service.py
+            mappers
+                test_ai_mapper.py
+            handlers
+                test_execute_ai_request_handler.py
+            commands
+                test_execute_ai_request_command.py
         __init__.py
+    api
+        test_ai_endpoint.py
     ai
         services
             test_email_generation_service.py
@@ -281,6 +401,72 @@ app
         agents
         __init__.py
     prompts
+        __init__.py
+    presentation
+        schemas
+            responses
+                recommendation_response.py
+                lead_response.py
+                ai_response.py
+                __init__.py
+            requests
+                recommendation_request.py
+                lead_request.py
+                discovery_request.py
+                assessment_request.py
+                ai_request.py
+                __init__.py
+            discovery_response.py
+            assessment_response.py
+            __init__.py
+        configuration
+            versioning.py
+            trusted_hosts.py
+            security.py
+            openapi.py
+            gzip.py
+            cors.py
+            __init__.py
+        common
+            response.py
+            pagination.py
+            mapper.py
+            __init__.py
+        bootstrap
+            startup.py
+            routing.py
+            middleware.py
+            exception.py
+            configuration.py
+            application.py
+            __init__.py
+        api
+            routers
+                recommendation_router.py
+                lead_router.py
+                health_router.py
+                discovery_router.py
+                assessment_router.py
+                ai_router.py
+                __init__.py
+            middleware
+                logging.py
+                exception.py
+                correlation_id.py
+                __init__.py
+            exception_handlers
+                validation_handler.py
+                infrastructure_handler.py
+                domain_handler.py
+                __init__.py
+            dependencies
+                persistence.py
+                handlers.py
+                ai.py
+                __init__.py
+            __init__.py
+        startup.py
+        main.py
         __init__.py
     pipelines
         stages
@@ -575,6 +761,167 @@ app
             gmail_auth.py
             __init__.py
         __init__.py
+    infrastructure
+        telemetry
+            __init__.py
+        persistence
+            unit_of_work
+                sqlalchemy_unit_of_work.py
+                __init__.py
+            sqlalchemy
+                url_type.py
+                type_decorators.py
+                response_id_type.py
+                provider_name_type.py
+                lead_score_type.py
+                email_address_type.py
+                __init__.py
+            repositories
+                recommendation
+                    sqlalchemy_recommendation_repository.py
+                    __init__.py
+                lead
+                    sqlalchemy_lead_repository.py
+                    __init__.py
+                discovery
+                    sqlalchemy_discovery_repository.py
+                    __init__.py
+                base
+                    sqlalchemy_repository.py
+                    specification_repository.py
+                    base_repository.py
+                assessment
+                    sqlalchemy_assessment_repository.py
+                    __init__.py
+                ai
+                    sqlalchemy_ai_request_repository.py
+                    __init__.py
+                __init__.py
+            models
+                timestamp_mixin.py
+                soft_delete_mixin.py
+                recommendation_model.py
+                lead_model.py
+                entity_mixin.py
+                discovery_model.py
+                company_model.py
+                base_model.py
+                audit_mixin.py
+                assessment_model.py
+                ai_request_model.py
+                __init__.py
+            migrations
+                versions
+                    __init__.py
+                script.py.mako
+                README.md
+                env.py
+            mappers
+                recommendation_mapper.py
+                lead_mapper.py
+                discovery_mapper.py
+                converters.py
+                converter_registry.py
+                base_mapper.py
+                assessment_mapper.py
+                ai_request_mapper.py
+                __init__.py
+            database
+                session.py
+                health.py
+                engine.py
+                context.py
+                base.py
+                __init__.py
+            __init__.py
+        messaging
+            __init__.py
+        dependency_injection
+            services.py
+            repositories.py
+            provider.py
+            handlers.py
+            database.py
+            container.py
+            configuration.py
+            ai_provider.py
+            __init__.py
+        configuration
+            settings_loader.py
+            provider_settings.py
+            logging_settings.py
+            environment.py
+            database_settings.py
+            application_settings.py
+            ai_settings.py
+            __init__.py
+        common
+            serialization
+                json_serializer.py
+                json_deserializer.py
+                __init__.py
+            resilience
+                retry.py
+                circuit_breaker.py
+                backoff.py
+                __init__.py
+            http
+                timeout_policy.py
+                retry_policy.py
+                http_response.py
+                http_client.py
+                base_http_client.py
+                __init__.py
+            exceptions
+                timeout_exception.py
+                infrastructure_exception.py
+                http_exception.py
+                __init__.py
+            __init__.py
+        cache
+            __init__.py
+        ai
+            repositories
+                sqlalchemy_ai_request_repository.py
+                ai_request_mapper.py
+                __init__.py
+            providers
+                openai_provider.py
+                ollama_provider.py
+                gemini_provider.py
+                base_provider.py
+                azure_openai_provider.py
+                __init__.py
+            mappers
+                ai_response_mapper.py
+                ai_request_mapper.py
+                __init__.py
+            factories
+                __init__.py
+            exceptions
+                unsupported_provider_exception.py
+                ai_provider_exception.py
+                ai_configuration_exception.py
+                ai_client_exception.py
+                __init__.py
+            configuration
+                settings_loader.py
+                provider_settings.py
+                model_settings.py
+                ai_settings.py
+                __init__.py
+            clients
+                openai_client.py
+                ollama_client.py
+                gemini_client.py
+                base_ai_client.py
+                azure_openai_client.py
+                __init__.py
+            adapters
+                application_ai_provider.py
+                __init__.py
+            __init__.py
+        __init__.py
     execution
         job_execution.py
         __init__.py
@@ -713,8 +1060,8 @@ app
         recommendation
             value_objects
                 technology_stack.py
-                roi.py
                 implementation_risk.py
+                expected_roi.py
                 dependency.py
                 cost_estimate.py
                 business_benefit.py
@@ -739,15 +1086,14 @@ app
                 __init__.py
             enums
                 solution_type.py
+                recommendation_type.py
                 recommendation_status.py
-                implementation_status.py
                 implementation_priority.py
                 __init__.py
             entities
                 solution.py
                 roadmap_phase.py
                 recommendation.py
-                implementation_phase.py
                 __init__.py
             __init__.py
         lead
@@ -853,7 +1199,9 @@ app
             __init__.py
         assessment
             value_objects
+                recommendation.py
                 opportunity.py
+                evidence.py
                 assessment_score.py
                 assessment_id.py
                 assessment_dimension.py
@@ -878,11 +1226,11 @@ app
             enums
                 maturity_level.py
                 finding_type.py
+                assessment_type.py
                 assessment_status.py
                 __init__.py
             entities
                 finding.py
-                evidence.py
                 assessment.py
                 __init__.py
             __init__.py
@@ -900,7 +1248,6 @@ app
                 __init__.py
             services
                 ai_validation_service.py
-                ai_execution_service.py
                 __init__.py
             repositories
                 ai_request_repository.py
@@ -927,7 +1274,7 @@ app
                 ai_response.py
                 ai_message.py
                 __init__.py
-            aggregate
+            aggregates
                 ai_request.py
                 __init__.py
             __init__.py
@@ -1096,16 +1443,60 @@ app
     application
         recommendation
             validators
+                update_roi_validator.py
+                update_roadmap_validator.py
+                update_cost_estimate_validator.py
+                submit_recommendation_validator.py
+                generate_recommendation_validator.py
+                create_recommendation_validator.py
+                approve_recommendation_validator.py
+                add_solution_validator.py
+                add_roadmap_phase_validator.py
+                add_implementation_risk_validator.py
+                add_dependency_validator.py
+                add_business_benefit_validator.py
                 __init__.py
             queries
+                get_recommendation_by_id.py
                 __init__.py
             mappers
+                solution_mapper.py
+                roadmap_phase_mapper.py
+                recommendation_mapper.py
                 __init__.py
             handlers
+                update_roi_handler.py
+                update_roadmap_handler.py
+                update_cost_estimate_handler.py
+                submit_recommendation_handler.py
+                get_recommendation_handler.py
+                generate_recommendation_handler.py
+                create_recommendation_handler.py
+                approve_recommendation_handler.py
+                add_solution_handler.py
+                add_roadmap_phase_handler.py
+                add_implementation_risk_handler.py
+                add_dependency_handler.py
+                add_business_benefit_handler.py
                 __init__.py
             dto
+                solution_dto.py
+                roadmap_phase_dto.py
+                recommendation_dto.py
                 __init__.py
             commands
+                update_roi.py
+                update_roadmap.py
+                update_cost_estimate.py
+                submit_recommendation.py
+                generate_recommendation.py
+                create_recommendation.py
+                approve_recommendation.py
+                add_solution.py
+                add_roadmap_phase.py
+                add_implementation_risk.py
+                add_dependency.py
+                add_business_benefit.py
                 __init__.py
             __init__.py
         qualification
@@ -1139,25 +1530,50 @@ app
             __init__.py
         discovery
             validators
+                start_discovery_validator.py
                 discover_companies_validator.py
+                complete_discovery_validator.py
+                add_discovery_response_validator.py
                 __init__.py
             queries
                 __init__.py
             mappers
+                discovery_response_mapper.py
                 discovery_mapper.py
                 __init__.py
             handlers
+                start_discovery_handler.py
                 discover_companies_handler.py
+                complete_discovery_handler.py
+                add_discovery_response_handler.py
                 __init__.py
             dto
                 discovery_response_dto.py
                 discovery_request_dto.py
+                discovery_dto.py
                 __init__.py
             commands
+                start_discovery.py
                 discover_companies.py
+                complete_discovery.py
+                add_discovery_response.py
                 __init__.py
             __init__.py
-        contact
+        contracts
+            services
+                recommendation_service.py
+                discovery_service.py
+                contact_discovery_service.py
+                assessment_service.py
+                ai_service.py
+                __init__.py
+            repositories
+                recommendation_repository.py
+                lead_repository.py
+                discovery_repository.py
+                assessment_repository.py
+                ai_request_repository.py
+                __init__.py
             discover_contacts.py
             __init__.py
         company_intelligence
@@ -1165,14 +1581,13 @@ app
                 enrich_company_validator.py
             mappers
                 company_profile_mapper.py
-            Handlers
+            handlers
                 enrich_company_handler.py
             dto
                 enrich_company_response_dto.py
                 enrich_company_request_dto.py
             commands
                 enrich_company.py
-            enrich_company.py
             __init__.py
         common
             validation
@@ -1233,25 +1648,67 @@ app
                 logging_behavior.py
                 behavior.py
                 __init__.py
+            operation_result.py
             exceptions.py
             __init__.py
         assessment
             validators
+                update_assessment_score_validator.py
+                start_assessment_validator.py
                 generate_assessment_validator.py
+                complete_assessment_validator.py
+                add_finding_validator.py
                 __init__.py
             queries
                 __init__.py
             mappers
+                finding_mapper.py
                 assessment_mapper.py
                 __init__.py
             handlers
+                update_assessment_score_handler.py
+                start_assessment_handler.py
                 generate_assessment_handler.py
+                complete_assessment_handler.py
+                assess_lead_handler.py
+                add_finding_handler.py
                 __init__.py
             dto
+                finding_dto.py
                 assessment_dto.py
                 __init__.py
             commands
+                update_assessment_score.py
+                start_assessment.py
                 generate_assessment.py
+                complete_assessment.py
+                add_finding.py
+                __init__.py
+            __init__.py
+        ai
+            validators
+                execute_ai_request_validator.py
+                __init__.py
+            services
+                ai_execution_service.py
+                __init__.py
+            ports
+                ai_provider.py
+                __init__.py
+            mappers
+                ai_mapper.py
+                __init__.py
+            handlers
+                generate_ai_response_handler.py
+                execute_ai_request_handler.py
+                __init__.py
+            dto
+                ai_response_dto.py
+                ai_request_dto.py
+                ai_message_dto.py
+                __init__.py
+            commands
+                execute_ai_request.py
                 __init__.py
             __init__.py
         __init__.py
@@ -1338,14 +1795,15 @@ test_json_parser.py
 test_job.py
 test_db.py
 test_agent.py
+repository_structure.txt
 pytest.ini
 main.py
-FolderStructure.ps1
+export_FolderStructure.ps1
 create_project_structure.ps1
-create_app_layer.ps1.txt
-create_app_layer.ps1
 application_files.txt
 application.txt
+alembic.ini
 AiSDR_project_structure.txt
 aisdr.db
+.gitignore
 .env

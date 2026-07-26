@@ -1,15 +1,26 @@
+"""
+Persistence dependencies.
+"""
+
+from __future__ import annotations
+
 from typing import Annotated
 
 from fastapi import Depends
 
-from app.infrastructure.dependency_injection.provider import get_unit_of_work
-from app.infrastructure.persistence.unit_of_work import UnitOfWork
+from app.application.common.interfaces.unit_of_work import (
+    UnitOfWork,
+)
+from app.infrastructure.dependency_injection.provider import (
+    get_unit_of_work,
+)
 
 
 def get_unit_of_work_dependency() -> UnitOfWork:
     """
-    Resolve the Unit of Work.
+    Resolve the application Unit of Work.
     """
+
     return get_unit_of_work()
 
 

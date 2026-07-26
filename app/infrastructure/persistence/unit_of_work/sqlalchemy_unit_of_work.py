@@ -6,6 +6,9 @@ from __future__ import annotations
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.application.common.interfaces.unit_of_work import (
+    UnitOfWork,
+)
 from app.infrastructure.persistence.repositories.ai.sqlalchemy_ai_request_repository import (
     SqlAlchemyAIRequestRepository,
 )
@@ -22,10 +25,8 @@ from app.infrastructure.persistence.repositories.recommendation.sqlalchemy_recom
     SqlAlchemyRecommendationRepository,
 )
 
-from .base_unit_of_work import BaseUnitOfWork
 
-
-class SqlAlchemyUnitOfWork(BaseUnitOfWork):
+class SqlAlchemyUnitOfWork(UnitOfWork):
     """
     SQLAlchemy implementation of Unit of Work.
     """
@@ -37,25 +38,11 @@ class SqlAlchemyUnitOfWork(BaseUnitOfWork):
 
         self._session = session
 
-        self.leads = SqlAlchemyLeadRepository(
-            session,
-        )
-
-        self.assessments = SqlAlchemyAssessmentRepository(
-            session,
-        )
-
-        self.discoveries = SqlAlchemyDiscoveryRepository(
-            session,
-        )
-
-        self.recommendations = SqlAlchemyRecommendationRepository(
-            session,
-        )
-
-        self.ai_requests = SqlAlchemyAIRequestRepository(
-            session,
-        )
+        self.leads = SqlAlchemyLeadRepository(session)
+        self.assessments = SqlAlchemyAssessmentRepository(session)
+        self.discoveries = SqlAlchemyDiscoveryRepository(session)
+        self.recommendations = SqlAlchemyRecommendationRepository(session)
+        self.ai_requests = SqlAlchemyAIRequestRepository(session)
 
     async def __aenter__(
         self,
@@ -69,7 +56,7 @@ class SqlAlchemyUnitOfWork(BaseUnitOfWork):
         tb,
     ) -> None:
 
-        if exc:
+        if exc_type is not None:
             await self.rollback()
         else:
             await self.commit()
@@ -79,11 +66,9 @@ class SqlAlchemyUnitOfWork(BaseUnitOfWork):
     async def commit(
         self,
     ) -> None:
-
         await self._session.commit()
 
     async def rollback(
         self,
     ) -> None:
-
         await self._session.rollback()
