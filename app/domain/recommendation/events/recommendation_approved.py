@@ -1,6 +1,6 @@
-from domain.shared.base import DomainEvent
+from app.domain.shared.base import DomainEvent
 
-from ..value_objects.recommendation_id import RecommendationId
+from app.domain.recommendation.value_objects.recommendation_id import RecommendationId
 
 
 class RecommendationApproved(DomainEvent):

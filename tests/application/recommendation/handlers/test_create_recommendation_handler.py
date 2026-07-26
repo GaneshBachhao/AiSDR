@@ -94,6 +94,6 @@ async def test_create_recommendation_handler_creates_recommendation():
     result = await handler.handle(command)
 
     assert result.assessment_id == assessment_id
-    assert result.status == "DRAFT"
+    assert result.status == "Draft"
 
     assert repository.recommendation is not None

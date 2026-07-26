@@ -1,4 +1,4 @@
-from domain.shared.base import DomainEvent
+from app.domain.shared.base import DomainEvent
 
 from ..value_objects.assessment_id import AssessmentId
 

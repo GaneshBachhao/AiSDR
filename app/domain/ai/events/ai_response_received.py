@@ -1,4 +1,4 @@
-from domain.shared.base import DomainEvent
+from app.domain.shared.base import DomainEvent
 
 from ..value_objects.ai_request_id import AIRequestId
 from ..value_objects.response_id import ResponseId

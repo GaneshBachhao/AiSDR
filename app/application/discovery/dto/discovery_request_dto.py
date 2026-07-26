@@ -22,4 +22,4 @@ class DiscoveryRequestDTO(BaseModel):
 
     location: str
 
-    max_results: int
+    max_results: int = 10

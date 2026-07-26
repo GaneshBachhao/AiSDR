@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
-from app.domain.assessment.identifiers.assessment_id import AssessmentId
+from app.domain.assessment.value_objects.assessment_id import AssessmentId
 from app.domain.recommendation.entities.roadmap_phase import RoadmapPhase
 from app.domain.recommendation.entities.solution import Solution
 from app.domain.recommendation.enums.recommendation_status import (
@@ -111,3 +111,9 @@ class Recommendation(AggregateRoot[RecommendationId]):
         """
         self.status = RecommendationStatus.ARCHIVED
         self.touch()
+
+    def submit(self) -> None:
+        """
+        Submit recommendation for review.
+        """
+        self.submit_for_review()

@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 from typing import List, Optional
 from uuid import uuid4
 
-from domain.shared.base import AggregateRoot
+from app.domain.shared.base import AggregateRoot
 
 from ..entities.report_section import ReportSection
 from ..entities.report_version import ReportVersion

@@ -1,5 +1,4 @@
-from domain.shared.identifiers import Identifier
-
+from app.domain.shared.identifiers import Identifier
 
 class AssessmentId(Identifier):
     """

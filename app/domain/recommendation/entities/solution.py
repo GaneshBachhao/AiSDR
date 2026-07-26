@@ -34,9 +34,9 @@ class Solution:
 
     description: str
 
-    solution_type: SolutionType
+    solution_type: SolutionType | str
 
-    priority: ImplementationPriority = (
+    priority: ImplementationPriority | str = (
         ImplementationPriority.MEDIUM
     )
 
@@ -61,6 +61,19 @@ class Solution:
     cost_estimate: CostEstimate | None = None
 
     solution_id: UUID = field(default_factory=uuid4)
+
+
+    def __post_init__(self) -> None:
+
+        if isinstance(self.solution_type, str):
+            self.solution_type = SolutionType(
+                self.solution_type
+            )
+
+        if isinstance(self.priority, str):
+            self.priority = ImplementationPriority(
+                self.priority
+            )
 
     def add_technology(
         self,

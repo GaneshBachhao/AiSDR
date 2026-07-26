@@ -1,93 +1,62 @@
 """
-SQLAlchemy async session management.
+Database session management.
+
+Provides SQLAlchemy engine and session factory
+for infrastructure persistence operations.
 """
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager
+from collections.abc import Generator
 
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
 
-from app.infrastructure.configuration.database_settings import DatabaseSettings
-from app.infrastructure.persistence.database.engine import (
-    get_session_factory,
-)
+from app.core.config.settings import settings
 
 
-class SessionManager:
+class DatabaseSessionFactory:
     """
-    Manages SQLAlchemy AsyncSession instances.
-    """
+    Creates database sessions.
 
-    def __init__(
-        self,
-        session_factory: async_sessionmaker[AsyncSession],
-    ) -> None:
-        self._session_factory = session_factory
-
-    @asynccontextmanager
-    async def session(self) -> AsyncGenerator[AsyncSession, None]:
-        """
-        Creates a managed AsyncSession.
-        """
-
-        session = self._session_factory()
-
-        try:
-            yield session
-            await session.commit()
-
-        except Exception:
-            await session.rollback()
-            raise
-
-        finally:
-            await session.close()
-
-    @asynccontextmanager
-    async def transaction(self) -> AsyncGenerator[AsyncSession, None]:
-        """
-        Executes a transactional scope.
-        """
-
-        async with self.session() as session:
-            async with session.begin():
-                yield session
-
-
-_session_manager: SessionManager | None = None
-
-
-def get_session_manager(
-    settings: DatabaseSettings,
-) -> SessionManager:
-    """
-    Returns singleton SessionManager.
+    Infrastructure layer abstraction responsible
+    for database connection lifecycle.
     """
 
-    global _session_manager
-
-    if _session_manager is None:
-        _session_manager = SessionManager(
-            get_session_factory(settings)
+    def __init__(self) -> None:
+        self._engine = create_engine(
+            settings.DATABASE_URL,
+            pool_pre_ping=True,
+            echo=False,
         )
 
-    return _session_manager
+        self._session_factory = sessionmaker(
+            bind=self._engine,
+            autocommit=False,
+            autoflush=False,
+            expire_on_commit=False,
+        )
+
+    def create_session(self) -> Session:
+        """
+        Create a new database session.
+        """
+        return self._session_factory()
 
 
-async def get_db_session(
-    settings: DatabaseSettings,
-) -> AsyncGenerator[AsyncSession, None]:
+database_session_factory = DatabaseSessionFactory()
+
+
+def get_db_session() -> Generator[Session, None, None]:
     """
-    FastAPI dependency.
+    Database session dependency.
 
-    Example:
-
-        Depends(get_db_session)
+    Ensures session cleanup after usage.
     """
 
-    manager = get_session_manager(settings)
+    session = database_session_factory.create_session()
 
-    async with manager.session() as session:
+    try:
         yield session
+    finally:
+        session.close()

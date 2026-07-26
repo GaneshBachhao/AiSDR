@@ -27,7 +27,7 @@ class DiscoverCompaniesValidator:
         Validate discovery request.
         """
 
-        result = OperationResult[None]()
+        result = OperationResult[None](success=True)
 
         if not request.industry.strip():
 

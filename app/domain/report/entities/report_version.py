@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 from typing import Optional
 from uuid import uuid4
 
-from domain.shared.base import Entity
+from app.domain.shared.base import Entity
 
 from ..exceptions.report_exception import ReportException
 from ..value_objects.version_id import VersionId

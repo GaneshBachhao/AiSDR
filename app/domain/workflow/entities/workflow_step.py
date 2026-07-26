@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 from typing import Optional
 from uuid import uuid4
 
-from domain.shared.base import Entity
+from app.domain.shared.base import Entity
 
 from ..enums.step_status import StepStatus
 from ..exceptions.workflow_step_exception import WorkflowStepException

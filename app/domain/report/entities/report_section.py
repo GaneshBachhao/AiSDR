@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 from typing import Optional
 from uuid import uuid4
 
-from domain.shared.base import Entity
+from app.domain.shared.base import Entity
 
 from ..enums.section_status import SectionStatus
 from ..exceptions.report_section_exception import ReportSectionException
