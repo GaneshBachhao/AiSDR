@@ -1,0 +1,60 @@
+"""Recommendation API router."""
+
+from __future__ import annotations
+
+from fastapi import APIRouter, Query, status
+
+from app.application.recommendation.commands.create_recommendation import CreateRecommendationCommand
+from app.application.recommendation.dto.recommendation_dto import RecommendationDTO
+from app.application.recommendation.queries.get_recommendation_by_id import GetRecommendationByIdQuery
+from app.application.recommendation.queries.list_recommendations import ListRecommendationsQuery
+from app.presentation.api.dependencies.handlers import (
+    CreateRecommendationHandlerDependency,
+    GetRecommendationHandlerDependency,
+    ListRecommendationHandlerDependency,
+)
+from app.presentation.schemas.requests.recommendation_request import GenerateRecommendationRequest
+
+router = APIRouter(prefix="/recommendations", tags=["Recommendation"])
+
+
+@router.post(
+    "",
+    response_model=RecommendationDTO,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_recommendation(
+    request: GenerateRecommendationRequest,
+    handler: CreateRecommendationHandlerDependency,
+) -> RecommendationDTO:
+    return await handler.handle(
+        CreateRecommendationCommand(assessment_id=request.assessment_id),
+    )
+
+
+@router.get(
+    "",
+    response_model=list[RecommendationDTO],
+)
+async def list_recommendations(
+    handler: ListRecommendationHandlerDependency,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=10, ge=1, le=200),
+) -> list[RecommendationDTO]:
+    return await handler.handle(
+        ListRecommendationsQuery(page=page, page_size=page_size),
+    )
+
+
+@router.get(
+    "/{recommendation_id}",
+    response_model=RecommendationDTO,
+)
+async def get_recommendation(
+    recommendation_id: str,
+    handler: GetRecommendationHandlerDependency,
+) -> RecommendationDTO:
+    from uuid import UUID
+    return await handler.handle(
+        GetRecommendationByIdQuery(recommendation_id=UUID(recommendation_id)),
+    )
