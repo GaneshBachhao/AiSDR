@@ -2,12 +2,14 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, status
 
-from app.company_research.schemas.company_research import (
+from app.application.company_research.dto.company_research_request import (
     CompanyResearchRequest,
+)
+from app.application.company_research.dto.company_research_response import (
     CompanySearchResult,
 )
-from app.company_research.services.company_research_service import (
-    CompanyResearchService,
+from app.presentation.api.dependencies.company_research import (
+    SearchCompaniesHandlerDependency,
 )
 
 router = APIRouter(
@@ -23,6 +25,7 @@ router = APIRouter(
 )
 async def search_companies(
     request: CompanyResearchRequest,
+    handler: SearchCompaniesHandlerDependency,
 ) -> list[CompanySearchResult]:
     """Discover and research public-web company opportunities.
 
@@ -30,8 +33,7 @@ async def search_companies(
     Company, Contact, Lead, or other CRM records and does not contact anyone.
     """
     try:
-        service = CompanyResearchService()
-        return service.search(request)
+        return await handler.handle(request)
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,

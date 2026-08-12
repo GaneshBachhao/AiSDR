@@ -1,0 +1,21 @@
+"""
+Configuration for the Gemini AI integration.
+
+Follows the same pydantic-settings pattern as
+``app.infrastructure.configuration.database_settings.DatabaseSettings``:
+values are read from real process environment variables first, falling
+back to a local ``.env`` file if present.
+"""
+
+from __future__ import annotations
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class GeminiSettings(BaseSettings):
+    """Gemini API configuration."""
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-2.5-flash"

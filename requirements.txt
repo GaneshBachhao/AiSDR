@@ -12,6 +12,14 @@ typing_extensions>=4.0,<5
 # The application remains importable and testable without Tavily.
 tavily-python>=0.5,<1
 
+# Optional live Gemini AI provider
+# The application remains importable and testable without it.
+google-genai>=1.0,<2
+
+# Optional live OpenAI / Azure OpenAI provider
+# The application remains importable and testable without it.
+openai>=1.0,<2
+
 # Test tooling
 pytest==9.0.2
 pytest-asyncio==1.3.0

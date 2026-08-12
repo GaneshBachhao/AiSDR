@@ -1,0 +1,173 @@
+"""
+Search Companies application handler.
+
+Orchestrates the full research pipeline: discover -> deterministic gate ->
+identity verification -> evidence gathering -> deterministic classification
+and scoring -> response assembly. This is a stateless research operation
+(no persistence), so it is shaped like ``AIExecutionService`` — ports
+injected via the constructor, no ``UnitOfWork`` — rather than the
+repository-backed CQRS handlers used by persisted CRM aggregates.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import logging
+
+from app.application.company_research.company_research_mapper import (
+    CompanyResearchMapper,
+    ResearchOutcome,
+)
+from app.application.company_research.dto.company_research_request import (
+    CompanyResearchRequest,
+)
+from app.application.company_research.dto.company_research_response import (
+    CompanySearchResult,
+)
+from app.application.company_research.ports.company_discovery_port import (
+    CompanyDiscoveryPort,
+)
+from app.application.company_research.ports.evidence_research_port import (
+    EvidenceResearchPort,
+)
+from app.application.company_research.ports.identity_verification_port import (
+    IdentityVerificationPort,
+)
+from app.domain.company_research.entities.candidate import CompanyCandidate
+from app.domain.company_research.services.discovery_funnel import DiscoveryFunnel
+from app.domain.company_research.services.evidence_signal_extractor import (
+    EvidenceSignalExtractor,
+)
+from app.domain.company_research.services.icp_matcher import IcpMatcher
+from app.domain.company_research.services.industry_classifier import IndustryClassifier
+from app.domain.company_research.services.opportunity_mapper import OpportunityMapper
+from app.domain.company_research.services.qualification_scorer import (
+    QualificationScorer,
+    ScoringInputs,
+)
+
+logger = logging.getLogger(__name__)
+
+_CONFIDENCE_RANK = {"LOW": 0, "MEDIUM": 1, "HIGH": 2}
+
+
+class SearchCompaniesHandler:
+    """Handles the company-research search use case."""
+
+    def __init__(
+        self,
+        discovery_port: CompanyDiscoveryPort,
+        identity_port: IdentityVerificationPort,
+        evidence_port: EvidenceResearchPort,
+        funnel: DiscoveryFunnel | None = None,
+        max_concurrent_research: int = 6,
+        min_identity_confidence: str = "MEDIUM",
+    ) -> None:
+        self._discovery_port = discovery_port
+        self._identity_port = identity_port
+        self._evidence_port = evidence_port
+        self._funnel = funnel or DiscoveryFunnel()
+        self._max_concurrent_research = max(1, max_concurrent_research)
+        self._min_identity_rank = _CONFIDENCE_RANK.get(min_identity_confidence.upper(), 1)
+
+    async def handle(self, request: CompanyResearchRequest) -> list[CompanySearchResult]:
+        candidates = await self._discovery_port.discover(request)
+        if not candidates:
+            return []
+
+        accepted, metrics = self._funnel.gate_candidates(candidates)
+        logger.info(
+            "Discovery funnel: discovered=%d gated_out=%d deduplicated=%d accepted=%d",
+            metrics.discovered,
+            metrics.deterministic_rejected,
+            metrics.deduplicated,
+            metrics.deterministic_accepted,
+        )
+        if not accepted:
+            return []
+
+        semaphore = asyncio.Semaphore(self._max_concurrent_research)
+
+        async def _research(candidate: CompanyCandidate) -> CompanySearchResult | None:
+            async with semaphore:
+                try:
+                    return await self._research_candidate(candidate, request)
+                except Exception:
+                    logger.exception("Research failed for candidate %s", candidate.company_name)
+                    return None
+
+        researched = await asyncio.gather(*(_research(candidate) for candidate in accepted))
+
+        results = [
+            result
+            for result in researched
+            if result is not None and result.qualification_score >= request.minimum_qualification_score
+        ]
+        results.sort(key=lambda item: item.qualification_score, reverse=True)
+        return results[: request.number_of_companies]
+
+    async def _research_candidate(
+        self,
+        candidate: CompanyCandidate,
+        request: CompanyResearchRequest,
+    ) -> CompanySearchResult | None:
+        identity = await self._identity_port.verify(candidate)
+        identity_rank = _CONFIDENCE_RANK.get(identity.confidence, 0)
+        if identity_rank < self._min_identity_rank or identity.verified_website is None:
+            return None
+
+        evidence = await self._evidence_port.gather(candidate, identity, request)
+
+        combined = " ".join(
+            filter(None, [candidate.title, candidate.content, *(item.snippet or "" for item in evidence)])
+        ).lower()
+
+        industry = IndustryClassifier.infer_industry(combined, candidate.title, request.industries)
+        industry_match, industry_reason = IndustryClassifier.matches(industry, combined, request.industries)
+        if request.industries and not industry_match:
+            return None
+
+        size_match, employee_count, size_reason = IcpMatcher.matches_size(combined, request.company_size)
+        if request.company_size and not size_match:
+            return None
+
+        enterprise_match, parent_from_text = IcpMatcher.enterprise_exclusion(combined, employee_count)
+        if request.company_size and enterprise_match:
+            return None
+
+        signals = EvidenceSignalExtractor.extract_signals(combined)
+        evidence_classification = EvidenceSignalExtractor.classify_evidence(signals, len(evidence))
+        scale_signal = EvidenceSignalExtractor.scale_signal(combined)
+
+        _, recommended_services = OpportunityMapper.map_signals(signals)
+        services_matched = OpportunityMapper.any_service_matches(recommended_services, request.services)
+
+        score = QualificationScorer.score(
+            ScoringInputs(
+                signals=signals,
+                evidence_count=len(evidence),
+                website_verified=identity.verified_website is not None,
+                services_matched=services_matched,
+                scale_signal=scale_signal,
+            )
+        )
+
+        outcome = ResearchOutcome(
+            candidate=candidate,
+            identity=identity,
+            evidence=evidence,
+            industry=industry,
+            industry_reason=industry_reason,
+            employee_count=employee_count,
+            icp_match=size_match,
+            icp_match_reason=size_reason,
+            score=score,
+            evidence_classification=evidence_classification,
+            signals=signals,
+        )
+        result = CompanyResearchMapper.to_response(outcome, request)
+
+        if result.parent_company is None and parent_from_text:
+            result = result.model_copy(update={"parent_company": parent_from_text})
+
+        return result

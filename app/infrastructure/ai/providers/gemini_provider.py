@@ -1,11 +1,23 @@
 from app.domain.ai.aggregates.ai_request import AIRequest
 from app.domain.ai.entities.ai_response import AIResponse
+from app.domain.ai.enums.finish_reason import FinishReason
+from app.domain.ai.value_objects.token_usage import TokenUsage
 
 from ..clients.gemini_client import GeminiClient
 from ..configuration import ProviderSettings
 from ..exceptions.ai_provider_exception import AIProviderException
 
 from .base_provider import BaseAIProvider
+
+
+_FINISH_REASON_MAP = {
+    "STOP": FinishReason.STOP,
+    "MAX_TOKENS": FinishReason.LENGTH,
+    "SAFETY": FinishReason.CONTENT_FILTER,
+    "PROHIBITED_CONTENT": FinishReason.CONTENT_FILTER,
+    "BLOCKLIST": FinishReason.CONTENT_FILTER,
+    "SPII": FinishReason.CONTENT_FILTER,
+}
 
 
 class GeminiProvider(BaseAIProvider):
@@ -35,26 +47,26 @@ class GeminiProvider(BaseAIProvider):
 
             payload = {
                 "model": request.model.value,
-                "contents": request.messages,
-                "temperature": request.temperature,
-                "max_tokens": request.max_tokens,
+                "contents": request.prompt.value,
+                "temperature": request.temperature.value,
+                "max_tokens": request.max_tokens.value,
             }
 
-
-            response = await self._client.send_request(
+            raw_response = await self._client.send_request(
                 payload
             )
 
-
-            # Future:
-            #
-            # return AIResponseAdapter.from_gemini(
-            #     response
-            # )
-
-
-            return response
-
+            return AIResponse(
+                content=raw_response["content"],
+                finish_reason=_FINISH_REASON_MAP.get(
+                    raw_response.get("finish_reason", "STOP"),
+                    FinishReason.STOP,
+                ),
+                token_usage=TokenUsage(
+                    prompt_tokens=raw_response.get("prompt_tokens", 0),
+                    completion_tokens=raw_response.get("completion_tokens", 0),
+                ),
+            )
 
         except Exception as exc:
 

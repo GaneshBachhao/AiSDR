@@ -8,7 +8,7 @@ This package is the cleaned replacement baseline for the AiSDR project.
 - Removed the older service/repository/pipeline/automation/outreach/email/discovery implementations that were outside the current DDD/application/persistence/presentation path.
 - Removed duplicate/backup presentation and dependency-injection files.
 - Kept one SQLAlchemy metadata registry under `app.infrastructure.persistence.database.base.Base`.
-- Kept the revised asymmetric company-discovery funnel under `app.company_research.funnel`.
+- Kept the revised asymmetric company-discovery funnel under `app.domain.company_research.services.discovery_funnel`.
 - Corrected stale imports and tests to match the current UUID-based domain contracts and repository interfaces.
 - Added a reproducible dependency manifest and local environment template.
 
