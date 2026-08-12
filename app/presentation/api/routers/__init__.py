@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from .admin_router import router as admin_router
 from .company_router import router as company_router
 from .company_research_router import router as company_research_router
 from .discovery_router import router as discovery_router
@@ -14,6 +15,7 @@ from .recommendation_router import router as recommendation_router
 api_router = APIRouter()
 
 
+api_router.include_router(admin_router)
 api_router.include_router(health_router)
 api_router.include_router(company_router)
 api_router.include_router(company_research_router)

@@ -17,6 +17,9 @@ a provider per request via ``AIRequest.provider``.
 
 from __future__ import annotations
 
+import os
+from dataclasses import dataclass
+
 from app.application.ai.services.ai_execution_service import AIExecutionService
 from app.infrastructure.ai.adapters.application_ai_provider import ApplicationAIProvider
 from app.infrastructure.ai.clients.azure_openai_client import AzureOpenAIClient
@@ -98,9 +101,25 @@ def build_ai_providers() -> dict[str, BaseAIProvider]:
 
 
 def build_ai_execution_service() -> AIExecutionService:
-    """Assemble an ``AIExecutionService`` backed by every configured provider."""
+    """Assemble an ``AIExecutionService`` backed by every configured provider.
 
-    application_provider = ApplicationAIProvider(providers=build_ai_providers())
+    Wires the ``AI_PROVIDER_FALLBACK`` setting through so a recoverable
+    failure on the primary provider (deprecated model, exhausted quota)
+    automatically retries against the next configured provider instead of
+    failing the whole request.
+    """
+
+    providers = build_ai_providers()
+    fallback_settings = AIProviderSettings()
+    default_models = {
+        name: default_model_for_provider(name) for name in providers
+    }
+
+    application_provider = ApplicationAIProvider(
+        providers=providers,
+        fallback_order=fallback_settings.fallback_list(),
+        default_models=default_models,
+    )
     return AIExecutionService(application_provider)
 
 
@@ -126,3 +145,73 @@ def default_model_for_provider(provider_name: str) -> str:
     if normalized == "azure_openai":
         return AzureOpenAISettings().azure_openai_model
     raise ValueError(f"No default model configured for provider '{provider_name}'.")
+
+
+@dataclass(frozen=True)
+class ProviderDiagnostics:
+    """Effective, secret-safe configuration snapshot for one AI provider."""
+
+    provider: str
+    configured: bool
+    model: str
+    key_fingerprint: str | None
+    key_source: str  # "environment_variable" | "dotenv_file" | "not_set"
+
+
+def _key_fingerprint(api_key: str) -> str | None:
+    if not api_key:
+        return None
+    return f"***{api_key[-4:]}" if len(api_key) >= 4 else "***"
+
+
+def _key_source(env_var_name: str, resolved_value: str) -> str:
+    if not resolved_value:
+        return "not_set"
+    # pydantic-settings never writes .env values back into os.environ, so a
+    # real hit here means a genuine process/OS-level environment variable is
+    # shadowing (or supplying) the value -- exactly the failure mode that
+    # took several manual os.environ inspections to diagnose previously.
+    if env_var_name in os.environ:
+        return "environment_variable"
+    return "dotenv_file"
+
+
+def ai_config_diagnostics() -> list[ProviderDiagnostics]:
+    """Effective AI provider configuration, with secrets redacted.
+
+    Reports, per provider: whether it's usable, which model it will call,
+    a last-4-characters key fingerprint (never the full key), and whether
+    the key came from a real environment variable or only from ``.env`` --
+    so a shadowing env var is visible in one call instead of a manual
+    ``os.environ`` investigation.
+    """
+
+    gemini = GeminiSettings()
+    openai = OpenAISettings()
+    azure = AzureOpenAISettings()
+
+    return [
+        ProviderDiagnostics(
+            provider="gemini",
+            configured=bool(gemini.gemini_api_key),
+            model=gemini.gemini_model,
+            key_fingerprint=_key_fingerprint(gemini.gemini_api_key),
+            key_source=_key_source("GEMINI_API_KEY", gemini.gemini_api_key),
+        ),
+        ProviderDiagnostics(
+            provider="openai",
+            configured=bool(openai.openai_api_key),
+            model=openai.openai_model,
+            key_fingerprint=_key_fingerprint(openai.openai_api_key),
+            key_source=_key_source("OPENAI_API_KEY", openai.openai_api_key),
+        ),
+        ProviderDiagnostics(
+            provider="azure_openai",
+            configured=bool(azure.azure_openai_api_key and azure.azure_openai_endpoint),
+            model=azure.azure_openai_model,
+            key_fingerprint=_key_fingerprint(azure.azure_openai_api_key),
+            key_source=_key_source(
+                "AZURE_OPENAI_API_KEY", azure.azure_openai_api_key
+            ),
+        ),
+    ]

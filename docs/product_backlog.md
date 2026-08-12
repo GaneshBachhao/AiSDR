@@ -34,27 +34,27 @@ Fibonacci (1, 2, 3, 5, 8, 13, 21). Priority uses MoSCoW (**M**ust / **S**hould /
 
 ## Epic Summary
 
-| Epic | Track | Title | Points | Priority | Depends on |
-|---|---|---|---|---|---|
-| EPIC-13 | 4 | Model health checks & automatic fallback | 8 | **M** | — |
-| EPIC-15 | 4 | AI config diagnostics endpoint | 5 | **M** | — |
-| EPIC-14 | 4 | AI cost & quota governance | 10 | **M** | EPIC-13 |
-| EPIC-00 | 1 | Domain Profile foundation | 8 | **M** | — |
-| EPIC-01 | 1 | Evidence Model v2 (`signal_scope`) | 8 | **M** | — |
-| EPIC-02 | 1 | Company Universe cheap-discovery tier | 13 | **M** | EPIC-00 |
-| EPIC-03 | 1 | Entity Resolution → canonical `Company` | 13 | **M** | EPIC-02 |
-| EPIC-04 | 1 | AI Solution Catalog + fix `generate_recommendation` | 13 | **M** | EPIC-01 |
-| EPIC-05 | 1 | Contact Discovery | 8 | **M** | EPIC-03, EPIC-04 |
-| EPIC-06 | 1 | Lead creation bridge | 8 | **M** | EPIC-05 |
-| EPIC-08 | 1 | Workflow orchestration | 8 | **S** | EPIC-06 |
-| EPIC-17 | 5 | Enrichment waterfall | 8 | **S** | EPIC-02, EPIC-03 |
-| EPIC-16 | 4 | Human-in-the-loop review queue & explainability | 13 | **M** | EPIC-06 |
-| EPIC-09 | 2 | Multichannel sequencing engine | 21 | **M** | EPIC-16 |
-| EPIC-10 | 2 | Reply intelligence & meeting booking | 13 | **M** | EPIC-09 |
-| EPIC-11 | 2 | Deliverability & compliance | 13 | **M** | EPIC-09 |
-| EPIC-12 | 3 | Outcome feedback loop | 13 | **S** | EPIC-10, EPIC-11 |
-| EPIC-07 | 1 | Outreach (thin placeholder) | — | **Won't-now** | superseded by EPIC-09–11, see note |
-| PARK-T6 | 6 | Multi-tenancy / retention / audit logging | — | **C** | as-needed, see Parking Lot |
+| Status | Epic | Track | Title | Points | Priority | Depends on |
+|---|---|---|---|---|---|---|
+| `[x]` Done | EPIC-13 | 4 | Model health checks & automatic fallback | 8 | **M** | — |
+| `[x]` Done | EPIC-15 | 4 | AI config diagnostics endpoint | 5 | **M** | — |
+| `[ ]` Backlog | EPIC-14 | 4 | AI cost & quota governance | 10 | **M** | EPIC-13 |
+| `[ ]` Backlog | EPIC-00 | 1 | Domain Profile foundation | 8 | **M** | — |
+| `[ ]` Backlog | EPIC-01 | 1 | Evidence Model v2 (`signal_scope`) | 8 | **M** | — |
+| `[ ]` Backlog | EPIC-02 | 1 | Company Universe cheap-discovery tier | 13 | **M** | EPIC-00 |
+| `[ ]` Backlog | EPIC-03 | 1 | Entity Resolution → canonical `Company` | 13 | **M** | EPIC-02 |
+| `[ ]` Backlog | EPIC-04 | 1 | AI Solution Catalog + fix `generate_recommendation` | 13 | **M** | EPIC-01 |
+| `[ ]` Backlog | EPIC-05 | 1 | Contact Discovery | 8 | **M** | EPIC-03, EPIC-04 |
+| `[ ]` Backlog | EPIC-06 | 1 | Lead creation bridge | 8 | **M** | EPIC-05 |
+| `[ ]` Backlog | EPIC-08 | 1 | Workflow orchestration | 8 | **S** | EPIC-06 |
+| `[ ]` Backlog | EPIC-17 | 5 | Enrichment waterfall | 8 | **S** | EPIC-02, EPIC-03 |
+| `[ ]` Backlog | EPIC-16 | 4 | Human-in-the-loop review queue & explainability | 13 | **M** | EPIC-06 |
+| `[ ]` Backlog | EPIC-09 | 2 | Multichannel sequencing engine | 21 | **M** | EPIC-16 |
+| `[ ]` Backlog | EPIC-10 | 2 | Reply intelligence & meeting booking | 13 | **M** | EPIC-09 |
+| `[ ]` Backlog | EPIC-11 | 2 | Deliverability & compliance | 13 | **M** | EPIC-09 |
+| `[ ]` Backlog | EPIC-12 | 3 | Outcome feedback loop | 13 | **S** | EPIC-10, EPIC-11 |
+| `[ ]` Won't-now | EPIC-07 | 1 | Outreach (thin placeholder) | — | **Won't-now** | superseded by EPIC-09–11, see note |
+| `[ ]` Parked | PARK-T6 | 6 | Multi-tenancy / retention / audit logging | — | **C** | as-needed, see Parking Lot |
 
 **EPIC-07 note:** the architecture doc's original Phase 7 ("thin single-touch outreach
 placeholder") is dropped from the sequenced backlog. Track 2 (EPIC-09–11) replaces it
@@ -69,18 +69,32 @@ Track 6 parking lot, which are explicitly out of the committed roadmap).
 
 ## Backlog Detail
 
-### EPIC-13 — Model health checks & automatic fallback (8 pts) · Track 4
+### EPIC-13 — Model health checks & automatic fallback (8 pts) · Track 4 · `[x]` Done — Sprint 1
 
-| ID | Story | Acceptance Criteria | Pts |
-|---|---|---|---|
-| 13.1 | As the platform, I want a `health_check_all()` on `AIExecutionService` so I know which providers are actually reachable right now | Calls each configured provider's existing `health_check()`; returns `{provider: bool}`; no live call for providers with no key configured | 3 |
-| 13.2 | As an operator, I want an ordered fallback list so one provider's model deprecation doesn't fail a whole batch | New `AI_PROVIDER_FALLBACK` env var (comma-separated); `ApplicationAIProvider` tries the next provider in the list on `AIProviderException`/`AIClientException` | 5 |
+| ID | Story | Acceptance Criteria | Pts | Status |
+|---|---|---|---|---|
+| 13.1 | As the platform, I want a `health_check_all()` on `AIExecutionService` so I know which providers are actually reachable right now | Calls each configured provider's existing `health_check()`; returns `{provider: bool}`; no live call for providers with no key configured | 3 | `[x]` Done |
+| 13.2 | As an operator, I want an ordered fallback list so one provider's model deprecation doesn't fail a whole batch | New `AI_PROVIDER_FALLBACK` env var (comma-separated); `ApplicationAIProvider` tries the next provider in the list on `AIProviderException`/`AIClientException` | 5 | `[x]` Done |
 
-### EPIC-15 — AI config diagnostics endpoint (5 pts) · Track 4
+Shipped in `app/application/ai/ports/ai_provider.py`, `app/infrastructure/ai/adapters/application_ai_provider.py`,
+`app/infrastructure/configuration/ai_provider_settings.py`, `app/infrastructure/ai/composition.py`.
+Live-verified: forcing a real Gemini failure (deprecated model) correctly triggered
+fallback to OpenAI and surfaced the true root cause via the exception chain rather
+than a generic error — see sprint plan §"Sprint 1 notes."
 
-| ID | Story | Acceptance Criteria | Pts |
-|---|---|---|---|
-| 15.1 | As an operator, I want to see effective resolved AI config without writing a debug script | New `GET /admin/ai-config` (or CLI) returns provider, model, key fingerprint (last 4 chars only), and source (`.env` vs. real process env var) for each configured provider | 5 |
+### EPIC-15 — AI config diagnostics endpoint (5 pts) · Track 4 · `[x]` Done — Sprint 1
+
+| ID | Story | Acceptance Criteria | Pts | Status |
+|---|---|---|---|---|
+| 15.1 | As an operator, I want to see effective resolved AI config without writing a debug script | New `GET /admin/ai-config` (or CLI) returns provider, model, key fingerprint (last 4 chars only), and source (`.env` vs. real process env var) for each configured provider | 5 | `[x]` Done |
+
+Shipped as `GET /admin/ai-config` (`app/presentation/api/routers/admin_router.py`,
+`app/infrastructure/ai/composition.py::ai_config_diagnostics()`). Live-verified
+against the real running app — and immediately caught a real, previously-unknown
+issue: a process-level `OPENAI_API_KEY` (different from the one already fixed
+earlier, and different from `.env`'s value) is shadowing config with an invalid
+key. Flagged to the user; not fixable from application code since it's inherited
+from the parent terminal process.
 
 ### EPIC-14 — AI cost & quota governance (10 pts) · Track 4
 

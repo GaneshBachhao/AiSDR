@@ -27,3 +27,22 @@ class AIProvider(ABC):
         Execute an AI request and return the response.
         """
         raise NotImplementedError
+
+    @abstractmethod
+    async def health_check(
+        self,
+        provider_name: str,
+    ) -> bool:
+        """
+        Check whether a specific named provider is reachable.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    async def health_check_all(
+        self,
+    ) -> dict[str, bool]:
+        """
+        Check health of every configured provider.
+        """
+        raise NotImplementedError

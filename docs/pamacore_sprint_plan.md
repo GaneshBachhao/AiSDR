@@ -29,27 +29,30 @@ low-effort/independent epics bundled into one sprint (e.g. Sprint 1 below).
 
 ## 2. Sprint Schedule
 
-| Sprint | Dates (Mon–Fri) | Epic(s) | Points | Sprint Goal |
-|---|---|---|---|---|
-| 1 | Aug 17 – Aug 21, 2026 | EPIC-13, EPIC-15 | 13 | Stop repeating this session's own failures: AI provider fallback + a config diagnostics endpoint, both ship this week |
-| 2 | Aug 24 – Aug 28, 2026 | EPIC-14 | 10 | AI spend/quota is tracked and pre-flight-checked, not discovered via failed batches |
-| 3 | Aug 31 – Sep 4, 2026 | EPIC-00 | 8 | Industry/ICP vocabulary is data, not hardcoded Python |
-| 4 | Sep 7 – Sep 11, 2026 | EPIC-01 | 8 | Evidence carries `signal_scope`; `CONFIRMED_NEED` can no longer be faked by industry noise |
-| 5 | Sep 14 – Sep 18, 2026 | EPIC-02 | 13 | A cheap discovery tier exists ahead of live Tavily search |
-| 6 | Sep 21 – Sep 25, 2026 | EPIC-03 | 13 | Research candidates resolve into real, deduplicated `Company` records |
-| 7 | Sep 28 – Oct 2, 2026 | EPIC-04 | 13 | `generate_recommendation` actually generates something, from a real shared catalog |
-| 8 | Oct 5 – Oct 9, 2026 | EPIC-05 | 8 | Qualified candidates get contact discovery, gated correctly |
-| 9 | Oct 12 – Oct 16, 2026 | EPIC-06 | 8 | **Milestone C** — full Company → Contact → Lead pipeline live end-to-end |
-| 10 | Oct 19 – Oct 23, 2026 | EPIC-08 | 8 | The full chain is observable and resumable, not silently swallowing failures |
-| 11 | Oct 26 – Oct 30, 2026 | EPIC-17 | 8 | **Milestone D** — enrichment waterfall live; junk-candidate rate measurably down |
-| 12 | Nov 2 – Nov 6, 2026 | EPIC-16 | 13 | Nothing sends autonomously; every Lead has an inspectable evidence trail and a review gate |
-| 13 | Nov 9 – Nov 13, 2026 | EPIC-09 (part 1) | 11 | `Sequence` aggregate + first channel adapter |
-| 14 | Nov 16 – Nov 20, 2026 | EPIC-09 (part 2) | 10 | Multi-touch variation + remaining channel adapter(s) complete |
-| 15 | Nov 23 – Nov 27, 2026 | EPIC-10 | 13 | Replies are classified; meeting booking works for "interested" |
-| 16 | Nov 30 – Dec 4, 2026 | EPIC-11 | 13 | **Milestone E** — suppression list, bounce handling, jurisdiction rules live; safe to run real outbound volume |
-| 17 | Dec 7 – Dec 11, 2026 | EPIC-12 | 13 | **Milestone F** — outcome events captured; recalibration job built (see gate note below) |
+| Status | Sprint | Dates (Mon–Fri) | Epic(s) | Points | Sprint Goal |
+|---|---|---|---|---|---|
+| `[x]` Done | 1 | **Started early: Aug 12, 2026** (planned Aug 17–21) | EPIC-13, EPIC-15 | 13 | Stop repeating this session's own failures: AI provider fallback + a config diagnostics endpoint, both ship this week |
+| `[ ]` Planned | 2 | Aug 24 – Aug 28, 2026 | EPIC-14 | 10 | AI spend/quota is tracked and pre-flight-checked, not discovered via failed batches |
+| `[ ]` Planned | 3 | Aug 31 – Sep 4, 2026 | EPIC-00 | 8 | Industry/ICP vocabulary is data, not hardcoded Python |
+| `[ ]` Planned | 4 | Sep 7 – Sep 11, 2026 | EPIC-01 | 8 | Evidence carries `signal_scope`; `CONFIRMED_NEED` can no longer be faked by industry noise |
+| `[ ]` Planned | 5 | Sep 14 – Sep 18, 2026 | EPIC-02 | 13 | A cheap discovery tier exists ahead of live Tavily search |
+| `[ ]` Planned | 6 | Sep 21 – Sep 25, 2026 | EPIC-03 | 13 | Research candidates resolve into real, deduplicated `Company` records |
+| `[ ]` Planned | 7 | Sep 28 – Oct 2, 2026 | EPIC-04 | 13 | `generate_recommendation` actually generates something, from a real shared catalog |
+| `[ ]` Planned | 8 | Oct 5 – Oct 9, 2026 | EPIC-05 | 8 | Qualified candidates get contact discovery, gated correctly |
+| `[ ]` Planned | 9 | Oct 12 – Oct 16, 2026 | EPIC-06 | 8 | **Milestone C** — full Company → Contact → Lead pipeline live end-to-end |
+| `[ ]` Planned | 10 | Oct 19 – Oct 23, 2026 | EPIC-08 | 8 | The full chain is observable and resumable, not silently swallowing failures |
+| `[ ]` Planned | 11 | Oct 26 – Oct 30, 2026 | EPIC-17 | 8 | **Milestone D** — enrichment waterfall live; junk-candidate rate measurably down |
+| `[ ]` Planned | 12 | Nov 2 – Nov 6, 2026 | EPIC-16 | 13 | Nothing sends autonomously; every Lead has an inspectable evidence trail and a review gate |
+| `[ ]` Planned | 13 | Nov 9 – Nov 13, 2026 | EPIC-09 (part 1) | 11 | `Sequence` aggregate + first channel adapter |
+| `[ ]` Planned | 14 | Nov 16 – Nov 20, 2026 | EPIC-09 (part 2) | 10 | Multi-touch variation + remaining channel adapter(s) complete |
+| `[ ]` Planned | 15 | Nov 23 – Nov 27, 2026 | EPIC-10 | 13 | Replies are classified; meeting booking works for "interested" |
+| `[ ]` Planned | 16 | Nov 30 – Dec 4, 2026 | EPIC-11 | 13 | **Milestone E** — suppression list, bounce handling, jurisdiction rules live; safe to run real outbound volume |
+| `[ ]` Planned | 17 | Dec 7 – Dec 11, 2026 | EPIC-12 | 13 | **Milestone F** — outcome events captured; recalibration job built (see gate note below) |
 
-**Total:** 17 sprints, ~183 points, Aug 17 → Dec 11, 2026 (~17 weeks / ~4 months).
+**Total:** 17 sprints, ~183 points, Aug 17 → Dec 11, 2026 (~17 weeks / ~4 months) as
+originally planned. Sprint 1 actually started Aug 12 (see §5) — sprints 2–17 keep
+their original dates for now rather than shifting the whole plan on one data point;
+revisit after Sprint 2–3 actuals per the recalibration policy below.
 
 **EPIC-12 gate:** Sprint 17 ships the *code* for outcome capture and recalibration.
 The recalibration itself needs 2–4 weeks of live pipeline usage generating real
@@ -112,7 +115,7 @@ form:
 
 | Sprint | Planned pts | Actual pts | Notes |
 |---|---|---|---|
-| 1 | 13 | _TBD_ | |
+| 1 | 13 | 13 | Completed same day (Aug 12), 5 days ahead of the planned Aug 17 start. See Sprint 1 notes below. |
 | 2 | 10 | _TBD_ | |
 | 3 | 8 | _TBD_ | |
 
@@ -122,6 +125,33 @@ count. If actual velocity is, say, 7 pts/week instead of 10, the remaining ~140
 points after Sprint 3 shift from ~14 sprints to ~20 — better to know that in
 September than in December. I'll do this recalculation with you when you ask, or
 proactively flag it if actuals drift more than ~25% from plan for two sprints running.
+
+**Sprint 1 notes (2026-08-12):** Both stories landed same-day — a strong signal, but
+one data point from small, well-scoped config/wiring work isn't enough to re-forecast
+the whole roadmap off (holding to the "recalibrate after Sprint 2–3" policy above,
+since epics like the sequencing engine involve more design decisions and won't move
+this fast). What actually shipped and was live-verified against real APIs, not just
+mocks:
+
+- `AIExecutionService.health_check_all()` / `ApplicationAIProvider.health_check_all()`
+  — reports reachability per provider.
+- Ordered fallback (`AI_PROVIDER_FALLBACK` in `.env`) — live-tested by forcing a real
+  Gemini failure (deprecated model name) and confirming it correctly attempted the
+  OpenAI fallback and surfaced the true root cause through the exception chain
+  (`AIProviderException → AIClientException → AuthenticationError`) instead of a
+  generic error.
+- `GET /admin/ai-config` — live-tested against the real app. It immediately paid for
+  itself: it caught that `OPENAI_API_KEY` is currently being supplied by a real
+  process-level environment variable, not `.env` — and it's a *different, invalid*
+  key from the one already fixed earlier this project. Not fixable from application
+  code (inherited from the parent terminal process); flagged for you to check your
+  terminal/VS Code session for a manually-exported `OPENAI_API_KEY`.
+
+Net effect: OpenAI is currently non-functional (bad key) and can't yet be verified as
+a *working* fallback target — Gemini alone is confirmed healthy. Azure OpenAI remains
+unconfigured. This doesn't block Sprint 1 (the mechanism is correct and covered by 6
+unit tests exercising both the success and exhausted-fallback paths); it's an
+external credential issue to resolve before Sprint 2 needs a working second provider.
 
 ---
 

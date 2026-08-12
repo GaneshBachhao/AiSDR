@@ -59,3 +59,12 @@ class AIExecutionService:
             )
 
             raise
+
+    async def health_check_all(
+        self,
+    ) -> dict[str, bool]:
+        """
+        Check health of every configured provider.
+        """
+
+        return await self._provider.health_check_all()

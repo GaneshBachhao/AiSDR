@@ -196,3 +196,16 @@ async def test_response_is_attached_to_request() -> None:
     await service.execute(request)
 
     assert request.response is response
+
+
+@pytest.mark.asyncio
+async def test_health_check_all_delegates_to_provider() -> None:
+    provider = AsyncMock(spec=AIProvider)
+    provider.health_check_all.return_value = {"gemini": True, "openai": False}
+
+    service = AIExecutionService(provider)
+
+    result = await service.health_check_all()
+
+    assert result == {"gemini": True, "openai": False}
+    provider.health_check_all.assert_awaited_once()
