@@ -5,6 +5,7 @@ Centralized application-level settings.
 from .provider_settings import ProviderSettings
 from .ai_settings import AISettings
 from .settings_loader import SettingsLoader
+from .ai_budget_settings import AIBudgetSettings
 from .ai_provider_settings import AIProviderSettings
 from .gemini_settings import GeminiSettings
 from .openai_settings import OpenAISettings
@@ -16,6 +17,7 @@ __all__ = [
     "ProviderSettings",
     "AISettings",
     "SettingsLoader",
+    "AIBudgetSettings",
     "AIProviderSettings",
     "GeminiSettings",
     "OpenAISettings",

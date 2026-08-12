@@ -33,6 +33,7 @@ from app.application.company_research.ports.evidence_research_port import (
 from app.application.company_research.ports.identity_verification_port import (
     IdentityVerificationPort,
 )
+from app.application.ai.ports.ai_budget_port import AIBudgetPort
 from app.domain.company_research.entities.candidate import CompanyCandidate
 from app.domain.company_research.services.discovery_funnel import DiscoveryFunnel
 from app.domain.company_research.services.evidence_signal_extractor import (
@@ -62,6 +63,8 @@ class SearchCompaniesHandler:
         funnel: DiscoveryFunnel | None = None,
         max_concurrent_research: int = 6,
         min_identity_confidence: str = "MEDIUM",
+        budget_port: AIBudgetPort | None = None,
+        ai_provider_name: str | None = None,
     ) -> None:
         self._discovery_port = discovery_port
         self._identity_port = identity_port
@@ -69,6 +72,8 @@ class SearchCompaniesHandler:
         self._funnel = funnel or DiscoveryFunnel()
         self._max_concurrent_research = max(1, max_concurrent_research)
         self._min_identity_rank = _CONFIDENCE_RANK.get(min_identity_confidence.upper(), 1)
+        self._budget_port = budget_port
+        self._ai_provider_name = ai_provider_name
 
     async def handle(self, request: CompanyResearchRequest) -> list[CompanySearchResult]:
         candidates = await self._discovery_port.discover(request)
@@ -85,6 +90,14 @@ class SearchCompaniesHandler:
         )
         if not accepted:
             return []
+
+        if self._budget_port is not None and self._ai_provider_name:
+            # One identity-verification AI call per accepted candidate --
+            # fail once, clearly, before fanning out any calls, rather than
+            # partway through as N near-identical per-candidate failures.
+            await self._budget_port.ensure_batch_fits(
+                self._ai_provider_name, len(accepted)
+            )
 
         semaphore = asyncio.Semaphore(self._max_concurrent_research)
 

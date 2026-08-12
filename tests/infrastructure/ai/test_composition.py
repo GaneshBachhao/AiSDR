@@ -4,6 +4,7 @@ import pytest
 
 from app.infrastructure.ai.composition import (
     ai_config_diagnostics,
+    build_ai_budget_guard,
     build_ai_execution_service,
     build_ai_providers,
     build_azure_openai_provider_settings,
@@ -12,6 +13,7 @@ from app.infrastructure.ai.composition import (
     default_ai_provider,
     default_model_for_provider,
 )
+from app.infrastructure.ai.usage.ai_budget_guard import AIBudgetGuard
 from app.infrastructure.configuration.ai_provider_settings import AIProviderSettings
 from app.infrastructure.configuration.azure_openai_settings import AzureOpenAISettings
 from app.infrastructure.configuration.gemini_settings import GeminiSettings
@@ -119,6 +121,16 @@ def test_ai_config_diagnostics_reports_not_set_when_no_key(monkeypatch):
     assert openai_diagnostics.configured is False
     assert openai_diagnostics.key_fingerprint is None
     assert openai_diagnostics.key_source == "not_set"
+
+
+def test_build_ai_execution_service_wires_a_usage_recorder():
+    service = build_ai_execution_service()
+    assert service._usage_recorder is not None  # noqa: SLF001
+
+
+def test_build_ai_budget_guard_returns_a_working_guard():
+    guard = build_ai_budget_guard()
+    assert isinstance(guard, AIBudgetGuard)
 
 
 def test_ai_config_diagnostics_never_exposes_the_full_key(monkeypatch):

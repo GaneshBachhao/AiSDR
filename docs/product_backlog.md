@@ -38,7 +38,7 @@ Fibonacci (1, 2, 3, 5, 8, 13, 21). Priority uses MoSCoW (**M**ust / **S**hould /
 |---|---|---|---|---|---|---|
 | `[x]` Done | EPIC-13 | 4 | Model health checks & automatic fallback | 8 | **M** | — |
 | `[x]` Done | EPIC-15 | 4 | AI config diagnostics endpoint | 5 | **M** | — |
-| `[ ]` Backlog | EPIC-14 | 4 | AI cost & quota governance | 10 | **M** | EPIC-13 |
+| `[x]` Done | EPIC-14 | 4 | AI cost & quota governance | 10 | **M** | EPIC-13 |
 | `[ ]` Backlog | EPIC-00 | 1 | Domain Profile foundation | 8 | **M** | — |
 | `[ ]` Backlog | EPIC-01 | 1 | Evidence Model v2 (`signal_scope`) | 8 | **M** | — |
 | `[ ]` Backlog | EPIC-02 | 1 | Company Universe cheap-discovery tier | 13 | **M** | EPIC-00 |
@@ -96,13 +96,39 @@ earlier, and different from `.env`'s value) is shadowing config with an invalid
 key. Flagged to the user; not fixable from application code since it's inherited
 from the parent terminal process.
 
-### EPIC-14 — AI cost & quota governance (10 pts) · Track 4
+### EPIC-14 — AI cost & quota governance (10 pts) · Track 4 · `[x]` Done — Sprint 2
 
-| ID | Story | Acceptance Criteria | Pts |
-|---|---|---|---|
-| 14.1 | As the platform, I want every AI call's token usage persisted so spend is visible | New `ai_usage_log` table/repo; `AIExecutionService.execute()` records provider, model, tokens, timestamp on every call | 5 |
-| 14.2 | As an operator, I want a configurable daily/monthly budget per provider | New `AIBudgetSettings`; budget values read from `.env` | 2 |
-| 14.3 | As the platform, I want a pre-flight budget check before fanning out a research batch | `SearchCompaniesHandler` checks projected usage vs. remaining budget before dispatching identity-verification calls; fails fast with one clear message instead of N per-candidate failures | 3 |
+| ID | Story | Acceptance Criteria | Pts | Status |
+|---|---|---|---|---|
+| 14.1 | As the platform, I want every AI call's token usage persisted so spend is visible | New `ai_usage_log` table/repo; `AIExecutionService.execute()` records provider, model, tokens, timestamp on every call | 5 | `[x]` Done |
+| 14.2 | As an operator, I want a configurable daily/monthly budget per provider | New `AIBudgetSettings`; budget values read from `.env` | 2 | `[x]` Done |
+| 14.3 | As the platform, I want a pre-flight budget check before fanning out a research batch | `SearchCompaniesHandler` checks projected usage vs. remaining budget before dispatching identity-verification calls; fails fast with one clear message instead of N per-candidate failures | 3 | `[x]` Done |
+
+Shipped as a fresh `ai_usage_log` table (`AIUsageLogModel`, `AIUsageTracker`) rather
+than reusing the pre-existing `AIRequestModel`/`AIRequestMapper`/`ExecuteAIRequestHandler`
+stack — that stack was discovered to be **broken and never actually exercised**:
+`SqlAlchemyAIRequestRepository` doesn't implement the `save()` its own domain
+interface declares, and once patched, persisting through `AIRequestMapper`'s
+`converter_registry` fails on the `Temperature` value object (`TypeError: float()
+argument must be a string or a real number, not 'dict'`). Not fixed here (out of
+Sprint 2 scope); flagged below as a new backlog candidate. New port
+`AIBudgetPort`/`AIUsageRecorder` added to `app/application/ai/ports` to keep
+`SearchCompaniesHandler` and `AIExecutionService` decoupled from the concrete
+infrastructure implementation. Live-verified end-to-end: a real Gemini call
+correctly decremented the tracked budget (20 → 19), and constraining the budget to
+1 caused a real `/company-research/search` call (21 live-discovered candidates) to
+correctly return `429` with one clear message instead of attempting any of the 21
+identity-verification calls.
+
+**New backlog candidate (not yet estimated/scheduled):** decide whether to fix
+(`converter_registry` value-object conversion + missing `save()`) or delete the
+orphaned `AIRequestModel` / `AIRequestMapper` / `ExecuteAIRequestHandler` /
+`GenerateAIResponseHandler` / `ai_router.py` stack -- it duplicates what
+`AIExecutionService`/`AIUsageTracker` now do, was never wired into the live app
+(`ai_router.py` isn't registered in `api_router`), and is confirmed broken. Same
+"confirmed-dead, never actually worked" pattern as the deleted legacy
+`app/company_research/` module and the orphaned `SettingsLoader`/`AISettings`
+duplicate stacks found earlier in this project.
 
 ### EPIC-00 — Domain Profile foundation (8 pts) · Track 1
 
@@ -234,7 +260,7 @@ need (see architecture doc §14 for full rationale):
 | Risk | Likelihood | Impact | Mitigation | Owning epic |
 |---|---|---|---|---|
 | AI provider model deprecation breaks a live batch (already happened twice this session) | High | Medium | Health checks + fallback | EPIC-13 |
-| AI quota/billing exhaustion mid-batch (already happened this session) | High | Medium | Budget tracking + pre-flight check | EPIC-14 |
+| AI quota/billing exhaustion mid-batch (already happened this session) | ~~High~~ Mitigated | Medium | Budget tracking + pre-flight check — `[x]` shipped Sprint 2, live-verified | EPIC-14 |
 | Config drift (stale env var shadowing `.env` — already happened this session) | Medium | Low-Medium | Diagnostics endpoint | EPIC-15 |
 | Autonomous outreach sends something wrong/off-brand | Medium | High | Review queue gate before EPIC-09 | EPIC-16 |
 | Compliance violation (CAN-SPAM/GDPR/TCPA) from real outbound volume | Low-Medium | High (legal) | Suppression list + jurisdiction rules before real volume | EPIC-11 |

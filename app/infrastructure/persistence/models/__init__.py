@@ -3,6 +3,7 @@ SQLAlchemy persistence models.
 """
 
 from .ai_request_model import AIRequestModel
+from .ai_usage_log_model import AIUsageLogModel
 from .assessment_model import AssessmentModel
 from .company_model import CompanyModel
 from .discovery_model import DiscoveryModel
@@ -14,6 +15,7 @@ from .qualification_model import QualificationModel
 
 __all__ = [
     "AIRequestModel",
+    "AIUsageLogModel",
     "AssessmentModel",
     "CompanyModel",
     "DiscoveryModel",

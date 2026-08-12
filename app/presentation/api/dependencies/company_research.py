@@ -15,7 +15,12 @@ from app.application.ai.services.ai_execution_service import AIExecutionService
 from app.application.company_research.handlers.search_companies_handler import (
     SearchCompaniesHandler,
 )
-from app.infrastructure.ai.composition import build_ai_execution_service, default_ai_provider
+from app.application.ai.ports.ai_budget_port import AIBudgetPort
+from app.infrastructure.ai.composition import (
+    build_ai_budget_guard,
+    build_ai_execution_service,
+    default_ai_provider,
+)
 from app.infrastructure.company_research.ai_identity_verification_adapter import (
     AiIdentityVerificationAdapter,
 )
@@ -41,6 +46,10 @@ def get_tavily_client() -> AgneticTavilyClient:
 
 def get_ai_execution_service() -> AIExecutionService:
     return build_ai_execution_service()
+
+
+def get_ai_budget_guard() -> AIBudgetPort:
+    return build_ai_budget_guard()
 
 
 def get_discovery_adapter(
@@ -73,6 +82,7 @@ def get_search_companies_handler(
     identity: AiIdentityVerificationAdapter = Depends(get_identity_adapter),
     evidence: TavilyEvidenceAdapter = Depends(get_evidence_adapter),
     settings: CompanyResearchSettings = Depends(get_company_research_settings),
+    budget_guard: AIBudgetPort = Depends(get_ai_budget_guard),
 ) -> SearchCompaniesHandler:
     return SearchCompaniesHandler(
         discovery_port=discovery,
@@ -80,6 +90,8 @@ def get_search_companies_handler(
         evidence_port=evidence,
         max_concurrent_research=settings.max_concurrent_research,
         min_identity_confidence=settings.min_identity_confidence,
+        budget_port=budget_guard,
+        ai_provider_name=default_ai_provider(),
     )
 
 

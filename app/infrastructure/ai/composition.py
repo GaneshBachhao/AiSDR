@@ -30,6 +30,8 @@ from app.infrastructure.ai.providers.azure_openai_provider import AzureOpenAIPro
 from app.infrastructure.ai.providers.base_provider import BaseAIProvider
 from app.infrastructure.ai.providers.gemini_provider import GeminiProvider
 from app.infrastructure.ai.providers.openai_provider import OpenAIProvider
+from app.infrastructure.ai.usage.ai_budget_guard import AIBudgetGuard
+from app.infrastructure.ai.usage.ai_usage_tracker import AIUsageTracker
 from app.infrastructure.configuration.ai_provider_settings import AIProviderSettings
 from app.infrastructure.configuration.azure_openai_settings import AzureOpenAISettings
 from app.infrastructure.configuration.gemini_settings import GeminiSettings
@@ -106,7 +108,8 @@ def build_ai_execution_service() -> AIExecutionService:
     Wires the ``AI_PROVIDER_FALLBACK`` setting through so a recoverable
     failure on the primary provider (deprecated model, exhausted quota)
     automatically retries against the next configured provider instead of
-    failing the whole request.
+    failing the whole request. Every call (success or failure) is logged
+    via ``AIUsageTracker`` for budget tracking -- see ``build_ai_budget_guard``.
     """
 
     providers = build_ai_providers()
@@ -120,7 +123,16 @@ def build_ai_execution_service() -> AIExecutionService:
         fallback_order=fallback_settings.fallback_list(),
         default_models=default_models,
     )
-    return AIExecutionService(application_provider)
+    return AIExecutionService(
+        application_provider,
+        usage_recorder=AIUsageTracker(),
+    )
+
+
+def build_ai_budget_guard() -> AIBudgetGuard:
+    """Assemble an ``AIBudgetGuard`` backed by the same usage log."""
+
+    return AIBudgetGuard(tracker=AIUsageTracker())
 
 
 def default_ai_provider() -> str:

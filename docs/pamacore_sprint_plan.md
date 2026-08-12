@@ -32,7 +32,7 @@ low-effort/independent epics bundled into one sprint (e.g. Sprint 1 below).
 | Status | Sprint | Dates (Mon–Fri) | Epic(s) | Points | Sprint Goal |
 |---|---|---|---|---|---|
 | `[x]` Done | 1 | **Started early: Aug 12, 2026** (planned Aug 17–21) | EPIC-13, EPIC-15 | 13 | Stop repeating this session's own failures: AI provider fallback + a config diagnostics endpoint, both ship this week |
-| `[ ]` Planned | 2 | Aug 24 – Aug 28, 2026 | EPIC-14 | 10 | AI spend/quota is tracked and pre-flight-checked, not discovered via failed batches |
+| `[x]` Done | 2 | **Started early: Aug 12, 2026** (planned Aug 24–28) | EPIC-14 | 10 | AI spend/quota is tracked and pre-flight-checked, not discovered via failed batches |
 | `[ ]` Planned | 3 | Aug 31 – Sep 4, 2026 | EPIC-00 | 8 | Industry/ICP vocabulary is data, not hardcoded Python |
 | `[ ]` Planned | 4 | Sep 7 – Sep 11, 2026 | EPIC-01 | 8 | Evidence carries `signal_scope`; `CONFIRMED_NEED` can no longer be faked by industry noise |
 | `[ ]` Planned | 5 | Sep 14 – Sep 18, 2026 | EPIC-02 | 13 | A cheap discovery tier exists ahead of live Tavily search |
@@ -78,7 +78,7 @@ Aug 17 ────────────────────────�
 
 | Milestone | End of | What's demoable |
 |---|---|---|
-| **A — Resilience Baseline** | Sprint 2 (Aug 28) | AI provider fallback, quota governance, config diagnostics — the platform stops silently breaking on provider issues |
+| **A — Resilience Baseline** ✅ | Reached Aug 12 (planned Aug 28) | AI provider fallback, quota governance, config diagnostics — the platform stops silently breaking on provider issues |
 | **B — Trusted Research Core** | Sprint 4 (Sep 11) | Domain Profile + Evidence v2 — company_research's own output quality improves, independent of anything downstream |
 | **C — Company Universe MVP** | Sprint 9 (Oct 16) | A qualified research candidate becomes a real Company + Contact + Lead, end-to-end, for the first time |
 | **D — Orchestrated & Enriched** | Sprint 11 (Oct 30) | The pipeline is observable/resumable, and less prone to junk candidates |
@@ -116,7 +116,7 @@ form:
 | Sprint | Planned pts | Actual pts | Notes |
 |---|---|---|---|
 | 1 | 13 | 13 | Completed same day (Aug 12), 5 days ahead of the planned Aug 17 start. See Sprint 1 notes below. |
-| 2 | 10 | _TBD_ | |
+| 2 | 10 | 10 | Also completed Aug 12, same session as Sprint 1. See Sprint 2 notes below. |
 | 3 | 8 | _TBD_ | |
 
 Fill in "Actual" as sprints complete. After Sprint 3: compute a real average
@@ -125,6 +125,12 @@ count. If actual velocity is, say, 7 pts/week instead of 10, the remaining ~140
 points after Sprint 3 shift from ~14 sprints to ~20 — better to know that in
 September than in December. I'll do this recalculation with you when you ask, or
 proactively flag it if actuals drift more than ~25% from plan for two sprints running.
+
+**Still holding at 2 of 2 data points before recalibrating** (per the Sprint 1 note's
+own policy) — Sprint 2 was also small, well-scoped infrastructure work, not
+representative of design-heavy epics like the sequencing engine. Recalibrate for
+real after Sprint 3 (EPIC-00, a company_research-internal refactor, is a closer
+proxy for "normal" feature work than Sprints 1–2's platform-resilience wiring).
 
 **Sprint 1 notes (2026-08-12):** Both stories landed same-day — a strong signal, but
 one data point from small, well-scoped config/wiring work isn't enough to re-forecast
@@ -152,6 +158,31 @@ a *working* fallback target — Gemini alone is confirmed healthy. Azure OpenAI 
 unconfigured. This doesn't block Sprint 1 (the mechanism is correct and covered by 6
 unit tests exercising both the success and exhausted-fallback paths); it's an
 external credential issue to resolve before Sprint 2 needs a working second provider.
+
+**Update (2026-08-12, before Sprint 2 started):** per explicit instruction, OpenAI is
+now excluded entirely — `AI_PROVIDER_FALLBACK` is blank in `.env`, so OpenAI is never
+invoked regardless of its key's validity. Gemini-only until further notice.
+
+**Sprint 2 notes (2026-08-12):** All three EPIC-14 stories shipped and were
+live-verified against the real app, real Gemini API, and real `ai_usage_log` table
+(not just mocks):
+
+- Built a fresh `AIUsageLogModel`/`AIUsageTracker` rather than reusing the
+  pre-existing `AIRequestModel`/`AIRequestMapper` persistence stack — that stack
+  turned out to be broken and never actually exercised (missing `save()` method,
+  and a `Temperature` value-object conversion bug in `converter_registry`).
+  Flagged as a new backlog candidate in `product_backlog.md` (fix-or-delete
+  decision, not yet scheduled) rather than silently working around it.
+- New `AIBudgetPort`/`AIUsageRecorder` application ports keep `SearchCompaniesHandler`
+  and `AIExecutionService` decoupled from the concrete persistence mechanism —
+  matches the existing `AIProvider` port pattern.
+- Live proof: a real Gemini call correctly decremented tracked budget from 20 to 19.
+  Then, with the budget artificially constrained to 1, a real
+  `POST /company-research/search` call — which live-discovered 21 real candidates via
+  Tavily — correctly returned `429` with one clear message instead of attempting any
+  of the 21 identity-verification calls. This is the exact failure mode from the
+  original Swagger test (17 near-identical per-candidate error lines), now one
+  actionable response.
 
 ---
 

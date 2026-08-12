@@ -8,6 +8,9 @@ from app.application.company_research.dto.company_research_request import (
 from app.application.company_research.dto.company_research_response import (
     CompanySearchResult,
 )
+from app.infrastructure.ai.exceptions.ai_budget_exceeded_exception import (
+    AIBudgetExceededException,
+)
 from app.presentation.api.dependencies.company_research import (
     SearchCompaniesHandlerDependency,
 )
@@ -34,6 +37,11 @@ async def search_companies(
     """
     try:
         return await handler.handle(request)
+    except AIBudgetExceededException as exc:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=str(exc),
+        ) from exc
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,

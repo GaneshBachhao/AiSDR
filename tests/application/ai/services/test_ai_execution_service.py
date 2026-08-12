@@ -199,6 +199,49 @@ async def test_response_is_attached_to_request() -> None:
 
 
 @pytest.mark.asyncio
+async def test_usage_recorder_logs_on_success() -> None:
+    provider = AsyncMock(spec=AIProvider)
+    provider.execute.return_value = create_response()
+    recorder = AsyncMock()
+
+    service = AIExecutionService(provider, usage_recorder=recorder)
+    request = create_request()
+
+    await service.execute(request)
+
+    recorder.log.assert_awaited_once_with(request)
+
+
+@pytest.mark.asyncio
+async def test_usage_recorder_logs_on_failure_too() -> None:
+    provider = AsyncMock(spec=AIProvider)
+    provider.execute.side_effect = RuntimeError("boom")
+    recorder = AsyncMock()
+
+    service = AIExecutionService(provider, usage_recorder=recorder)
+    request = create_request()
+
+    with pytest.raises(RuntimeError):
+        await service.execute(request)
+
+    recorder.log.assert_awaited_once_with(request)
+    assert request.is_failed
+
+
+@pytest.mark.asyncio
+async def test_execute_works_without_a_usage_recorder() -> None:
+    provider = AsyncMock(spec=AIProvider)
+    response = create_response()
+    provider.execute.return_value = response
+
+    service = AIExecutionService(provider)  # no usage_recorder -- backward compatible
+
+    result = await service.execute(create_request())
+
+    assert result is response
+
+
+@pytest.mark.asyncio
 async def test_health_check_all_delegates_to_provider() -> None:
     provider = AsyncMock(spec=AIProvider)
     provider.health_check_all.return_value = {"gemini": True, "openai": False}

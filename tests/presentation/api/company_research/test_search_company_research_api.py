@@ -16,6 +16,9 @@ from app.application.company_research.dto.company_research_response import (
 from app.application.company_research.handlers.search_companies_handler import (
     SearchCompaniesHandler,
 )
+from app.infrastructure.ai.exceptions.ai_budget_exceeded_exception import (
+    AIBudgetExceededException,
+)
 from app.presentation.api.dependencies.company_research import (
     get_search_companies_handler,
 )
@@ -93,3 +96,14 @@ def test_search_companies_maps_handler_exception_to_502(client, handler):
 
     assert response.status_code == 502
     assert "Company research failed" in response.json()["detail"]
+
+
+def test_search_companies_maps_budget_exceeded_to_429(client, handler):
+    handler.handle.side_effect = AIBudgetExceededException(
+        "Requested 10 AI calls against 'gemini' but only 3 remain in today's budget."
+    )
+
+    response = client.post("/company-research/search", json={"geography": "India"})
+
+    assert response.status_code == 429
+    assert "only 3 remain" in response.json()["detail"]

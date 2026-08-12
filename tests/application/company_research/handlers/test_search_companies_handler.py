@@ -1,7 +1,12 @@
 from __future__ import annotations
 
+from unittest.mock import AsyncMock
+
 import pytest
 
+from app.infrastructure.ai.exceptions.ai_budget_exceeded_exception import (
+    AIBudgetExceededException,
+)
 from app.application.company_research.dto.company_research_request import (
     CompanyResearchRequest,
 )
@@ -213,3 +218,60 @@ async def test_one_candidate_failure_does_not_break_others():
     request = CompanyResearchRequest(geography="India")
     results = await handler.handle(request)
     assert [r.company_name for r in results] == ["Acme B"]
+
+
+@pytest.mark.asyncio
+async def test_budget_guard_checked_with_accepted_candidate_count_before_any_ai_call():
+    candidates = [_candidate("Acme A", "https://a.example"), _candidate("Acme B", "https://b.example")]
+    identity_adapter = AsyncMock(spec=IdentityVerificationPort)
+    identity_adapter.verify.return_value = _verified("https://a.example")
+    budget_guard = AsyncMock()
+
+    handler = SearchCompaniesHandler(
+        ScriptedDiscoveryAdapter(candidates),
+        identity_adapter,
+        ScriptedEvidenceAdapter({}),
+        budget_port=budget_guard,
+        ai_provider_name="gemini",
+    )
+    request = CompanyResearchRequest(geography="India")
+
+    await handler.handle(request)
+
+    budget_guard.ensure_batch_fits.assert_awaited_once_with("gemini", 2)
+
+
+@pytest.mark.asyncio
+async def test_budget_exceeded_prevents_any_identity_verification_call():
+    candidates = [_candidate("Acme A", "https://a.example")]
+    identity_adapter = AsyncMock(spec=IdentityVerificationPort)
+    budget_guard = AsyncMock()
+    budget_guard.ensure_batch_fits.side_effect = AIBudgetExceededException("budget exceeded")
+
+    handler = SearchCompaniesHandler(
+        ScriptedDiscoveryAdapter(candidates),
+        identity_adapter,
+        ScriptedEvidenceAdapter({}),
+        budget_port=budget_guard,
+        ai_provider_name="gemini",
+    )
+    request = CompanyResearchRequest(geography="India")
+
+    with pytest.raises(AIBudgetExceededException):
+        await handler.handle(request)
+
+    identity_adapter.verify.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_no_budget_guard_configured_skips_check_entirely():
+    candidate = _candidate("Acme Manufacturing", "https://acme.example")
+    handler = SearchCompaniesHandler(
+        ScriptedDiscoveryAdapter([candidate]),
+        ScriptedIdentityAdapter({"Acme Manufacturing": _verified("https://acme.example")}),
+        ScriptedEvidenceAdapter({"Acme Manufacturing": _hiring_evidence("Acme Manufacturing")}),
+        # no budget_port / ai_provider_name -- must behave exactly as before
+    )
+    request = CompanyResearchRequest(geography="India", industries=["Manufacturing"])
+    results = await handler.handle(request)
+    assert len(results) == 1
