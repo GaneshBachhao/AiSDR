@@ -30,3 +30,7 @@ class CompanyResearchSettings(BaseSettings):
 
     # Identity verification.
     min_identity_confidence: str = "MEDIUM"
+
+    # Cheap-tier (directory) discovery: how long a sector/geography's mined
+    # candidates are reused before re-querying Tavily.
+    directory_cache_ttl_seconds: int = 3600

@@ -41,7 +41,7 @@ Fibonacci (1, 2, 3, 5, 8, 13, 21). Priority uses MoSCoW (**M**ust / **S**hould /
 | `[x]` Done | EPIC-14 | 4 | AI cost & quota governance | 10 | **M** | EPIC-13 |
 | `[x]` Done | EPIC-00 | 1 | Domain Profile foundation | 8 | **M** | — |
 | `[x]` Done | EPIC-01 | 1 | Evidence Model v2 (`signal_scope`) | 8 | **M** | — |
-| `[ ]` Backlog | EPIC-02 | 1 | Company Universe cheap-discovery tier | 13 | **M** | EPIC-00 |
+| `[x]` Done | EPIC-02 | 1 | Company Universe cheap-discovery tier | 13 | **M** | EPIC-00 |
 | `[ ]` Backlog | EPIC-03 | 1 | Entity Resolution → canonical `Company` | 13 | **M** | EPIC-02 |
 | `[ ]` Backlog | EPIC-04 | 1 | AI Solution Catalog + fix `generate_recommendation` | 13 | **M** | EPIC-01 |
 | `[ ]` Backlog | EPIC-05 | 1 | Contact Discovery | 8 | **M** | EPIC-03, EPIC-04 |
@@ -207,13 +207,47 @@ returned 8 real evidence items, all correctly tagged `signal_scope=company_speci
 with `observed_date` populated, proving the classification runs against live data,
 not just mocks.
 
-### EPIC-02 — Company Universe cheap-discovery tier (13 pts) · Track 1
+### EPIC-02 — Company Universe cheap-discovery tier (13 pts) · Track 1 · `[x]` Done — Sprint 5
 
-| ID | Story | Acceptance Criteria | Pts |
-|---|---|---|---|
-| 2.1 | As the platform, I want a discovery port distinct from live web search | New `CompanyDirectoryPort` (application layer) | 2 |
-| 2.2 | As the platform, I want at least one cheap structured-source adapter | One concrete adapter (registry/directory source, or a cached/batched directory-page miner reusing `TavilyDiscoveryAdapter._extract_directory_candidates`) | 8 |
-| 2.3 | As the platform, I want the cheap tier tried before the expensive one | `SearchCompaniesHandler` calls `CompanyDirectoryPort` first; falls back to `CompanyDiscoveryPort` (Tavily) only when the cheap tier doesn't fill the candidate pool | 3 |
+| ID | Story | Acceptance Criteria | Pts | Status |
+|---|---|---|---|---|
+| 2.1 | As the platform, I want a discovery port distinct from live web search | New `CompanyDirectoryPort` (application layer) | 2 | `[x]` Done |
+| 2.2 | As the platform, I want at least one cheap structured-source adapter | One concrete adapter (registry/directory source, or a cached/batched directory-page miner reusing `TavilyDiscoveryAdapter._extract_directory_candidates`) | 8 | `[x]` Done |
+| 2.3 | As the platform, I want the cheap tier tried before the expensive one | `SearchCompaniesHandler` calls `CompanyDirectoryPort` first; falls back to `CompanyDiscoveryPort` (Tavily) only when the cheap tier doesn't fill the candidate pool | 3 | `[x]` Done |
+
+No paid registry/government API is available, so shipped the AC's own suggested
+fallback: `TavilyDirectoryAdapter` (new `CompanyDirectoryPort` implementation) that
+**only** harvests structured directory/listing pages via `TavilyDiscoveryAdapter`'s
+existing `_discovery_metadata`/`_extract_directory_candidates` classmethods (reused
+directly, not duplicated) — unlike the expensive tier, it never falls back to
+treating a single search result as one candidate, which is what keeps its
+candidates-per-Tavily-call ratio high. Added an in-memory cache keyed by
+`(industries, geography, company_size)` with a configurable TTL
+(`AI_DAILY_REQUEST_BUDGET_*`-style setting: `directory_cache_ttl_seconds`, default
+3600s) so repeated requests for the same sector/region don't re-query Tavily at
+all. `SearchCompaniesHandler` gained a `directory_port` constructor param
+(`None`-safe, regression-tested) and a `_discover_candidates()` helper: cheap tier
+first, expensive tier only when the cheap tier returns fewer candidates than
+`request.number_of_companies` — results are simply concatenated, since
+`DiscoveryFunnel.gate_candidates()` already deduplicates downstream (no new dedup
+logic needed).
+
+**Wiring note:** the directory adapter is registered as a **singleton** in
+`dependencies/company_research.py` (`get_directory_adapter`, mirroring the existing
+`get_database_engine`/`get_session_manager` module-global pattern) — a per-request
+instance would reset the in-memory cache on every call and defeat its entire
+purpose.
+
+Live-verified against real Tavily: first call for Manufacturing/India took 3.85s
+and returned 18 real candidates from directory-page mining; an immediate repeat
+call for the same request returned the identical list in 0.0001s from cache
+(confirmed same object identity, zero new Tavily calls). One of the 18 live
+candidates had a garbled name (an HTML filename fragment concatenated into the
+company name) — this is the pre-existing `_extract_directory_candidates` row
+parser (reused as-is, not modified this sprint), and directly confirms the
+already-tracked "Discovery precision ceiling" risk below rather than introducing a
+new one; EPIC-17 (Enrichment Waterfall) remains the right place to improve
+directory-row parsing quality.
 
 ### EPIC-03 — Entity Resolution → canonical `Company` (13 pts) · Track 1
 
@@ -325,7 +359,7 @@ need (see architecture doc §14 for full rationale):
 | Config drift (stale env var shadowing `.env` — already happened this session) | Medium | Low-Medium | Diagnostics endpoint | EPIC-15 |
 | Autonomous outreach sends something wrong/off-brand | Medium | High | Review queue gate before EPIC-09 | EPIC-16 |
 | Compliance violation (CAN-SPAM/GDPR/TCPA) from real outbound volume | Low-Medium | High (legal) | Suppression list + jurisdiction rules before real volume | EPIC-11 |
-| Discovery precision ceiling (junk candidates observed in live testing) | High | Low-Medium | Cheap tier + enrichment waterfall | EPIC-02, EPIC-17 |
+| Discovery precision ceiling (junk candidates observed in live testing; reconfirmed Sprint 5 with a garbled directory-row name) | High | Low-Medium | Cheap tier `[x]` shipped Sprint 5; row-parsing quality still needs EPIC-17 | EPIC-02, EPIC-17 |
 | **New (Sprint 3):** Gemini per-minute rate limit (5 RPM free tier) distinct from the daily budget — concurrent fan-out can burst past it | High | Medium | Not yet mitigated — daily `AIBudgetGuard` doesn't cover RPM; needs a token-bucket/RPM limiter | Unscheduled — candidate for a Track 4 fast-follow |
 | Solo+AI velocity estimate is wrong | Medium | Medium (schedule slip, not scope loss) | Recalibrate after Sprint 2–3 actuals (see sprint plan) | — |
 | Scope creep beyond committed 17 epics | Medium | Medium | MoSCoW priority + Parking Lot boundary enforced | — |

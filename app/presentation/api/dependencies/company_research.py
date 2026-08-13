@@ -24,6 +24,9 @@ from app.infrastructure.ai.composition import (
 from app.infrastructure.company_research.ai_identity_verification_adapter import (
     AiIdentityVerificationAdapter,
 )
+from app.infrastructure.company_research.tavily_directory_adapter import (
+    TavilyDirectoryAdapter,
+)
 from app.infrastructure.company_research.tavily_discovery_adapter import (
     TavilyDiscoveryAdapter,
 )
@@ -59,6 +62,21 @@ def get_discovery_adapter(
     return TavilyDiscoveryAdapter(client=client, settings=settings)
 
 
+_directory_adapter: TavilyDirectoryAdapter | None = None
+
+
+def get_directory_adapter(
+    client: AgneticTavilyClient = Depends(get_tavily_client),
+    settings: CompanyResearchSettings = Depends(get_company_research_settings),
+) -> TavilyDirectoryAdapter:
+    """Singleton, like ``get_database_engine`` -- the adapter's in-memory
+    cache only saves anything if the same instance persists across requests."""
+    global _directory_adapter
+    if _directory_adapter is None:
+        _directory_adapter = TavilyDirectoryAdapter(client=client, settings=settings)
+    return _directory_adapter
+
+
 def get_evidence_adapter(
     client: AgneticTavilyClient = Depends(get_tavily_client),
     settings: CompanyResearchSettings = Depends(get_company_research_settings),
@@ -79,6 +97,7 @@ def get_identity_adapter(
 
 def get_search_companies_handler(
     discovery: TavilyDiscoveryAdapter = Depends(get_discovery_adapter),
+    directory: TavilyDirectoryAdapter = Depends(get_directory_adapter),
     identity: AiIdentityVerificationAdapter = Depends(get_identity_adapter),
     evidence: TavilyEvidenceAdapter = Depends(get_evidence_adapter),
     settings: CompanyResearchSettings = Depends(get_company_research_settings),
@@ -92,6 +111,7 @@ def get_search_companies_handler(
         min_identity_confidence=settings.min_identity_confidence,
         budget_port=budget_guard,
         ai_provider_name=default_ai_provider(),
+        directory_port=directory,
     )
 
 

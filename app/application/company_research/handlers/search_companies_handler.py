@@ -24,6 +24,9 @@ from app.application.company_research.dto.company_research_request import (
 from app.application.company_research.dto.company_research_response import (
     CompanySearchResult,
 )
+from app.application.company_research.ports.company_directory_port import (
+    CompanyDirectoryPort,
+)
 from app.application.company_research.ports.company_discovery_port import (
     CompanyDiscoveryPort,
 )
@@ -65,6 +68,7 @@ class SearchCompaniesHandler:
         min_identity_confidence: str = "MEDIUM",
         budget_port: AIBudgetPort | None = None,
         ai_provider_name: str | None = None,
+        directory_port: CompanyDirectoryPort | None = None,
     ) -> None:
         self._discovery_port = discovery_port
         self._identity_port = identity_port
@@ -74,9 +78,10 @@ class SearchCompaniesHandler:
         self._min_identity_rank = _CONFIDENCE_RANK.get(min_identity_confidence.upper(), 1)
         self._budget_port = budget_port
         self._ai_provider_name = ai_provider_name
+        self._directory_port = directory_port
 
     async def handle(self, request: CompanyResearchRequest) -> list[CompanySearchResult]:
-        candidates = await self._discovery_port.discover(request)
+        candidates = await self._discover_candidates(request)
         if not candidates:
             return []
 
@@ -118,6 +123,36 @@ class SearchCompaniesHandler:
         ]
         results.sort(key=lambda item: item.qualification_score, reverse=True)
         return results[: request.number_of_companies]
+
+    async def _discover_candidates(
+        self, request: CompanyResearchRequest
+    ) -> list[CompanyCandidate]:
+        """Cheap tier first (if configured), expensive tier only to fill the
+        remainder of the pool -- see docs/pamacore_aisdr_summary.md §4.
+        Deduplication happens downstream in ``DiscoveryFunnel.gate_candidates``,
+        so cheap- and expensive-tier results can simply be concatenated here.
+        """
+        if self._directory_port is None:
+            return await self._discovery_port.discover(request)
+
+        cheap = await self._directory_port.discover(request)
+        if len(cheap) >= request.number_of_companies:
+            logger.info(
+                "Cheap-tier discovery filled the pool: %d candidates (requested %d); "
+                "skipping expensive discovery",
+                len(cheap),
+                request.number_of_companies,
+            )
+            return cheap
+
+        logger.info(
+            "Cheap-tier discovery returned %d candidates (< requested %d); "
+            "falling back to expensive discovery to fill the remainder",
+            len(cheap),
+            request.number_of_companies,
+        )
+        expensive = await self._discovery_port.discover(request)
+        return cheap + expensive
 
     async def _research_candidate(
         self,

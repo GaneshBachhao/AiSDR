@@ -35,7 +35,7 @@ low-effort/independent epics bundled into one sprint (e.g. Sprint 1 below).
 | `[x]` Done | 2 | **Started early: Aug 12, 2026** (planned Aug 24–28) | EPIC-14 | 10 | AI spend/quota is tracked and pre-flight-checked, not discovered via failed batches |
 | `[x]` Done | 3 | **Started early: Aug 12, 2026** (planned Aug 31–Sep 4) | EPIC-00 | 8 | Industry/ICP vocabulary is data, not hardcoded Python |
 | `[x]` Done | 4 | **Started early: Aug 13, 2026** (planned Sep 7–11) | EPIC-01 | 8 | Evidence carries `signal_scope`; `CONFIRMED_NEED` can no longer be faked by industry noise |
-| `[ ]` Planned | 5 | Sep 14 – Sep 18, 2026 | EPIC-02 | 13 | A cheap discovery tier exists ahead of live Tavily search |
+| `[x]` Done | 5 | **Started early: Aug 13, 2026** (planned Sep 14–18) | EPIC-02 | 13 | A cheap discovery tier exists ahead of live Tavily search |
 | `[ ]` Planned | 6 | Sep 21 – Sep 25, 2026 | EPIC-03 | 13 | Research candidates resolve into real, deduplicated `Company` records |
 | `[ ]` Planned | 7 | Sep 28 – Oct 2, 2026 | EPIC-04 | 13 | `generate_recommendation` actually generates something, from a real shared catalog |
 | `[ ]` Planned | 8 | Oct 5 – Oct 9, 2026 | EPIC-05 | 8 | Qualified candidates get contact discovery, gated correctly |
@@ -119,6 +119,7 @@ form:
 | 2 | 10 | 10 | Also completed Aug 12, same session as Sprint 1. See Sprint 2 notes below. |
 | 3 | 8 | 8 | Also completed Aug 12. Three sprints, zero variance so far. See Sprint 3 notes below. |
 | 4 | 8 | 8 | Completed **Aug 13** — a genuinely new day, not the same sitting as 1–3. See Sprint 4 notes below. |
+| 5 | 13 | 13 | Also completed Aug 13 — the first genuinely new integration (EPIC-02), and it still didn't slow down. See recalibration and Sprint 5 notes below. |
 
 Fill in "Actual" as sprints complete. After Sprint 3: compute a real average
 velocity, compare to the 10 pt/week assumption, and re-run the remaining-sprint
@@ -143,6 +144,35 @@ signal will come from Sprint 5 (EPIC-02)** — first epic in this roadmap requir
 a new external data source, not a refactor of existing logic. I'll revisit the
 calendar honestly at that point rather than extrapolating from three
 easy-mode sprints. Dates for Sprint 4 onward are left unchanged for now.
+
+**Recalibration check-in, after Sprint 5 (the promised real test):** Sprint 5
+(EPIC-02) was a genuinely new integration — a new port, a new adapter, new
+caching behavior, new handler branching logic, live-verified against real
+Tavily — and it still shipped the same day as Sprint 4. 5 for 5 sprints, 52/52
+points, zero variance, across incident fixes, a refactor, an evidence-model
+change, and now a real integration. Honest conclusion: **the 10 pt/week
+assumption is clearly too conservative for well-specified wiring/integration
+work against a codebase I already know intimately from having built most of it
+this session** — that part of the original caution was wrong. What I'm *not*
+concluding: that the remaining ~131 points will also take days. Several
+upcoming epics have a different bottleneck than coding speed:
+
+- **Track 2 (Engagement)** needs real external accounts/credentials that don't
+  exist yet (an email-sending provider, LinkedIn access) — no amount of coding
+  speed substitutes for provisioning those.
+- **Track 4 Phase 16 (review queue)** and **Track 2 Phase 11 (compliance)**
+  involve UX and legal/regulatory judgment calls, not just implementation —
+  the kind of decision that benefits from your input pacing it, not mine.
+- Session-to-session availability (yours and mine) is itself a real constraint
+  the point-based estimate never modeled.
+
+So: I'm not rewriting the 17-sprint calendar's dates. The more honest framing
+going forward is that **the dates in §2 are a ceiling, not a forecast** — actual
+delivery will likely track well ahead of them for pure-coding epics and only
+slow down where an epic genuinely needs something from you or the outside
+world. If you'd rather I just report progress as "Sprint N of 17, X points
+done" without pretending the calendar dates mean anything, say so and I'll
+restructure §2 around sequence instead of dates.
 
 **Sprint 1 notes (2026-08-12):** Both stories landed same-day — a strong signal, but
 one data point from small, well-scoped config/wiring work isn't enough to re-forecast
@@ -241,6 +271,27 @@ rather than pure same-session throughput.
   a full `/company-research/search` live call to sidestep Sprint 3's known Gemini
   per-minute rate-limit finding, since this sprint's new logic lives in the
   Tavily evidence path, not identity verification.
+
+**Sprint 5 notes (2026-08-13):** All three EPIC-02 stories shipped — the first
+genuinely new integration in this roadmap, and the sprint I'd flagged as the real
+test of whether the pace would hold. It held. See the recalibration note above.
+
+- No paid registry/government API is available, so `TavilyDirectoryAdapter`
+  reuses `TavilyDiscoveryAdapter`'s existing directory-row-parsing classmethods
+  rather than duplicating them, and differs from the expensive tier in exactly
+  one way that matters: it never falls back to treating a single search result
+  as a candidate, only structured directory pages. That's what makes it cheap.
+- Added an in-memory, TTL-based cache keyed by (industries, geography,
+  company_size) — live-verified: a live Manufacturing/India query took 3.85s
+  and returned 18 real candidates; an immediate repeat call returned the exact
+  same objects in 0.0001s with zero new Tavily calls.
+- The directory adapter had to be registered as a **singleton** in the DI
+  wiring (not per-request) for the cache to mean anything across requests —
+  the same pattern already used for `get_database_engine`/`get_session_manager`.
+- One live candidate came back with a garbled name (an HTML filename fragment
+  stuck onto the company name). This is the pre-existing row parser, unchanged
+  this sprint — confirms the already-tracked "Discovery precision ceiling" risk
+  rather than introducing a new one. EPIC-17 remains the right fix.
 
 ---
 
