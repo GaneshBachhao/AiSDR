@@ -33,7 +33,7 @@ low-effort/independent epics bundled into one sprint (e.g. Sprint 1 below).
 |---|---|---|---|---|---|
 | `[x]` Done | 1 | **Started early: Aug 12, 2026** (planned Aug 17–21) | EPIC-13, EPIC-15 | 13 | Stop repeating this session's own failures: AI provider fallback + a config diagnostics endpoint, both ship this week |
 | `[x]` Done | 2 | **Started early: Aug 12, 2026** (planned Aug 24–28) | EPIC-14 | 10 | AI spend/quota is tracked and pre-flight-checked, not discovered via failed batches |
-| `[ ]` Planned | 3 | Aug 31 – Sep 4, 2026 | EPIC-00 | 8 | Industry/ICP vocabulary is data, not hardcoded Python |
+| `[x]` Done | 3 | **Started early: Aug 12, 2026** (planned Aug 31–Sep 4) | EPIC-00 | 8 | Industry/ICP vocabulary is data, not hardcoded Python |
 | `[ ]` Planned | 4 | Sep 7 – Sep 11, 2026 | EPIC-01 | 8 | Evidence carries `signal_scope`; `CONFIRMED_NEED` can no longer be faked by industry noise |
 | `[ ]` Planned | 5 | Sep 14 – Sep 18, 2026 | EPIC-02 | 13 | A cheap discovery tier exists ahead of live Tavily search |
 | `[ ]` Planned | 6 | Sep 21 – Sep 25, 2026 | EPIC-03 | 13 | Research candidates resolve into real, deduplicated `Company` records |
@@ -117,7 +117,7 @@ form:
 |---|---|---|---|
 | 1 | 13 | 13 | Completed same day (Aug 12), 5 days ahead of the planned Aug 17 start. See Sprint 1 notes below. |
 | 2 | 10 | 10 | Also completed Aug 12, same session as Sprint 1. See Sprint 2 notes below. |
-| 3 | 8 | _TBD_ | |
+| 3 | 8 | 8 | Also completed Aug 12. Three sprints, zero variance so far. See Sprint 3 notes below. |
 
 Fill in "Actual" as sprints complete. After Sprint 3: compute a real average
 velocity, compare to the 10 pt/week assumption, and re-run the remaining-sprint
@@ -126,11 +126,22 @@ points after Sprint 3 shift from ~14 sprints to ~20 — better to know that in
 September than in December. I'll do this recalculation with you when you ask, or
 proactively flag it if actuals drift more than ~25% from plan for two sprints running.
 
-**Still holding at 2 of 2 data points before recalibrating** (per the Sprint 1 note's
-own policy) — Sprint 2 was also small, well-scoped infrastructure work, not
-representative of design-heavy epics like the sequencing engine. Recalibrate for
-real after Sprint 3 (EPIC-00, a company_research-internal refactor, is a closer
-proxy for "normal" feature work than Sprints 1–2's platform-resilience wiring).
+**Recalibration check-in, after Sprint 3 (as promised above):** 3 for 3 sprints,
+31/31 points, all completed the same day (2026-08-12) in one continuous session.
+Taken literally, that "velocity" would suggest compressing the entire 183-point,
+17-sprint schedule down to a handful of days — **I'm deliberately not doing that.**
+Sprints 1–3 share a trait that won't generalize: each was either directly informed
+by an incident already diagnosed earlier in this session (Sprints 1–2) or a
+self-contained refactor of code already deeply understood from building it
+originally (Sprint 3's `IndustryClassifier`/`IcpMatcher`). None of them involved
+new external integrations, new UI/UX decisions, or the kind of design exploration
+that Track 2's sequencing engine (EPIC-09, 21 pts) or Track 1's cheap-discovery
+tier (EPIC-02, 13 pts — a genuinely new integration) will need. Sprint 4 (EPIC-01)
+is similar in shape to Sprint 3, so it's not yet a fair test either. **Real
+signal will come from Sprint 5 (EPIC-02)** — first epic in this roadmap requiring
+a new external data source, not a refactor of existing logic. I'll revisit the
+calendar honestly at that point rather than extrapolating from three
+easy-mode sprints. Dates for Sprint 4 onward are left unchanged for now.
 
 **Sprint 1 notes (2026-08-12):** Both stories landed same-day — a strong signal, but
 one data point from small, well-scoped config/wiring work isn't enough to re-forecast
@@ -183,6 +194,29 @@ live-verified against the real app, real Gemini API, and real `ai_usage_log` tab
   of the 21 identity-verification calls. This is the exact failure mode from the
   original Swagger test (17 near-identical per-candidate error lines), now one
   actionable response.
+
+**Sprint 3 notes (2026-08-12):** All three EPIC-00 stories shipped. Seed data for
+the 9 profiles was derived directly from the pre-existing hardcoded keyword table
+(not invented), so the new `DomainProfile`-driven path and the old hardcoded path
+agree by construction, not by luck.
+
+- Regression safety verified two ways: (1) new unit tests assert
+  `profile=None` produces byte-identical results to omitting the parameter
+  entirely; (2) a live `POST /company-research/search` call (no profile
+  injected anywhere in the request path yet, as intended for this phase)
+  returned a normal `200` with correctly reasoned `industry_match`/`icp_match`
+  fields before rate-limiting cut the batch short (see below).
+- **New finding, unrelated to Domain Profiles:** that live call hit a real Gemini
+  `429` — a **per-minute** rate limit (5 requests/minute, free tier), which is a
+  *different* constraint than the **daily** budget EPIC-14 tracks.
+  `SearchCompaniesHandler`'s concurrent fan-out can burst past 5 RPM well before
+  the daily cap matters. Not fixed now — added to the Risk Register in
+  `product_backlog.md` as unscheduled Track 4 follow-up work.
+- **Also observed:** `.env`'s `GEMINI_MODEL` is currently `gemini-2.5-flash`, not
+  `gemini-3.5-flash` — the value it was set to earlier this project after the
+  "model no longer available" incident. I did not change this myself at any point
+  after that fix; flagging it since I can't tell whether the reversion was
+  intentional.
 
 ---
 

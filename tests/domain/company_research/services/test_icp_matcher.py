@@ -1,4 +1,5 @@
 from app.domain.company_research.services.icp_matcher import IcpMatcher
+from app.domain.company_research.value_objects.domain_profile import DomainProfile
 
 
 def test_extract_employee_count_from_explicit_phrase():
@@ -72,3 +73,34 @@ def test_company_size_label_bands():
     assert IcpMatcher.company_size_label(None) is None
     assert IcpMatcher.company_size_label(10) == "Startup / Micro"
     assert IcpMatcher.company_size_label(600) == "500+"
+
+
+def test_enterprise_exclusion_default_behavior_unchanged_when_no_profile_passed():
+    """Regression guard: omitting ``profile`` must behave exactly as before
+    Domain Profiles existed."""
+    with_default = IcpMatcher.enterprise_exclusion("", 501)
+    explicit_none = IcpMatcher.enterprise_exclusion("", 501, profile=None)
+    assert with_default == explicit_none == (True, None)
+
+
+def test_enterprise_exclusion_profile_can_raise_the_threshold():
+    profile = DomainProfile(name="custom", enterprise_exclusion_threshold=2000)
+    # 501 employees would exclude under the default (500) threshold...
+    excluded, _ = IcpMatcher.enterprise_exclusion("", 501)
+    assert excluded is True
+    # ...but not under a profile that raises the threshold.
+    excluded, _ = IcpMatcher.enterprise_exclusion("", 501, profile=profile)
+    assert excluded is False
+
+
+def test_enterprise_exclusion_profile_can_replace_explicit_markers():
+    profile = DomainProfile(
+        name="custom",
+        enterprise_exclusion_markers=("state-owned enterprise",),
+    )
+    # The default marker ("fortune 500") no longer applies under this profile.
+    excluded, _ = IcpMatcher.enterprise_exclusion("a fortune 500 company", None, profile=profile)
+    assert excluded is False
+    # The profile's own marker does.
+    excluded, _ = IcpMatcher.enterprise_exclusion("a state-owned enterprise", None, profile=profile)
+    assert excluded is True

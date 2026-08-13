@@ -1,0 +1,24 @@
+{
+  "name": "manufacturing",
+  "industry_keywords": {
+    "manufacturing": [
+      "manufacturer", "manufacturing", "factory", "production plant",
+      "industrial machinery", "industrial equipment", "automotive manufacturer",
+      "electronics manufacturing", "component manufacturer", "fabrication",
+      "machinery maker", "production facility"
+    ]
+  },
+  "negative_service_markers": [
+    "it services", "software company", "software development", "technology consulting",
+    "ai company", "automation vendor", "cloud consulting", "digital agency",
+    "system integrator", "managed services", "staffing", "recruitment agency"
+  ],
+  "enterprise_exclusion_threshold": 500,
+  "enterprise_exclusion_markers": [
+    "fortune 500", "fortune global 500", "global 2000", "forbes global 2000",
+    "multinational corporation", "multinational company", "large conglomerate",
+    "global conglomerate", "conglomerate"
+  ],
+  "evidence_scope_keywords": [],
+  "scoring_weight_overrides": {}
+}

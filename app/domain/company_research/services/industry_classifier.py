@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from app.domain.company_research.value_objects.domain_profile import DomainProfile
+
 
 class IndustryClassifier:
     """Deterministic, keyword-based industry inference and matching.
@@ -8,6 +10,11 @@ class IndustryClassifier:
     discovery/evidence adapters. Not a substitute for identity verification —
     this answers "what industry does the evidence suggest", not "is this
     really the company we think it is".
+
+    Accepts an optional ``DomainProfile`` to override the vocabulary below
+    per-sector. When omitted, behavior is unchanged from before Domain
+    Profiles existed -- the class constants below remain the single source
+    of truth for the default profile.
     """
 
     INDUSTRY_KEYWORDS = {
@@ -55,17 +62,31 @@ class IndustryClassifier:
     )
 
     @classmethod
+    def _keywords(cls, profile: DomainProfile | None) -> dict[str, tuple[str, ...]]:
+        if profile is not None and profile.industry_keywords:
+            return profile.industry_keywords
+        return cls.INDUSTRY_KEYWORDS
+
+    @classmethod
+    def _negative_markers(cls, profile: DomainProfile | None) -> tuple[str, ...]:
+        if profile is not None and profile.negative_service_markers:
+            return profile.negative_service_markers
+        return cls.NEGATIVE_SERVICE_MARKERS
+
+    @classmethod
     def infer_industry(
         cls,
         text: str,
         title: str,
         targets: list[str],
+        profile: DomainProfile | None = None,
     ) -> str | None:
+        industry_keywords = cls._keywords(profile)
         haystack = f"{title} {text}".lower()
         best_target = None
         best_score = 0
-        for target in targets or cls.INDUSTRY_KEYWORDS.keys():
-            keywords = cls.INDUSTRY_KEYWORDS.get(target.lower(), (target.lower(),))
+        for target in targets or industry_keywords.keys():
+            keywords = industry_keywords.get(target.lower(), (target.lower(),))
             score = sum(1 for word in keywords if word in haystack)
             if score > best_score:
                 best_score = score
@@ -78,17 +99,20 @@ class IndustryClassifier:
         industry: str | None,
         text: str,
         targets: list[str],
+        profile: DomainProfile | None = None,
     ) -> tuple[bool, str]:
         if not targets:
             return True, "No industry restriction was requested."
+        industry_keywords = cls._keywords(profile)
+        negative_markers = cls._negative_markers(profile)
         normalized_targets = [t.lower().strip() for t in targets]
         normalized_industry = (industry or "").lower()
         for target in normalized_targets:
             if normalized_industry and (target in normalized_industry or normalized_industry in target):
                 return True, f"Primary industry is consistent with requested industry: {target}."
-            keywords = cls.INDUSTRY_KEYWORDS.get(target, (target,))
+            keywords = industry_keywords.get(target, (target,))
             positive = sum(1 for word in keywords if word in text)
-            negative = sum(1 for word in cls.NEGATIVE_SERVICE_MARKERS if word in text)
+            negative = sum(1 for word in negative_markers if word in text)
             if positive >= 2 and positive > negative:
                 return True, f"Public company information contains multiple signals consistent with {target}."
         return False, "Public information does not sufficiently support the requested industry."

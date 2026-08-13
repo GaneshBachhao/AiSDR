@@ -2,6 +2,14 @@ from __future__ import annotations
 
 import re
 
+from app.domain.company_research.value_objects.domain_profile import DomainProfile
+
+_DEFAULT_ENTERPRISE_MARKERS = (
+    "fortune 500", "fortune global 500", "global 2000", "forbes global 2000",
+    "multinational corporation", "multinational company", "large conglomerate",
+    "global conglomerate", "conglomerate",
+)
+
 
 class IcpMatcher:
     """Deterministic ICP (Ideal Customer Profile) size/scale rules.
@@ -10,6 +18,10 @@ class IcpMatcher:
     an unknown employee count must never silently pass. This mirrors the
     pre-existing behavior in the discovery funnel, just relocated to a
     pure, independently testable domain service.
+
+    ``enterprise_exclusion`` accepts an optional ``DomainProfile`` to
+    override the exclusion threshold/markers per-sector. When omitted,
+    behavior matches the pre-Domain-Profile defaults exactly.
     """
 
     @staticmethod
@@ -82,14 +94,17 @@ class IcpMatcher:
     def enterprise_exclusion(
         text: str,
         employee_count: int | None,
+        profile: DomainProfile | None = None,
     ) -> tuple[bool, str | None]:
-        if employee_count is not None and employee_count > 500:
-            return True, None
+        threshold = profile.enterprise_exclusion_threshold if profile is not None else 500
         explicit_markers = (
-            "fortune 500", "fortune global 500", "global 2000", "forbes global 2000",
-            "multinational corporation", "multinational company", "large conglomerate",
-            "global conglomerate", "conglomerate",
+            profile.enterprise_exclusion_markers
+            if profile is not None and profile.enterprise_exclusion_markers
+            else _DEFAULT_ENTERPRISE_MARKERS
         )
+
+        if employee_count is not None and employee_count > threshold:
+            return True, None
         if any(marker in text for marker in explicit_markers):
             return True, None
 

@@ -39,7 +39,7 @@ Fibonacci (1, 2, 3, 5, 8, 13, 21). Priority uses MoSCoW (**M**ust / **S**hould /
 | `[x]` Done | EPIC-13 | 4 | Model health checks & automatic fallback | 8 | **M** | — |
 | `[x]` Done | EPIC-15 | 4 | AI config diagnostics endpoint | 5 | **M** | — |
 | `[x]` Done | EPIC-14 | 4 | AI cost & quota governance | 10 | **M** | EPIC-13 |
-| `[ ]` Backlog | EPIC-00 | 1 | Domain Profile foundation | 8 | **M** | — |
+| `[x]` Done | EPIC-00 | 1 | Domain Profile foundation | 8 | **M** | — |
 | `[ ]` Backlog | EPIC-01 | 1 | Evidence Model v2 (`signal_scope`) | 8 | **M** | — |
 | `[ ]` Backlog | EPIC-02 | 1 | Company Universe cheap-discovery tier | 13 | **M** | EPIC-00 |
 | `[ ]` Backlog | EPIC-03 | 1 | Entity Resolution → canonical `Company` | 13 | **M** | EPIC-02 |
@@ -130,13 +130,41 @@ orphaned `AIRequestModel` / `AIRequestMapper` / `ExecuteAIRequestHandler` /
 `app/company_research/` module and the orphaned `SettingsLoader`/`AISettings`
 duplicate stacks found earlier in this project.
 
-### EPIC-00 — Domain Profile foundation (8 pts) · Track 1
+### EPIC-00 — Domain Profile foundation (8 pts) · Track 1 · `[x]` Done — Sprint 3
 
-| ID | Story | Acceptance Criteria | Pts |
-|---|---|---|---|
-| 0.1 | As the platform, I want industry/ICP vocabulary as data instead of hardcoded dicts | New `DomainProfile` value object (vocabulary, size rules, exclusions, evidence keywords, scoring weight overrides) | 3 |
-| 0.2 | As an operator, I want seed profiles for the 9 initial sectors | JSON/YAML profiles under `app/infrastructure/configuration/domain_profiles/` for Manufacturing, Healthcare, Pharma, Biotech, Research, Logistics, Financial Services, Construction, Retail | 3 |
-| 0.3 | As the platform, I want `IndustryClassifier`/`IcpMatcher` to use the injected profile | Both accept a `DomainProfile`; behavior for the default profile is unchanged (regression-safe) | 2 |
+| ID | Story | Acceptance Criteria | Pts | Status |
+|---|---|---|---|---|
+| 0.1 | As the platform, I want industry/ICP vocabulary as data instead of hardcoded dicts | New `DomainProfile` value object (vocabulary, size rules, exclusions, evidence keywords, scoring weight overrides) | 3 | `[x]` Done |
+| 0.2 | As an operator, I want seed profiles for the 9 initial sectors | JSON/YAML profiles under `app/infrastructure/configuration/domain_profiles/` for Manufacturing, Healthcare, Pharma, Biotech, Research, Logistics, Financial Services, Construction, Retail | 3 | `[x]` Done |
+| 0.3 | As the platform, I want `IndustryClassifier`/`IcpMatcher` to use the injected profile | Both accept a `DomainProfile`; behavior for the default profile is unchanged (regression-safe) | 2 | `[x]` Done |
+
+Shipped as `app/domain/company_research/value_objects/domain_profile.py`
+(`DomainProfile`, frozen dataclass) + 9 JSON seed files under
+`app/infrastructure/configuration/domain_profiles/`, loaded via
+`load_domain_profile()`/`load_all_domain_profiles()`. `IndustryClassifier.infer_industry`/
+`matches` and `IcpMatcher.enterprise_exclusion` now take an optional `profile`
+parameter; the pre-existing class constants remain the single source of truth for
+the default (no-profile) behavior, so nothing downstream changed. Seed data was
+derived directly from the existing hardcoded keyword table (not invented), so
+there's no drift between the old defaults and the new seed profiles.
+**Deliberately not done this sprint** (out of the committed 0.1–0.3 scope):
+`SearchCompaniesHandler` does not yet select/inject a profile per request —
+profiles are loadable and provably change behavior when passed explicitly, but
+nothing in the live request path picks one yet. That's future wiring, not part of
+this "no pipeline behavior change" phase.
+
+**New finding (2026-08-12, live verification):** a live `/company-research/search`
+call surfaced a real Gemini `429 RESOURCE_EXHAUSTED` — a **per-minute** rate limit
+(5 requests/minute on the free tier), distinct from the **daily** budget EPIC-14
+already guards. `SearchCompaniesHandler`'s bounded-concurrency fan-out
+(`max_concurrent_research`, default 6) can burst past a 5 RPM limit well before
+the daily cap is reached. Not fixed here (out of Sprint 3 scope) — added to the
+Risk Register below as a new backlog candidate (e.g. a token-bucket/RPM limiter
+alongside the existing daily `AIBudgetGuard`).
+Also observed: `.env`'s `GEMINI_MODEL` is currently `gemini-2.5-flash`, not
+`gemini-3.5-flash` (which is what it was set to earlier in this project after the
+"model no longer available" incident) — flagging since I didn't change it back
+myself; worth confirming whether that reversion was intentional.
 
 ### EPIC-01 — Evidence Model v2 (8 pts) · Track 1
 
@@ -265,5 +293,6 @@ need (see architecture doc §14 for full rationale):
 | Autonomous outreach sends something wrong/off-brand | Medium | High | Review queue gate before EPIC-09 | EPIC-16 |
 | Compliance violation (CAN-SPAM/GDPR/TCPA) from real outbound volume | Low-Medium | High (legal) | Suppression list + jurisdiction rules before real volume | EPIC-11 |
 | Discovery precision ceiling (junk candidates observed in live testing) | High | Low-Medium | Cheap tier + enrichment waterfall | EPIC-02, EPIC-17 |
+| **New (Sprint 3):** Gemini per-minute rate limit (5 RPM free tier) distinct from the daily budget — concurrent fan-out can burst past it | High | Medium | Not yet mitigated — daily `AIBudgetGuard` doesn't cover RPM; needs a token-bucket/RPM limiter | Unscheduled — candidate for a Track 4 fast-follow |
 | Solo+AI velocity estimate is wrong | Medium | Medium (schedule slip, not scope loss) | Recalibrate after Sprint 2–3 actuals (see sprint plan) | — |
 | Scope creep beyond committed 17 epics | Medium | Medium | MoSCoW priority + Parking Lot boundary enforced | — |
