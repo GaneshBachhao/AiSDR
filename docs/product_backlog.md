@@ -40,7 +40,7 @@ Fibonacci (1, 2, 3, 5, 8, 13, 21). Priority uses MoSCoW (**M**ust / **S**hould /
 | `[x]` Done | EPIC-15 | 4 | AI config diagnostics endpoint | 5 | **M** | — |
 | `[x]` Done | EPIC-14 | 4 | AI cost & quota governance | 10 | **M** | EPIC-13 |
 | `[x]` Done | EPIC-00 | 1 | Domain Profile foundation | 8 | **M** | — |
-| `[ ]` Backlog | EPIC-01 | 1 | Evidence Model v2 (`signal_scope`) | 8 | **M** | — |
+| `[x]` Done | EPIC-01 | 1 | Evidence Model v2 (`signal_scope`) | 8 | **M** | — |
 | `[ ]` Backlog | EPIC-02 | 1 | Company Universe cheap-discovery tier | 13 | **M** | EPIC-00 |
 | `[ ]` Backlog | EPIC-03 | 1 | Entity Resolution → canonical `Company` | 13 | **M** | EPIC-02 |
 | `[ ]` Backlog | EPIC-04 | 1 | AI Solution Catalog + fix `generate_recommendation` | 13 | **M** | EPIC-01 |
@@ -166,13 +166,46 @@ Also observed: `.env`'s `GEMINI_MODEL` is currently `gemini-2.5-flash`, not
 "model no longer available" incident) — flagging since I didn't change it back
 myself; worth confirming whether that reversion was intentional.
 
-### EPIC-01 — Evidence Model v2 (8 pts) · Track 1
+### EPIC-01 — Evidence Model v2 (8 pts) · Track 1 · `[x]` Done — Sprint 4
 
-| ID | Story | Acceptance Criteria | Pts |
-|---|---|---|---|
-| 1.1 | As the platform, I want evidence tagged by scope so industry noise can't fake company-level confidence | `EvidenceItem` gets `signal_scope: "company_specific" \| "industry_general"` | 3 |
-| 1.2 | As the platform, I want evidence dated so recency can be judged | `EvidenceItem` gets `source_date`/`observed_date` | 2 |
-| 1.3 | As a reviewer, I want `CONFIRMED_NEED` to require real company-specific evidence | `classify_evidence()` requires `confirmed_company_specific_count >= 2`, not just `confirmed >= 2` regardless of scope; regression test: an all-industry evidence set can never classify above `STRONG_COMPANY_SIGNAL` | 3 |
+| ID | Story | Acceptance Criteria | Pts | Status |
+|---|---|---|---|---|
+| 1.1 | As the platform, I want evidence tagged by scope so industry noise can't fake company-level confidence | `EvidenceItem` gets `signal_scope: "company_specific" \| "industry_general"` | 3 | `[x]` Done |
+| 1.2 | As the platform, I want evidence dated so recency can be judged | `EvidenceItem` gets `source_date`/`observed_date` | 2 | `[x]` Done |
+| 1.3 | As a reviewer, I want `CONFIRMED_NEED` to require real company-specific evidence | `classify_evidence()` requires `confirmed_company_specific_count >= 2`, not just `confirmed >= 2` regardless of scope; regression test: an all-industry evidence set can never classify above `STRONG_COMPANY_SIGNAL` | 3 | `[x]` Done |
+
+Shipped as: `EvidenceItem.signal_scope` (defaults to the conservative
+`"industry_general"` so unclassified evidence is never mistaken for proof) and
+`EvidenceItem.observed_date`, both populated by `TavilyEvidenceAdapter` at gather
+time; `EvidenceSignalExtractor.classify_scope()` (new) does the actual
+company-name-match classification; `classify_evidence()` now takes optional
+`company_specific_signals`/`company_specific_evidence_count` and **only** reaches
+`"Confirmed Need"` when those are supplied and sufficient — callers that don't
+pass them (i.e. don't know the scope) can never reach it, which is the safe
+default, not the permissive one.
+
+**Naming note:** story 1.3's AC text referenced the architecture doc's
+illustrative 6-tier ladder (`STRONG_COMPANY_SIGNAL`, etc.). The shipped code kept
+the actual, already-existing 4-tier names (`"Confirmed Need"` / `"Strong
+Opportunity Signal"` / `"Reasonable Business Hypothesis"` / `"Unverified
+Assumption"`) rather than introducing a parallel naming scheme — renaming the
+enum wasn't itself a committed backlog item. The regression test asserts the
+equivalent claim against the real tier name: an all-industry-general evidence set
+can never classify above `"Strong Opportunity Signal"`.
+
+**Deliberately not done this sprint:** `_evidence_text()` in
+`company_research_mapper.py` still says "Public sources show **company-specific**
+signals..." even though the underlying `signals` dict it describes is still
+combined-text (not scope-filtered) — this prose predates Sprint 4 and was already
+slightly overclaiming; fixing the wording is a small follow-up, not part of the
+committed 1.1–1.3 scope. `SearchCompaniesHandler` doesn't use `evidence_date` vs.
+`observed_date` differently anywhere yet either (`observed_date` is populated and
+available, not yet consumed downstream).
+
+Live-verified: `TavilyEvidenceAdapter.gather()` against real Tavily (Tata Motors)
+returned 8 real evidence items, all correctly tagged `signal_scope=company_specific`
+with `observed_date` populated, proving the classification runs against live data,
+not just mocks.
 
 ### EPIC-02 — Company Universe cheap-discovery tier (13 pts) · Track 1
 

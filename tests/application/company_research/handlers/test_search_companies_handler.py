@@ -220,6 +220,59 @@ async def test_one_candidate_failure_does_not_break_others():
     assert [r.company_name for r in results] == ["Acme B"]
 
 
+def _scoped_evidence(name: str, scope: str, count: int) -> list[EvidenceItem]:
+    slug = name.lower().replace(" ", "-")
+    snippets = [
+        f"{name} is hiring cloud and software engineers as part of a technology modernization push.",
+        f"{name} announced a major expansion and a new funding round.",
+        "The broader industry sector is seeing growth in automation investment.",
+    ]
+    return [
+        EvidenceItem(
+            title=f"Evidence {i}",
+            url=f"https://{slug}.example/{i}",
+            snippet=snippets[i % len(snippets)],
+            signal_scope=scope,
+        )
+        for i in range(count)
+    ]
+
+
+@pytest.mark.asyncio
+async def test_confirmed_need_reachable_with_company_specific_evidence():
+    candidate = _candidate("Acme Manufacturing", "https://acme.example")
+    handler = SearchCompaniesHandler(
+        ScriptedDiscoveryAdapter([candidate]),
+        ScriptedIdentityAdapter({"Acme Manufacturing": _verified("https://acme.example")}),
+        ScriptedEvidenceAdapter(
+            {"Acme Manufacturing": _scoped_evidence("Acme Manufacturing", "company_specific", 3)}
+        ),
+    )
+    request = CompanyResearchRequest(geography="India")
+    results = await handler.handle(request)
+    assert len(results) == 1
+    assert results[0].evidence_classification == "Confirmed Need"
+
+
+@pytest.mark.asyncio
+async def test_confirmed_need_unreachable_with_only_industry_general_evidence():
+    """Regression guard, end-to-end: industry-general evidence -- even with
+    plenty of signal keywords and enough items -- must never classify as
+    Confirmed Need."""
+    candidate = _candidate("Acme Manufacturing", "https://acme.example")
+    handler = SearchCompaniesHandler(
+        ScriptedDiscoveryAdapter([candidate]),
+        ScriptedIdentityAdapter({"Acme Manufacturing": _verified("https://acme.example")}),
+        ScriptedEvidenceAdapter(
+            {"Acme Manufacturing": _scoped_evidence("Acme Manufacturing", "industry_general", 3)}
+        ),
+    )
+    request = CompanyResearchRequest(geography="India")
+    results = await handler.handle(request)
+    assert len(results) == 1
+    assert results[0].evidence_classification != "Confirmed Need"
+
+
 @pytest.mark.asyncio
 async def test_budget_guard_checked_with_accepted_candidate_count_before_any_ai_call():
     candidates = [_candidate("Acme A", "https://a.example"), _candidate("Acme B", "https://b.example")]

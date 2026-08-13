@@ -1,15 +1,28 @@
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, Field, HttpUrl
 
 
 class EvidenceItem(BaseModel):
-    """A public source used to support a research observation."""
+    """A public source used to support a research observation.
+
+    ``signal_scope`` distinguishes evidence that plausibly refers to the
+    named company ("company_specific") from evidence that only discusses
+    its industry/sector in general ("industry_general") -- see
+    docs/pamacore_aisdr_summary.md §3. Defaults to the conservative value
+    so evidence of unknown scope (e.g. constructed without classification)
+    is never mistaken for company-specific proof. ``evidence_date`` is when
+    the source was published; ``observed_date`` is when Pamacore captured it.
+    """
 
     title: str
     url: HttpUrl
     snippet: str | None = None
     evidence_date: str | None = None
+    observed_date: str | None = None
+    signal_scope: Literal["company_specific", "industry_general"] = "industry_general"
 
 
 class DiscoverySourceMetadata(BaseModel):

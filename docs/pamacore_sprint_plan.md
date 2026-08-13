@@ -34,7 +34,7 @@ low-effort/independent epics bundled into one sprint (e.g. Sprint 1 below).
 | `[x]` Done | 1 | **Started early: Aug 12, 2026** (planned Aug 17–21) | EPIC-13, EPIC-15 | 13 | Stop repeating this session's own failures: AI provider fallback + a config diagnostics endpoint, both ship this week |
 | `[x]` Done | 2 | **Started early: Aug 12, 2026** (planned Aug 24–28) | EPIC-14 | 10 | AI spend/quota is tracked and pre-flight-checked, not discovered via failed batches |
 | `[x]` Done | 3 | **Started early: Aug 12, 2026** (planned Aug 31–Sep 4) | EPIC-00 | 8 | Industry/ICP vocabulary is data, not hardcoded Python |
-| `[ ]` Planned | 4 | Sep 7 – Sep 11, 2026 | EPIC-01 | 8 | Evidence carries `signal_scope`; `CONFIRMED_NEED` can no longer be faked by industry noise |
+| `[x]` Done | 4 | **Started early: Aug 13, 2026** (planned Sep 7–11) | EPIC-01 | 8 | Evidence carries `signal_scope`; `CONFIRMED_NEED` can no longer be faked by industry noise |
 | `[ ]` Planned | 5 | Sep 14 – Sep 18, 2026 | EPIC-02 | 13 | A cheap discovery tier exists ahead of live Tavily search |
 | `[ ]` Planned | 6 | Sep 21 – Sep 25, 2026 | EPIC-03 | 13 | Research candidates resolve into real, deduplicated `Company` records |
 | `[ ]` Planned | 7 | Sep 28 – Oct 2, 2026 | EPIC-04 | 13 | `generate_recommendation` actually generates something, from a real shared catalog |
@@ -79,7 +79,7 @@ Aug 17 ────────────────────────�
 | Milestone | End of | What's demoable |
 |---|---|---|
 | **A — Resilience Baseline** ✅ | Reached Aug 12 (planned Aug 28) | AI provider fallback, quota governance, config diagnostics — the platform stops silently breaking on provider issues |
-| **B — Trusted Research Core** | Sprint 4 (Sep 11) | Domain Profile + Evidence v2 — company_research's own output quality improves, independent of anything downstream |
+| **B — Trusted Research Core** ✅ | Reached Aug 13 (planned Sep 11) | Domain Profile + Evidence v2 — company_research's own output quality improves, independent of anything downstream |
 | **C — Company Universe MVP** | Sprint 9 (Oct 16) | A qualified research candidate becomes a real Company + Contact + Lead, end-to-end, for the first time |
 | **D — Orchestrated & Enriched** | Sprint 11 (Oct 30) | The pipeline is observable/resumable, and less prone to junk candidates |
 | **E — Trusted Engagement Launch** | Sprint 16 (Dec 4) | First real multi-touch outbound campaigns can run safely (review gate + compliance both live) |
@@ -118,6 +118,7 @@ form:
 | 1 | 13 | 13 | Completed same day (Aug 12), 5 days ahead of the planned Aug 17 start. See Sprint 1 notes below. |
 | 2 | 10 | 10 | Also completed Aug 12, same session as Sprint 1. See Sprint 2 notes below. |
 | 3 | 8 | 8 | Also completed Aug 12. Three sprints, zero variance so far. See Sprint 3 notes below. |
+| 4 | 8 | 8 | Completed **Aug 13** — a genuinely new day, not the same sitting as 1–3. See Sprint 4 notes below. |
 
 Fill in "Actual" as sprints complete. After Sprint 3: compute a real average
 velocity, compare to the 10 pt/week assumption, and re-run the remaining-sprint
@@ -217,6 +218,29 @@ agree by construction, not by luck.
   "model no longer available" incident. I did not change this myself at any point
   after that fix; flagging it since I can't tell whether the reversion was
   intentional.
+
+**Sprint 4 notes (2026-08-13):** All three EPIC-01 stories shipped. Unlike
+Sprints 1–3, this genuinely happened the next calendar day, not the same
+sitting — the first real (if small) data point on session-to-session pacing
+rather than pure same-session throughput.
+
+- `EvidenceItem.signal_scope` defaults to the conservative `"industry_general"`
+  and `classify_evidence()`'s new company-specific-count requirement means
+  callers that don't supply scope data can no longer reach `"Confirmed Need"` at
+  all — verified with an explicit regression test, plus an end-to-end handler
+  test proving `"Confirmed Need"` *is* reachable when evidence is genuinely
+  company-specific and capped at `"Strong Opportunity Signal"` when it isn't.
+- Story 1.3's acceptance criteria referenced the architecture doc's illustrative
+  6-tier ladder naming (`STRONG_COMPANY_SIGNAL`); shipped code kept the actual
+  4-tier names already in production rather than introducing a second naming
+  scheme not itself in scope. Noted explicitly in `product_backlog.md` rather
+  than silently diverging from the written AC.
+- Live-verified against real Tavily (not just mocks): a live evidence-gather for
+  Tata Motors returned 8 real results, all correctly tagged
+  `signal_scope=company_specific` with `observed_date` populated. Chose this over
+  a full `/company-research/search` live call to sidestep Sprint 3's known Gemini
+  per-minute rate-limit finding, since this sprint's new logic lives in the
+  Tavily evidence path, not identity verification.
 
 ---
 

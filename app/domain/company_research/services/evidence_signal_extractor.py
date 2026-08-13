@@ -51,9 +51,57 @@ class EvidenceSignalExtractor:
         return "none"
 
     @staticmethod
-    def classify_evidence(signals: dict[str, bool], evidence_count: int) -> str:
+    def classify_scope(text: str, company_name: str) -> str:
+        """Return "company_specific" if ``text`` plausibly refers to the
+        named company, else "industry_general".
+
+        A cheap, deterministic proxy for whether a search result actually
+        surfaced company-specific evidence versus topically-related
+        industry noise -- Tavily's queries are built with the company name
+        as a search term, but a search engine can still return generic
+        articles that merely rank well for that query.
+        """
+        normalized_name = company_name.strip().lower()
+        normalized_text = text.lower()
+        if not normalized_name:
+            return "industry_general"
+        if normalized_name in normalized_text:
+            return "company_specific"
+        # Tolerate legal-suffix variation ("Acme Manufacturing" vs.
+        # "Acme Manufacturing Pvt Ltd") by also matching on the first
+        # significant word of the name.
+        first_word = normalized_name.split()[0]
+        if len(first_word) >= 4 and first_word in normalized_text:
+            return "company_specific"
+        return "industry_general"
+
+    @staticmethod
+    def classify_evidence(
+        signals: dict[str, bool],
+        evidence_count: int,
+        company_specific_signals: dict[str, bool] | None = None,
+        company_specific_evidence_count: int = 0,
+    ) -> str:
+        """Classify overall evidence strength.
+
+        ``Confirmed Need`` requires the confirmed signals to actually come
+        from company-specific evidence, not merely from the combined text
+        (which may include industry-general noise). Callers that don't pass
+        ``company_specific_signals``/``company_specific_evidence_count``
+        can never reach ``Confirmed Need`` -- unknown scope is treated
+        conservatively, not permissively.
+        """
         confirmed = sum(1 for value in signals.values() if value)
-        if confirmed >= 2 and evidence_count >= 3:
+        confirmed_company_specific = sum(
+            1 for value in (company_specific_signals or {}).values() if value
+        )
+
+        if (
+            confirmed >= 2
+            and evidence_count >= 3
+            and confirmed_company_specific >= 2
+            and company_specific_evidence_count >= 2
+        ):
             return "Confirmed Need"
         if confirmed >= 1 and evidence_count >= 1:
             return "Strong Opportunity Signal"

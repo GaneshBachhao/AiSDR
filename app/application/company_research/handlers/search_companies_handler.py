@@ -149,7 +149,21 @@ class SearchCompaniesHandler:
             return None
 
         signals = EvidenceSignalExtractor.extract_signals(combined)
-        evidence_classification = EvidenceSignalExtractor.classify_evidence(signals, len(evidence))
+
+        company_specific_evidence = [
+            item for item in evidence if item.signal_scope == "company_specific"
+        ]
+        company_specific_text = " ".join(
+            item.snippet or "" for item in company_specific_evidence
+        ).lower()
+        company_specific_signals = EvidenceSignalExtractor.extract_signals(company_specific_text)
+
+        evidence_classification = EvidenceSignalExtractor.classify_evidence(
+            signals,
+            len(evidence),
+            company_specific_signals=company_specific_signals,
+            company_specific_evidence_count=len(company_specific_evidence),
+        )
         scale_signal = EvidenceSignalExtractor.scale_signal(combined)
 
         _, recommended_services = OpportunityMapper.map_signals(signals)

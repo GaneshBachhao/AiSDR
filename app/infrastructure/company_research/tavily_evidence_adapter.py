@@ -9,6 +9,7 @@ funding, requested-service-specific activity) for the verified company.
 from __future__ import annotations
 
 import asyncio
+from datetime import UTC, datetime
 from urllib.parse import urlparse
 
 from app.application.company_research.dto.company_research_request import (
@@ -23,6 +24,9 @@ from app.application.company_research.ports.identity_verification_port import (
 )
 from app.domain.company_research.entities.candidate import CompanyCandidate
 from app.domain.company_research.services.candidate_gate import DeterministicCandidateGate
+from app.domain.company_research.services.evidence_signal_extractor import (
+    EvidenceSignalExtractor,
+)
 from app.infrastructure.configuration.company_research_settings import (
     CompanyResearchSettings,
 )
@@ -66,6 +70,7 @@ class TavilyEvidenceAdapter(EvidenceResearchPort):
 
         evidence: list[EvidenceItem] = []
         seen_urls: set[str] = set()
+        observed_date = datetime.now(UTC).date().isoformat()
 
         for query in queries:
             for item in self._client.search(query=query, max_results=5, search_depth="advanced"):
@@ -84,6 +89,10 @@ class TavilyEvidenceAdapter(EvidenceResearchPort):
                         snippet=snippet[:800] if snippet else None,
                         evidence_date=(
                             str(item.get("published_date") or item.get("date") or "").strip() or None
+                        ),
+                        observed_date=observed_date,
+                        signal_scope=EvidenceSignalExtractor.classify_scope(
+                            f"{title} {snippet}", name
                         ),
                     )
                 )

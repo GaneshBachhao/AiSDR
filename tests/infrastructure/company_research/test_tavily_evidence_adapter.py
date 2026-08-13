@@ -54,6 +54,27 @@ async def test_gather_returns_evidence_items_from_search_results():
     assert len(evidence) >= 1
     assert evidence[0].title == "Acme is hiring cloud engineers"
     assert evidence[0].evidence_date == "2026-01-01"
+    assert evidence[0].observed_date is not None
+    assert evidence[0].signal_scope == "company_specific"
+
+
+@pytest.mark.asyncio
+async def test_gather_tags_evidence_without_the_company_name_as_industry_general():
+    client = Mock()
+    client.search.return_value = [
+        {
+            "title": "Manufacturing sector sees rising automation investment",
+            "url": "https://industry-news.example/article",
+            "content": "The broader manufacturing sector is investing heavily in automation.",
+        }
+    ]
+    adapter = TavilyEvidenceAdapter(client=client, settings=CompanyResearchSettings())
+    request = CompanyResearchRequest(geography="India")
+
+    evidence = await adapter.gather(_candidate(), _identity(), request)
+
+    assert len(evidence) == 1
+    assert evidence[0].signal_scope == "industry_general"
 
 
 @pytest.mark.asyncio
