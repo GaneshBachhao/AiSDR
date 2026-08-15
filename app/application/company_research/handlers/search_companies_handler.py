@@ -25,7 +25,12 @@ from app.application.company_research.dto.company_research_request import (
     CompanyResearchRequest,
 )
 from app.application.company_research.dto.company_research_response import (
+    CandidateResearchFailure,
+    CompanyResearchBatchResult,
     CompanySearchResult,
+)
+from app.application.company_research.exceptions.pipeline_step_failure import (
+    PipelineStepFailure,
 )
 from app.application.company_research.handlers.promote_candidate_to_company_handler import (
     PromoteCandidateToCompanyHandler,
@@ -57,6 +62,7 @@ from app.domain.company_research.services.evidence_signal_extractor import (
 from app.domain.company_research.services.icp_matcher import IcpMatcher
 from app.domain.company_research.services.industry_classifier import IndustryClassifier
 from app.domain.company_research.services.opportunity_mapper import OpportunityMapper
+from app.domain.company_research.value_objects.pipeline_step import PipelineStep
 from app.domain.recommendation.value_objects.solution_catalog_entry import (
     SolutionCatalogEntry,
 )
@@ -103,10 +109,10 @@ class SearchCompaniesHandler:
         self._contact_port = contact_port
         self._lead_promoter = lead_promoter
 
-    async def handle(self, request: CompanyResearchRequest) -> list[CompanySearchResult]:
+    async def handle(self, request: CompanyResearchRequest) -> CompanyResearchBatchResult:
         candidates = await self._discover_candidates(request)
         if not candidates:
-            return []
+            return CompanyResearchBatchResult()
 
         accepted, metrics = self._funnel.gate_candidates(candidates)
         logger.info(
@@ -117,7 +123,7 @@ class SearchCompaniesHandler:
             metrics.deterministic_accepted,
         )
         if not accepted:
-            return []
+            return CompanyResearchBatchResult()
 
         if self._budget_port is not None and self._ai_provider_name:
             # One identity-verification AI call per accepted candidate --
@@ -129,28 +135,84 @@ class SearchCompaniesHandler:
 
         semaphore = asyncio.Semaphore(self._max_concurrent_research)
 
-        async def _research(candidate: CompanyCandidate) -> CompanySearchResult | None:
+        async def _research(
+            candidate: CompanyCandidate,
+        ) -> CompanySearchResult | CandidateResearchFailure | None:
             async with semaphore:
                 try:
                     return await self._research_candidate(candidate, request)
-                except Exception:
+                except PipelineStepFailure as exc:
+                    logger.warning(
+                        "Research step '%s' failed for candidate %s: %s",
+                        exc.step,
+                        candidate.company_name,
+                        exc,
+                    )
+                    return self._to_failure(candidate, exc.step, str(exc))
+                except Exception as exc:
                     logger.exception("Research failed for candidate %s", candidate.company_name)
-                    return None
+                    return self._to_failure(candidate, PipelineStep.UNKNOWN, str(exc))
 
         researched = await asyncio.gather(*(_research(candidate) for candidate in accepted))
 
         results = [
-            result
-            for result in researched
-            if result is not None and result.qualification_score >= request.minimum_qualification_score
+            item
+            for item in researched
+            if isinstance(item, CompanySearchResult)
+            and item.qualification_score >= request.minimum_qualification_score
         ]
+        failures = [item for item in researched if isinstance(item, CandidateResearchFailure)]
         results.sort(key=lambda item: item.qualification_score, reverse=True)
         final_results = results[: request.number_of_companies]
 
         if request.persist_as_companies and self._candidate_promoter is not None:
             final_results = await self._promote_results(final_results)
 
-        return final_results
+        return CompanyResearchBatchResult(results=final_results, failures=failures)
+
+    async def retry_candidate(
+        self,
+        failure: CandidateResearchFailure,
+        request: CompanyResearchRequest,
+    ) -> CompanySearchResult | CandidateResearchFailure | None:
+        """Re-run the research pipeline for one previously-failed candidate.
+
+        Skips discovery entirely -- the point of capturing enough state on
+        ``CandidateResearchFailure`` to reconstruct the original
+        ``CompanyCandidate`` is to make retrying cheap (no re-querying
+        Tavily, no re-spending AI budget on candidates that already cleared
+        the funnel once) rather than re-running the whole batch.
+        """
+        candidate = CompanyCandidate(
+            company_name=failure.company_name,
+            website=str(failure.website) if failure.website else None,
+            title=failure.title,
+            content=failure.content,
+            source_url=failure.source_url,
+            discovery_metadata=failure.discovery_metadata,
+        )
+        try:
+            return await self._research_candidate(candidate, request)
+        except PipelineStepFailure as exc:
+            return self._to_failure(candidate, exc.step, str(exc))
+        except Exception as exc:
+            logger.exception("Retry failed for candidate %s", candidate.company_name)
+            return self._to_failure(candidate, PipelineStep.UNKNOWN, str(exc))
+
+    @staticmethod
+    def _to_failure(
+        candidate: CompanyCandidate, step: PipelineStep, message: str
+    ) -> CandidateResearchFailure:
+        return CandidateResearchFailure(
+            company_name=candidate.company_name,
+            website=candidate.website,
+            title=candidate.title,
+            content=candidate.content,
+            source_url=candidate.source_url,
+            discovery_metadata=candidate.discovery_metadata,
+            failed_step=step.value,
+            error_message=message,
+        )
 
     async def _promote_results(
         self, results: list[CompanySearchResult]
@@ -230,12 +292,19 @@ class SearchCompaniesHandler:
         candidate: CompanyCandidate,
         request: CompanyResearchRequest,
     ) -> CompanySearchResult | None:
-        identity = await self._identity_port.verify(candidate)
+        try:
+            identity = await self._identity_port.verify(candidate)
+        except Exception as exc:
+            raise PipelineStepFailure(PipelineStep.IDENTITY_VERIFICATION, str(exc)) from exc
+
         identity_rank = _CONFIDENCE_RANK.get(identity.confidence, 0)
         if identity_rank < self._min_identity_rank or identity.verified_website is None:
             return None
 
-        evidence = await self._evidence_port.gather(candidate, identity, request)
+        try:
+            evidence = await self._evidence_port.gather(candidate, identity, request)
+        except Exception as exc:
+            raise PipelineStepFailure(PipelineStep.EVIDENCE_GATHERING, str(exc)) from exc
 
         combined = " ".join(
             filter(None, [candidate.title, candidate.content, *(item.snippet or "" for item in evidence)])

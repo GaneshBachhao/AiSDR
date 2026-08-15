@@ -46,7 +46,7 @@ Fibonacci (1, 2, 3, 5, 8, 13, 21). Priority uses MoSCoW (**M**ust / **S**hould /
 | `[x]` Done | EPIC-04 | 1 | AI Solution Catalog + fix `generate_recommendation` | 13 | **M** | EPIC-01 |
 | `[x]` Done | EPIC-05 | 1 | Contact Discovery | 8 | **M** | EPIC-03, EPIC-04 |
 | `[x]` Done | EPIC-06 | 1 | Lead creation bridge | 8 | **M** | EPIC-05 |
-| `[ ]` Backlog | EPIC-08 | 1 | Workflow orchestration | 8 | **S** | EPIC-06 |
+| `[x]` Done | EPIC-08 | 1 | Workflow orchestration | 8 | **S** | EPIC-06 |
 | `[ ]` Backlog | EPIC-17 | 5 | Enrichment waterfall | 8 | **S** | EPIC-02, EPIC-03 |
 | `[ ]` Backlog | EPIC-16 | 4 | Human-in-the-loop review queue & explainability | 13 | **M** | EPIC-06 |
 | `[ ]` Backlog | EPIC-09 | 2 | Multichannel sequencing engine | 21 | **M** | EPIC-16 |
@@ -507,12 +507,88 @@ rows were created by this run (the 3 existing rows found belong to Sprint
 7's live-verification chain, timestamped earlier the same day). Exactly the
 dormant-but-honest behavior Option B was chosen for.
 
-### EPIC-08 — Workflow orchestration (8 pts) · Track 1
+### EPIC-08 — Workflow orchestration (8 pts) · Track 1 · `[x]` Done — Sprint 10
 
-| ID | Story | Acceptance Criteria | Pts |
-|---|---|---|---|
-| 8.1 | As an operator, I want the DISCOVER→...→LEAD chain observable per candidate | Wrap it as a `Workflow`/`WorkflowStep` execution reusing `app.domain.workflow` | 5 |
-| 8.2 | As an operator, I want failures to be resumable, not silently dropped | A failed step leaves the Workflow in a resumable/failed state instead of `SearchCompaniesHandler._research` swallowing the exception | 3 |
+| ID | Story | Acceptance Criteria | Pts | Status |
+|---|---|---|---|---|
+| 8.1 | As an operator, I want the DISCOVER→...→LEAD chain observable per candidate | ~~Wrap it as a `Workflow`/`WorkflowStep` execution reusing `app.domain.workflow`~~ **New `CompanyResearchBatchResult` envelope** (`results` + `failures`), each failure tagged with the pipeline step that crashed | 5 | `[x]` Done (target module changed — see finding below) |
+| 8.2 | As an operator, I want failures to be resumable, not silently dropped | `PipelineStepFailure` distinguishes a crash from a legitimate disqualification; `POST /company-research/retry` re-runs one failed candidate without re-discovery | 3 | `[x]` Done |
+
+**Finding, before any code was written:** `app.domain.workflow` (the module
+story 8.1 named) turned out to be complete, coherent-looking domain
+scaffolding -- `Workflow` aggregate, `WorkflowStep`, `WorkflowExecution`,
+validation/execution services, all the right enums -- but **entirely
+unwired**: zero application-layer usage, zero persistence, zero router, zero
+tests, and zero references anywhere else in the codebase (confirmed by
+`grep`). It also has its own internal defect nothing ever caught: two
+separate, functionally-identical `WorkflowId` classes live in different
+subpackages of the same unused module
+(`value_objects/workflow_id.py` and `identifiers/workflow_id.py`). Beyond
+being unused, its shape doesn't fit this use case either --
+`WorkflowRepository` is a **synchronous** ABC (`def save`, not `async def`)
+in an otherwise fully-async codebase, and `WorkflowStep` has no field for
+which candidate it belongs to or what step-specific data it produced.
+Presented the tradeoffs to the user (fix-and-adopt vs. build purpose-fit
+tracking) before writing anything -- same discipline as the EPIC-05 and
+EPIC-06 decision gates. **Chose purpose-fit tracking**; `app.domain.workflow`
+is untouched and moved to the Parking Lot below as unused/inconsistent
+scaffolding needing its own cleanup decision, same treatment as the
+`recommendation` module's dead "Universe B" and the orphaned `AIRequestModel`
+stack found in earlier sprints.
+
+**What shipped instead:** the actual bug named in story 8.2's AC --
+`SearchCompaniesHandler._research`'s blanket `except Exception: return None`
+made a genuine crash (a Tavily network error, a provider outage) look
+*identical* to a candidate that was correctly checked and just doesn't
+qualify (wrong industry, unverified identity, ...). Both silently vanished
+from the response the same way, with only a log line to tell them apart.
+Fixed by wrapping the two real I/O boundaries in `_research_candidate`
+(`IdentityVerificationPort.verify`, `EvidenceResearchPort.gather`) so an
+unexpected exception raises `PipelineStepFailure` tagged with a
+`PipelineStep` (`identity_verification` / `evidence_gathering` / `unknown`
+as a defensive fallback for anything else), caught at the per-candidate
+`asyncio.gather` boundary and converted into a `CandidateResearchFailure`
+DTO -- carrying the original candidate's discovery fields so it can be
+retried without paying for a fresh Tavily query. Deterministic disqualifying
+branches (`return None` for low identity confidence, industry mismatch,
+size mismatch, ...) are completely unchanged and still resolve to "just not
+in `results`," exactly as before -- only genuine crashes changed behavior.
+
+**Public API contract change (documented, not snuck in):**
+`POST /company-research/search`'s response changed from a bare
+`CompanySearchResult[]` array to `{results: [...], failures: [...]}`. This is
+the natural, honest shape for the fix -- crashed candidates need somewhere
+to be visible that isn't silently indistinguishable from a legitimate
+rejection -- and keeps the frontend-consumability direction from Sprint 8/9
+(flat, typed, no hidden gaps) rather than overloading the existing array
+with a sentinel value. New `POST /company-research/retry` endpoint accepts
+one `CandidateResearchFailure` + the original request and re-runs just that
+candidate.
+
+**Live-verified against real Tavily, real discovery, one real simulated
+step failure:** ran a real discovery batch, then made the evidence step
+genuinely raise for one specific real candidate (simulating a Tavily
+outage) while the other three proceeded normally. `failures` correctly
+contained exactly the one crashed candidate, tagged `evidence_gathering`
+with the real error message; `results` correctly contained the other three,
+unaffected. Retrying the failed candidate via `retry_candidate()` -- with no
+new discovery call -- succeeded and produced a real qualified result (score
+74), concretely proving the resumability claim rather than just asserting a
+flag exists.
+
+**Second, unrelated finding surfaced during live verification:** the real
+Gemini identity adapter (`AiIdentityVerificationAdapter`) is already
+correctly defensive -- it catches its own provider errors internally and
+returns a `LOW`-confidence result rather than raising, per its existing
+"never silently upgrade to a match" contract, so it couldn't be used to
+demonstrate a step failure organically. But every real call against it
+today returns a **new, more serious error**: `404 NOT_FOUND: models/
+gemini-2.5-flash is no longer available to new users` -- a model
+deprecation, not the daily-quota `RESOURCE_EXHAUSTED` seen in Sprints 8-9.
+Not fixed here (out of this sprint's scope); flagged to the user directly
+and added to the Risk Register below, since every future sprint needing a
+live Gemini call will hit this until `.env`'s `GEMINI_MODEL` is updated to a
+currently-supported model.
 
 ### EPIC-17 — Enrichment waterfall (8 pts) · Track 5
 
@@ -598,6 +674,16 @@ need (see architecture doc §14 for full rationale):
 - **`complete_assessment_handler.py`** (found before Sprint 7) — completely empty
   file, no `/complete` route wired; assessment "completion" today only happens
   indirectly via the generic update endpoint.
+- **`app/domain/workflow` cleanup** (found Sprint 10) — a complete-looking
+  `Workflow`/`WorkflowStep`/`WorkflowExecution` domain module with validation
+  and execution services, but entirely unwired (no application layer, no
+  persistence, no router, zero tests, zero references anywhere else in the
+  codebase) and internally inconsistent (two duplicate `WorkflowId` classes
+  in different subpackages of the same unused module). `WorkflowRepository`
+  is also a synchronous ABC, inconsistent with every other repository in
+  this async-throughout codebase. EPIC-08 was originally planned to reuse it;
+  built purpose-fit tracking instead (see EPIC-08 notes above). Needs its own
+  scoping pass (fix-and-adopt vs. delete) before anything else touches it.
 
 ---
 
@@ -613,5 +699,6 @@ need (see architecture doc §14 for full rationale):
 | Discovery precision ceiling (junk candidates observed in live testing; reconfirmed Sprint 5 with a garbled directory-row name) | High | Low-Medium | Cheap tier `[x]` shipped Sprint 5; row-parsing quality still needs EPIC-17 | EPIC-02, EPIC-17 |
 | **New (Sprint 3):** Gemini per-minute rate limit (5 RPM free tier) distinct from the daily budget — concurrent fan-out can burst past it | High | Medium | Not yet mitigated — daily `AIBudgetGuard` doesn't cover RPM; needs a token-bucket/RPM limiter | Unscheduled — candidate for a Track 4 fast-follow |
 | **New (Sprint 9):** Lead creation bridge (EPIC-06) is fully shipped and tested but produces zero live Leads until a real email-enrichment source exists -- public LinkedIn discovery (EPIC-05) never surfaces an email, and `PromoteCandidateToLeadHandler` deliberately never guesses one | High (today) | Low (by design -- honest gap, not a bug) | Mitigated once EPIC-17 (Enrichment waterfall) adds a real email source; `lead_creation_skipped_reason` makes the gap visible via the API rather than silent | EPIC-17 |
+| **New (Sprint 10):** Configured Gemini model (`gemini-2.5-flash`) now returns `404 NOT_FOUND: ... no longer available to new users` on every real call -- a model deprecation, not the previously-tracked daily-quota/RPM limits | High | High (blocks every live AI call, not just a batch) | Not yet mitigated -- needs `.env`'s `GEMINI_MODEL` updated to a currently-supported model | Unscheduled — candidate for an urgent Track 4 fast-follow |
 | Solo+AI velocity estimate is wrong | Medium | Medium (schedule slip, not scope loss) | Recalibrate after Sprint 2–3 actuals (see sprint plan) | — |
 | Scope creep beyond committed 17 epics | Medium | Medium | MoSCoW priority + Parking Lot boundary enforced | — |

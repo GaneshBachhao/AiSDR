@@ -107,3 +107,42 @@ class CompanySearchResult(BaseModel):
     persisted_contact_id: str | None = None
     persisted_lead_id: str | None = None
     lead_creation_skipped_reason: str | None = None
+
+
+class CandidateResearchFailure(BaseModel):
+    """A candidate whose research pipeline step raised unexpectedly.
+
+    Deliberately distinct from a candidate simply not appearing in
+    ``CompanyResearchBatchResult.results`` -- that still happens whenever a
+    candidate is checked and legitimately doesn't qualify (wrong industry,
+    unverifiable identity, ...), which is not an error. This DTO exists only
+    for the other case: an identity-verification or evidence-gathering call
+    raised (a network error, a provider outage, ...) before the candidate
+    could be checked at all. Carries the original candidate's discovery
+    fields so it can be retried via ``POST /company-research/retry`` without
+    paying for a fresh discovery pass.
+    """
+
+    company_name: str
+    website: HttpUrl | None = None
+    title: str
+    content: str
+    source_url: str
+    discovery_metadata: list[DiscoverySourceMetadata] = Field(default_factory=list)
+    failed_step: str
+    error_message: str
+    is_resumable: bool = True
+
+
+class CompanyResearchBatchResult(BaseModel):
+    """Envelope response for ``POST /company-research/search``.
+
+    Splits genuinely-qualified results from candidates whose research
+    pipeline crashed before a qualification decision could even be made --
+    see ``CandidateResearchFailure``. A candidate that was checked and
+    simply didn't qualify appears in neither list, same as before this
+    envelope existed.
+    """
+
+    results: list[CompanySearchResult] = Field(default_factory=list)
+    failures: list[CandidateResearchFailure] = Field(default_factory=list)

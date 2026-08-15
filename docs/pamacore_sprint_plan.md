@@ -40,7 +40,7 @@ low-effort/independent epics bundled into one sprint (e.g. Sprint 1 below).
 | `[x]` Done | 7 | **Started early: Aug 15, 2026** (planned Sep 28–Oct 2) | EPIC-04 | 13 | `generate_recommendation` actually generates something, from a real shared catalog |
 | `[x]` Done | 8 | **Started early: Aug 15, 2026** (planned Oct 5–9) | EPIC-05 | 8 | Qualified candidates get contact discovery, gated correctly |
 | `[x]` Done | 9 | **Started early: Aug 15, 2026** (planned Oct 12–16) | EPIC-06 | 8 | **Milestone C** — full Company → Contact → Lead pipeline live end-to-end (mechanism live; Lead creation dormant until EPIC-17 adds a real email source — see notes) |
-| `[ ]` Planned | 10 | Oct 19 – Oct 23, 2026 | EPIC-08 | 8 | The full chain is observable and resumable, not silently swallowing failures |
+| `[x]` Done | 10 | **Started early: Aug 15, 2026** (planned Oct 19–23) | EPIC-08 | 8 | The full chain is observable and resumable, not silently swallowing failures |
 | `[ ]` Planned | 11 | Oct 26 – Oct 30, 2026 | EPIC-17 | 8 | **Milestone D** — enrichment waterfall live; junk-candidate rate measurably down |
 | `[ ]` Planned | 12 | Nov 2 – Nov 6, 2026 | EPIC-16 | 13 | Nothing sends autonomously; every Lead has an inspectable evidence trail and a review gate |
 | `[ ]` Planned | 13 | Nov 9 – Nov 13, 2026 | EPIC-09 (part 1) | 11 | `Sequence` aggregate + first channel adapter |
@@ -124,6 +124,7 @@ form:
 | 7 | 13 | 13 | Completed **Aug 15** — a genuine 2-day gap since Sprint 6, the first real session-to-session pacing data point. Also the first sprint requiring a scope judgment call (see Sprint 7 notes) rather than pure implementation. |
 | 8 | 8 | 8 | Also completed Aug 15, same day as Sprint 7. First sprint with a real, previously-flagged decision gate resolved before writing code (company_research-specific port vs. shared contract). See Sprint 8 notes below. |
 | 9 | 8 | 8 | Also completed Aug 15. Second decision gate in a row, this one discovered mid-sprint rather than flagged in advance: a mandatory-schema-field gap (no email source exists) that shapes whether the epic's output is live or dormant. See Sprint 9 notes below. |
+| 10 | 8 | 8 | Also completed Aug 15. Third decision gate in a row: the domain module the story named to reuse turned out to be unused, untested, and internally inconsistent scaffolding -- built purpose-fit tracking instead. Also a public API contract change (response envelope), made deliberately and documented, not incidentally. See Sprint 10 notes below. |
 
 Fill in "Actual" as sprints complete. After Sprint 3: compute a real average
 velocity, compare to the 10 pt/week assumption, and re-run the remaining-sprint
@@ -432,6 +433,53 @@ treating absent evidence as a hard stop, not a best-effort guess.
   created. Milestone C is therefore marked "mechanism shipped," not "reached"
   -- see §3 above -- since a qualified candidate doesn't yet become a live
   Lead without EPIC-17 adding a real email source.
+
+**Sprint 10 notes (2026-08-15):** Both EPIC-08 stories shipped, same day as
+Sprints 7-9. Investigating story 8.1 before writing any code found that
+`app.domain.workflow` -- the module the story explicitly named to reuse --
+is complete-looking domain scaffolding (`Workflow` aggregate, `WorkflowStep`,
+validation/execution services) that has **never been wired to anything**:
+no application layer, no persistence, no router, zero tests, zero
+references anywhere else in the codebase. It also has an internal defect of
+its own (two duplicate `WorkflowId` classes in different subpackages) and a
+sync/async mismatch (`WorkflowRepository` is a synchronous ABC in an
+otherwise fully-async codebase). Laid out the tradeoffs for the user
+(fix-and-adopt vs. purpose-fit tracking) before starting -- third decision
+gate in three sprints, this one surfaced mid-investigation rather than
+flagged in advance. **Chose purpose-fit tracking**, confirmed with the user;
+`app.domain.workflow` moved to the Parking Lot as unused/inconsistent
+scaffolding.
+
+- The actual bug: `SearchCompaniesHandler._research`'s blanket
+  `except Exception: return None` made a genuine crash (network error,
+  provider outage) indistinguishable from a candidate that was correctly
+  checked and just doesn't qualify -- both silently vanished from the
+  response the same way. Fixed by wrapping the two real I/O boundaries
+  (identity verification, evidence gathering) so an unexpected exception
+  becomes a tagged `CandidateResearchFailure` instead of a bare `None`.
+  Deterministic disqualification branches are completely unchanged.
+- **Public API contract change, made deliberately:**
+  `POST /company-research/search` now returns `{results, failures}` instead
+  of a bare array -- the only honest shape for surfacing crashed candidates
+  without conflating them with legitimate rejections. New
+  `POST /company-research/retry` endpoint re-runs one failed candidate
+  without paying for a fresh Tavily discovery pass.
+- **Live-verified against real Tavily:** ran a real discovery batch, made
+  the evidence step genuinely crash for one specific real candidate
+  (simulating a Tavily outage) while three others proceeded normally.
+  `failures` correctly isolated the one crashed candidate with the right
+  step tag and error message; the other three landed in `results`
+  unaffected. Retrying the failed candidate -- no new discovery call --
+  produced a real qualified result (score 74), concretely proving
+  resumability rather than just asserting a flag.
+- **Unrelated finding surfaced during live verification:** the real Gemini
+  identity adapter is already correctly defensive (never raises, per its
+  existing contract), so it couldn't demonstrate a step failure itself --
+  but every real call against it today returns `404 NOT_FOUND:
+  models/gemini-2.5-flash is no longer available to new users`, a model
+  deprecation distinct from the daily-quota exhaustion tracked in Sprints
+  8-9. Flagged to the user directly and added to the Risk Register; not
+  fixed here.
 
 ---
 

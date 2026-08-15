@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -11,6 +11,7 @@ from app.application.company_research.dto.company_research_request import (
     CompanyResearchRequest,
 )
 from app.application.company_research.dto.company_research_response import (
+    CandidateResearchFailure,
     DiscoveredContact,
     EvidenceItem,
 )
@@ -108,7 +109,7 @@ async def test_returns_empty_list_when_discovery_finds_nothing():
         ScriptedEvidenceAdapter({}),
     )
     request = CompanyResearchRequest(geography="India")
-    assert await handler.handle(request) == []
+    assert (await handler.handle(request)).results == []
 
 
 @pytest.mark.asyncio
@@ -120,7 +121,7 @@ async def test_rejects_candidate_with_unverified_identity():
         ScriptedEvidenceAdapter({}),
     )
     request = CompanyResearchRequest(geography="India")
-    results = await handler.handle(request)
+    results = (await handler.handle(request)).results
     assert results == []
 
 
@@ -133,7 +134,7 @@ async def test_verified_candidate_with_evidence_is_returned():
         ScriptedEvidenceAdapter({"Acme Manufacturing": _hiring_evidence("Acme Manufacturing")}),
     )
     request = CompanyResearchRequest(geography="India", industries=["Manufacturing"], number_of_companies=5)
-    results = await handler.handle(request)
+    results = (await handler.handle(request)).results
     assert len(results) == 1
     assert results[0].company_name == "Acme Manufacturing"
     assert results[0].qualification_score > 0
@@ -154,7 +155,7 @@ async def test_industry_mismatch_is_rejected():
         ScriptedEvidenceAdapter({}),
     )
     request = CompanyResearchRequest(geography="India", industries=["Manufacturing"])
-    results = await handler.handle(request)
+    results = (await handler.handle(request)).results
     assert results == []
 
 
@@ -173,7 +174,7 @@ async def test_company_size_gate_rejects_unknown_employee_count():
         ScriptedEvidenceAdapter({}),
     )
     request = CompanyResearchRequest(geography="India", company_size=["SMB"])
-    results = await handler.handle(request)
+    results = (await handler.handle(request)).results
     assert results == []
 
 
@@ -186,7 +187,7 @@ async def test_minimum_qualification_score_filters_low_scoring_results():
         ScriptedEvidenceAdapter({}),
     )
     request = CompanyResearchRequest(geography="India", minimum_qualification_score=95)
-    results = await handler.handle(request)
+    results = (await handler.handle(request)).results
     assert results == []
 
 
@@ -203,7 +204,7 @@ async def test_results_sorted_and_truncated_to_number_of_companies():
         ),
     )
     request = CompanyResearchRequest(geography="India", number_of_companies=1)
-    results = await handler.handle(request)
+    results = (await handler.handle(request)).results
     assert len(results) == 1
     assert results[0].company_name == "Acme A"
 
@@ -219,7 +220,7 @@ async def test_one_candidate_failure_does_not_break_others():
         PartiallyFailingEvidenceAdapter(failing_name="Acme A"),
     )
     request = CompanyResearchRequest(geography="India")
-    results = await handler.handle(request)
+    results = (await handler.handle(request)).results
     assert [r.company_name for r in results] == ["Acme B"]
 
 
@@ -252,7 +253,7 @@ async def test_confirmed_need_reachable_with_company_specific_evidence():
         ),
     )
     request = CompanyResearchRequest(geography="India")
-    results = await handler.handle(request)
+    results = (await handler.handle(request)).results
     assert len(results) == 1
     assert results[0].evidence_classification == "Confirmed Need"
 
@@ -271,7 +272,7 @@ async def test_confirmed_need_unreachable_with_only_industry_general_evidence():
         ),
     )
     request = CompanyResearchRequest(geography="India")
-    results = await handler.handle(request)
+    results = (await handler.handle(request)).results
     assert len(results) == 1
     assert results[0].evidence_classification != "Confirmed Need"
 
@@ -329,7 +330,7 @@ async def test_no_budget_guard_configured_skips_check_entirely():
         # no budget_port / ai_provider_name -- must behave exactly as before
     )
     request = CompanyResearchRequest(geography="India", industries=["Manufacturing"])
-    results = await handler.handle(request)
+    results = (await handler.handle(request)).results
     assert len(results) == 1
 
 
@@ -348,7 +349,7 @@ async def test_no_directory_port_configured_uses_only_discovery_port():
         # no directory_port
     )
     request = CompanyResearchRequest(geography="India", industries=["Manufacturing"])
-    results = await handler.handle(request)
+    results = (await handler.handle(request)).results
 
     assert len(results) == 1
     discovery.discover.assert_awaited_once_with(request)
@@ -399,7 +400,7 @@ async def test_falls_back_to_expensive_tier_when_cheap_tier_is_insufficient():
     )
     # Requesting more companies than the cheap tier alone can supply.
     request = CompanyResearchRequest(geography="India", number_of_companies=5)
-    results = await handler.handle(request)
+    results = (await handler.handle(request)).results
 
     directory.discover.assert_awaited_once_with(request)
     discovery.discover.assert_awaited_once_with(request)
@@ -418,7 +419,7 @@ async def test_persist_as_companies_false_never_calls_the_promoter():
     )
     request = CompanyResearchRequest(geography="India", industries=["Manufacturing"])
     # persist_as_companies defaults to False.
-    results = await handler.handle(request)
+    results = (await handler.handle(request)).results
 
     promoter.handle.assert_not_awaited()
     assert results[0].persisted_company_id is None
@@ -438,7 +439,7 @@ async def test_persist_as_companies_true_promotes_each_final_result():
     request = CompanyResearchRequest(
         geography="India", industries=["Manufacturing"], persist_as_companies=True
     )
-    results = await handler.handle(request)
+    results = (await handler.handle(request)).results
 
     promoter.handle.assert_awaited_once()
     assert results[0].persisted_company_id == "company-123"
@@ -456,7 +457,7 @@ async def test_persist_as_companies_true_without_a_promoter_configured_is_a_noop
     request = CompanyResearchRequest(
         geography="India", industries=["Manufacturing"], persist_as_companies=True
     )
-    results = await handler.handle(request)
+    results = (await handler.handle(request)).results
 
     assert len(results) == 1
     assert results[0].persisted_company_id is None
@@ -477,7 +478,7 @@ async def test_lead_promoter_not_invoked_when_persist_as_companies_is_false():
     )
     request = CompanyResearchRequest(geography="India", industries=["Manufacturing"])
     # persist_as_companies defaults to False.
-    results = await handler.handle(request)
+    results = (await handler.handle(request)).results
 
     lead_promoter.handle.assert_not_awaited()
     assert results[0].persisted_lead_id is None
@@ -506,7 +507,7 @@ async def test_lead_promoter_invoked_with_the_persisted_company_id_after_company
     request = CompanyResearchRequest(
         geography="India", industries=["Manufacturing"], persist_as_companies=True
     )
-    results = await handler.handle(request)
+    results = (await handler.handle(request)).results
 
     lead_promoter.handle.assert_awaited_once()
     called_result, called_company_id = lead_promoter.handle.call_args.args
@@ -539,7 +540,7 @@ async def test_lead_creation_skipped_reason_surfaces_when_no_email_found():
     request = CompanyResearchRequest(
         geography="India", industries=["Manufacturing"], persist_as_companies=True
     )
-    results = await handler.handle(request)
+    results = (await handler.handle(request)).results
 
     assert results[0].persisted_contact_id is None
     assert results[0].persisted_lead_id is None
@@ -562,7 +563,7 @@ async def test_lead_promoter_not_invoked_when_company_promotion_itself_failed():
     request = CompanyResearchRequest(
         geography="India", industries=["Manufacturing"], persist_as_companies=True
     )
-    results = await handler.handle(request)
+    results = (await handler.handle(request)).results
 
     lead_promoter.handle.assert_not_awaited()
     assert results[0].persisted_lead_id is None
@@ -585,7 +586,7 @@ async def test_lead_promotion_failure_does_not_break_the_research_response():
     request = CompanyResearchRequest(
         geography="India", industries=["Manufacturing"], persist_as_companies=True
     )
-    results = await handler.handle(request)
+    results = (await handler.handle(request)).results
 
     assert len(results) == 1
     assert results[0].persisted_company_id == "company-123"
@@ -602,7 +603,7 @@ async def test_contact_discovery_not_invoked_when_no_contact_port_configured():
         # no contact_port -- must behave exactly as before this feature existed
     )
     request = CompanyResearchRequest(geography="India", industries=["Manufacturing"])
-    results = await handler.handle(request)
+    results = (await handler.handle(request)).results
 
     assert len(results) == 1
     assert results[0].discovered_contacts == []
@@ -622,7 +623,7 @@ async def test_contact_discovery_skipped_below_minimum_qualification_score():
     # enough that the funnel/identity/industry gates still let it through.
     request = CompanyResearchRequest(geography="India", minimum_qualification_score=95)
 
-    results = await handler.handle(request)
+    results = (await handler.handle(request)).results
 
     assert results == []
     contact_port.discover.assert_not_awaited()
@@ -643,7 +644,7 @@ async def test_contact_discovery_invoked_and_merged_when_score_clears_threshold(
     )
     request = CompanyResearchRequest(geography="India", industries=["Manufacturing"])
 
-    results = await handler.handle(request)
+    results = (await handler.handle(request)).results
 
     assert len(results) == 1
     contact_port.discover.assert_awaited_once()
@@ -664,7 +665,7 @@ async def test_contact_discovery_failure_does_not_break_the_research_response():
     )
     request = CompanyResearchRequest(geography="India", industries=["Manufacturing"])
 
-    results = await handler.handle(request)
+    results = (await handler.handle(request)).results
 
     assert len(results) == 1
     assert results[0].discovered_contacts == []
@@ -684,7 +685,177 @@ async def test_promotion_failure_does_not_break_the_research_response():
     request = CompanyResearchRequest(
         geography="India", industries=["Manufacturing"], persist_as_companies=True
     )
-    results = await handler.handle(request)
+    results = (await handler.handle(request)).results
 
     assert len(results) == 1
     assert results[0].persisted_company_id is None
+
+
+class RaisingIdentityAdapter(IdentityVerificationPort):
+    """Simulates a real crash (network/provider error), not a legitimate
+    low-confidence rejection -- the distinction this sprint's failures/
+    results split exists to preserve."""
+
+    async def verify(self, candidate):
+        raise RuntimeError("tavily unreachable")
+
+
+class RaisingEvidenceAdapter(EvidenceResearchPort):
+    async def gather(self, candidate, identity, request):
+        raise RuntimeError("gemini quota exhausted")
+
+
+@pytest.mark.asyncio
+async def test_identity_verification_crash_surfaces_as_a_tagged_failure_not_a_silent_drop():
+    candidate = _candidate("Acme Manufacturing", "https://acme.example")
+    handler = SearchCompaniesHandler(
+        ScriptedDiscoveryAdapter([candidate]),
+        RaisingIdentityAdapter(),
+        ScriptedEvidenceAdapter({}),
+    )
+    request = CompanyResearchRequest(geography="India")
+
+    batch = await handler.handle(request)
+
+    assert batch.results == []
+    assert len(batch.failures) == 1
+    failure = batch.failures[0]
+    assert failure.company_name == "Acme Manufacturing"
+    assert failure.failed_step == "identity_verification"
+    assert "tavily unreachable" in failure.error_message
+    assert failure.is_resumable is True
+
+
+@pytest.mark.asyncio
+async def test_evidence_gathering_crash_surfaces_as_a_tagged_failure():
+    candidate = _candidate("Acme Manufacturing", "https://acme.example")
+    handler = SearchCompaniesHandler(
+        ScriptedDiscoveryAdapter([candidate]),
+        ScriptedIdentityAdapter({"Acme Manufacturing": _verified("https://acme.example")}),
+        RaisingEvidenceAdapter(),
+    )
+    request = CompanyResearchRequest(geography="India")
+
+    batch = await handler.handle(request)
+
+    assert batch.results == []
+    assert len(batch.failures) == 1
+    assert batch.failures[0].failed_step == "evidence_gathering"
+    assert "gemini quota exhausted" in batch.failures[0].error_message
+
+
+@pytest.mark.asyncio
+async def test_legitimate_disqualification_is_not_a_failure():
+    """A candidate that was actually checked and doesn't qualify (e.g.
+    unverified identity) must appear in neither results nor failures --
+    that's not an error, and conflating the two was the original bug this
+    sprint fixes."""
+    candidate = _candidate("Lathangi Motors", "https://tatamotors.com")
+    handler = SearchCompaniesHandler(
+        ScriptedDiscoveryAdapter([candidate]),
+        ScriptedIdentityAdapter({"Lathangi Motors": _unverified()}),
+        ScriptedEvidenceAdapter({}),
+    )
+    request = CompanyResearchRequest(geography="India")
+
+    batch = await handler.handle(request)
+
+    assert batch.results == []
+    assert batch.failures == []
+
+
+@pytest.mark.asyncio
+async def test_an_unexpected_non_step_exception_still_becomes_an_unknown_failure():
+    """Defensive fallback: even an exception from somewhere other than the
+    two wrapped I/O ports must not crash the whole batch or silently vanish
+    the candidate -- it's tagged 'unknown' rather than a specific step."""
+    candidate = _candidate("Acme Manufacturing", "https://acme.example")
+    handler = SearchCompaniesHandler(
+        ScriptedDiscoveryAdapter([candidate]),
+        ScriptedIdentityAdapter({"Acme Manufacturing": _verified("https://acme.example")}),
+        ScriptedEvidenceAdapter({"Acme Manufacturing": _hiring_evidence("Acme Manufacturing")}),
+    )
+    with patch(
+        "app.application.company_research.handlers.search_companies_handler."
+        "EvidenceSignalExtractor.extract_signals",
+        side_effect=RuntimeError("boom"),
+    ):
+        batch = await handler.handle(CompanyResearchRequest(geography="India"))
+
+    assert batch.results == []
+    assert len(batch.failures) == 1
+    assert batch.failures[0].failed_step == "unknown"
+    assert "boom" in batch.failures[0].error_message
+
+
+@pytest.mark.asyncio
+async def test_retry_candidate_skips_discovery_and_returns_a_qualified_result():
+    discovery = AsyncMock(spec=CompanyDiscoveryPort)
+    handler = SearchCompaniesHandler(
+        discovery,
+        ScriptedIdentityAdapter({"Acme Manufacturing": _verified("https://acme.example")}),
+        ScriptedEvidenceAdapter({"Acme Manufacturing": _hiring_evidence("Acme Manufacturing")}),
+    )
+    request = CompanyResearchRequest(geography="India", industries=["Manufacturing"])
+    failure = CandidateResearchFailure(
+        company_name="Acme Manufacturing",
+        website="https://acme.example",
+        title="Acme Manufacturing | Official Site",
+        content="Acme Manufacturing is a manufacturer of industrial equipment with approximately 120 employees.",
+        source_url="https://acme.example",
+        failed_step="identity_verification",
+        error_message="tavily unreachable",
+    )
+
+    result = await handler.retry_candidate(failure, request)
+
+    assert result.company_name == "Acme Manufacturing"
+    assert result.qualification_score > 0
+    discovery.discover.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_retry_candidate_that_fails_again_returns_another_tagged_failure():
+    handler = SearchCompaniesHandler(
+        AsyncMock(spec=CompanyDiscoveryPort),
+        RaisingIdentityAdapter(),
+        ScriptedEvidenceAdapter({}),
+    )
+    request = CompanyResearchRequest(geography="India")
+    failure = CandidateResearchFailure(
+        company_name="Acme Manufacturing",
+        website="https://acme.example",
+        title="Acme Manufacturing",
+        content="x",
+        source_url="https://acme.example",
+        failed_step="identity_verification",
+        error_message="tavily unreachable",
+    )
+
+    retried = await handler.retry_candidate(failure, request)
+
+    assert isinstance(retried, CandidateResearchFailure)
+    assert retried.failed_step == "identity_verification"
+
+
+@pytest.mark.asyncio
+async def test_retry_candidate_that_now_legitimately_fails_to_qualify_returns_none():
+    handler = SearchCompaniesHandler(
+        AsyncMock(spec=CompanyDiscoveryPort),
+        ScriptedIdentityAdapter({"Acme Manufacturing": _unverified()}),
+        ScriptedEvidenceAdapter({}),
+    )
+    request = CompanyResearchRequest(geography="India")
+    failure = CandidateResearchFailure(
+        company_name="Acme Manufacturing",
+        website="https://acme.example",
+        title="Acme Manufacturing",
+        content="x",
+        source_url="https://acme.example",
+        failed_step="identity_verification",
+        error_message="tavily unreachable",
+    )
+
+    retried = await handler.retry_candidate(failure, request)
+
+    assert retried is None
