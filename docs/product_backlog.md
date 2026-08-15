@@ -44,7 +44,7 @@ Fibonacci (1, 2, 3, 5, 8, 13, 21). Priority uses MoSCoW (**M**ust / **S**hould /
 | `[x]` Done | EPIC-02 | 1 | Company Universe cheap-discovery tier | 13 | **M** | EPIC-00 |
 | `[x]` Done | EPIC-03 | 1 | Entity Resolution → canonical `Company` | 13 | **M** | EPIC-02 |
 | `[x]` Done | EPIC-04 | 1 | AI Solution Catalog + fix `generate_recommendation` | 13 | **M** | EPIC-01 |
-| `[ ]` Backlog | EPIC-05 | 1 | Contact Discovery | 8 | **M** | EPIC-03, EPIC-04 |
+| `[x]` Done | EPIC-05 | 1 | Contact Discovery | 8 | **M** | EPIC-03, EPIC-04 |
 | `[ ]` Backlog | EPIC-06 | 1 | Lead creation bridge | 8 | **M** | EPIC-05 |
 | `[ ]` Backlog | EPIC-08 | 1 | Workflow orchestration | 8 | **S** | EPIC-06 |
 | `[ ]` Backlog | EPIC-17 | 5 | Enrichment waterfall | 8 | **S** | EPIC-02, EPIC-03 |
@@ -381,12 +381,63 @@ order (map to catalog first, propose generic only when nothing fits, always labe
 which is which). A fresh `GET /recommendations/{id}` in a separate call confirmed
 all three solutions round-tripped through the real database with full detail.
 
-### EPIC-05 — Contact Discovery (8 pts) · Track 1
+### EPIC-05 — Contact Discovery (8 pts) · Track 1 · `[x]` Done — Sprint 8
 
-| ID | Story | Acceptance Criteria | Pts |
-|---|---|---|---|
-| 5.1 | As the platform, I want a contact-discovery port + adapter | New `ContactDiscoveryPort`, Tavily-backed adapter | 5 |
-| 5.2 | As the platform, I want contact discovery gated by qualification score | Adapter never invoked below `minimum_qualification_score`; role targeting driven by the EPIC-04 catalog match | 3 |
+| ID | Story | Acceptance Criteria | Pts | Status |
+|---|---|---|---|---|
+| 5.1 | As the platform, I want a contact-discovery port + adapter | New `ContactDiscoveryPort`, Tavily-backed adapter | 5 | `[x]` Done |
+| 5.2 | As the platform, I want contact discovery gated by qualification score | Adapter never invoked below `minimum_qualification_score`; role targeting driven by the EPIC-04 catalog match | 3 | `[x]` Done |
+
+**Decision gate resolved before starting:** the existing, unimplemented
+`app/application/contracts/services/contact_discovery_service.py` contract
+(flagged in the Parking Lot below before Sprint 7) was left untouched, and a
+new company_research-specific `ContactDiscoveryPort` was built instead,
+matching `CompanyDiscoveryPort`/`IdentityVerificationPort`/`EvidenceResearchPort`'s
+existing pattern. Confirmed with the user first; the shared-contract
+generalization remains a Parking Lot candidate if another module needs
+contact discovery later, not a Sprint 8 side quest.
+
+Shipped `ContactDiscoveryPort` (`discover(candidate, website, target_role) ->
+list[DiscoveredContact]`) and `TavilyContactDiscoveryAdapter` — searches for
+the candidate's public LinkedIn profiles, filters to genuine
+`linkedin.com/in/...` profile URLs (never a company page or unrelated
+result), and parses the standard "Name - Title - Company | LinkedIn"
+search-result title format into a name + observed role title. No profile
+found means an empty list, never a fabricated contact -- same
+never-guess discipline as `IdentityVerificationPort`.
+
+**Gating (story 5.2):** wired into `SearchCompaniesHandler._research_candidate`
+*after* qualification scoring, checked against `request.minimum_qualification_score`
+before the port is ever called -- so a sub-threshold candidate costs zero
+contact-discovery Tavily calls, not just a discarded result. Role targeting
+reuses `CompanySearchResult.decision_maker_role`, which Sprint 7's
+`OpportunityMapper`/catalog match already computes -- no new role-inference
+logic needed, just threading the existing value into the new port call.
+
+**Response shape (frontend-facing, per user direction on 2026-08-15 --
+see the architecture doc's framing on future frontend consumption):** added
+`CompanySearchResult.discovered_contacts: list[DiscoveredContact]` (name,
+role_title, linkedin_url, source_url) rather than only overloading the
+pre-existing singular `decision_maker_name`/`public_contact_channel` fields
+-- follows the same "richer list alongside the existing singular field"
+pattern already used for `sources`/`discovery_metadata`. The singular
+`decision_maker_name` is still populated (from the first discovered contact)
+so existing consumers of that field keep working unchanged.
+
+Live-verified against real Tavily end-to-end (discovery -> evidence ->
+scoring -> contact discovery); Gemini identity verification was substituted
+with a scripted trust-the-verified-website stub for this one smoke test
+only, since the real Gemini key had already hit its free-tier **daily** quota
+from earlier live testing today (a pre-existing, already-tracked constraint,
+not a new one) -- same workaround Sprint 4 used for the same reason. For a
+real qualifying candidate ("Jabil", score 74), the adapter found a genuine
+LinkedIn profile (`May Yap`, `linkedin.com/in/may-yap-77997311`) and
+populated both `discovered_contacts` and `decision_maker_name`. For two
+other candidates that were pre-existing discovery-tier noise (tracked under
+the "Discovery precision ceiling" risk, EPIC-17 -- not introduced this
+sprint), contact discovery correctly returned an empty list instead of
+fabricating a person, confirming the never-guess contract holds under real
+data.
 
 ### EPIC-06 — Lead creation bridge (8 pts) · Track 1
 
@@ -470,11 +521,14 @@ need (see architecture doc §14 for full rationale):
   (`__init__.py`-inlined duplicates + standalone orphans, built against a
   domain-layer `RecommendationRepository` with no concrete implementation).
   Needs its own scoping pass before touching — likely 8-13 points on its own.
-- **`ContactDiscoveryService` reconsideration for EPIC-05** (found before Sprint 7)
-  — an unimplemented contact-discovery contract already exists in
-  `app/application/contracts/services/`. EPIC-05 was planned as a new
-  company_research-specific port; worth deciding whether to implement *that*
-  existing contract instead so contact discovery isn't company_research-private.
+- **`ContactDiscoveryService` generalization** (found before Sprint 7,
+  resolved for Sprint 8) — an unimplemented contact-discovery contract sits
+  in `app/application/contracts/services/`. Decided (2026-08-15, confirmed
+  with the user) to ship EPIC-05 as a new company_research-specific
+  `ContactDiscoveryPort` instead, matching the module's existing port
+  pattern. The shared contract remains unimplemented; revisit only if
+  another module (not just company_research) actually needs contact
+  discovery -- don't generalize speculatively.
 - **`complete_assessment_handler.py`** (found before Sprint 7) — completely empty
   file, no `/complete` route wired; assessment "completion" today only happens
   indirectly via the generic update endpoint.

@@ -10,7 +10,10 @@ from app.infrastructure.ai.exceptions.ai_budget_exceeded_exception import (
 from app.application.company_research.dto.company_research_request import (
     CompanyResearchRequest,
 )
-from app.application.company_research.dto.company_research_response import EvidenceItem
+from app.application.company_research.dto.company_research_response import (
+    DiscoveredContact,
+    EvidenceItem,
+)
 from app.application.company_research.handlers.search_companies_handler import (
     SearchCompaniesHandler,
 )
@@ -457,6 +460,84 @@ async def test_persist_as_companies_true_without_a_promoter_configured_is_a_noop
 
     assert len(results) == 1
     assert results[0].persisted_company_id is None
+
+
+@pytest.mark.asyncio
+async def test_contact_discovery_not_invoked_when_no_contact_port_configured():
+    candidate = _candidate("Acme Manufacturing", "https://acme.example")
+    handler = SearchCompaniesHandler(
+        ScriptedDiscoveryAdapter([candidate]),
+        ScriptedIdentityAdapter({"Acme Manufacturing": _verified("https://acme.example")}),
+        ScriptedEvidenceAdapter({"Acme Manufacturing": _hiring_evidence("Acme Manufacturing")}),
+        # no contact_port -- must behave exactly as before this feature existed
+    )
+    request = CompanyResearchRequest(geography="India", industries=["Manufacturing"])
+    results = await handler.handle(request)
+
+    assert len(results) == 1
+    assert results[0].discovered_contacts == []
+
+
+@pytest.mark.asyncio
+async def test_contact_discovery_skipped_below_minimum_qualification_score():
+    candidate = _candidate("Acme Manufacturing", "https://acme.example")
+    contact_port = AsyncMock()
+    handler = SearchCompaniesHandler(
+        ScriptedDiscoveryAdapter([candidate]),
+        ScriptedIdentityAdapter({"Acme Manufacturing": _verified("https://acme.example")}),
+        ScriptedEvidenceAdapter({}),  # no evidence -> low score
+        contact_port=contact_port,
+    )
+    # Threshold set above what a no-evidence candidate can score, but low
+    # enough that the funnel/identity/industry gates still let it through.
+    request = CompanyResearchRequest(geography="India", minimum_qualification_score=95)
+
+    results = await handler.handle(request)
+
+    assert results == []
+    contact_port.discover.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_contact_discovery_invoked_and_merged_when_score_clears_threshold():
+    candidate = _candidate("Acme Manufacturing", "https://acme.example")
+    contact_port = AsyncMock()
+    contact_port.discover.return_value = [
+        DiscoveredContact(name="Jane Doe", role_title="COO")
+    ]
+    handler = SearchCompaniesHandler(
+        ScriptedDiscoveryAdapter([candidate]),
+        ScriptedIdentityAdapter({"Acme Manufacturing": _verified("https://acme.example")}),
+        ScriptedEvidenceAdapter({"Acme Manufacturing": _hiring_evidence("Acme Manufacturing")}),
+        contact_port=contact_port,
+    )
+    request = CompanyResearchRequest(geography="India", industries=["Manufacturing"])
+
+    results = await handler.handle(request)
+
+    assert len(results) == 1
+    contact_port.discover.assert_awaited_once()
+    assert results[0].discovered_contacts[0].name == "Jane Doe"
+    assert results[0].decision_maker_name == "Jane Doe"
+
+
+@pytest.mark.asyncio
+async def test_contact_discovery_failure_does_not_break_the_research_response():
+    candidate = _candidate("Acme Manufacturing", "https://acme.example")
+    contact_port = AsyncMock()
+    contact_port.discover.side_effect = RuntimeError("tavily unavailable")
+    handler = SearchCompaniesHandler(
+        ScriptedDiscoveryAdapter([candidate]),
+        ScriptedIdentityAdapter({"Acme Manufacturing": _verified("https://acme.example")}),
+        ScriptedEvidenceAdapter({"Acme Manufacturing": _hiring_evidence("Acme Manufacturing")}),
+        contact_port=contact_port,
+    )
+    request = CompanyResearchRequest(geography="India", industries=["Manufacturing"])
+
+    results = await handler.handle(request)
+
+    assert len(results) == 1
+    assert results[0].discovered_contacts == []
 
 
 @pytest.mark.asyncio

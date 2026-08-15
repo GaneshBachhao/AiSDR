@@ -36,6 +36,9 @@ from app.application.company_research.ports.company_directory_port import (
 from app.application.company_research.ports.company_discovery_port import (
     CompanyDiscoveryPort,
 )
+from app.application.company_research.ports.contact_discovery_port import (
+    ContactDiscoveryPort,
+)
 from app.application.company_research.ports.evidence_research_port import (
     EvidenceResearchPort,
 )
@@ -80,6 +83,7 @@ class SearchCompaniesHandler:
         directory_port: CompanyDirectoryPort | None = None,
         candidate_promoter: PromoteCandidateToCompanyHandler | None = None,
         solution_catalog: list[SolutionCatalogEntry] | None = None,
+        contact_port: ContactDiscoveryPort | None = None,
     ) -> None:
         self._discovery_port = discovery_port
         self._identity_port = identity_port
@@ -92,6 +96,7 @@ class SearchCompaniesHandler:
         self._directory_port = directory_port
         self._candidate_promoter = candidate_promoter
         self._solution_catalog = solution_catalog
+        self._contact_port = contact_port
 
     async def handle(self, request: CompanyResearchRequest) -> list[CompanySearchResult]:
         candidates = await self._discover_candidates(request)
@@ -267,4 +272,35 @@ class SearchCompaniesHandler:
         if result.parent_company is None and parent_from_text:
             result = result.model_copy(update={"parent_company": parent_from_text})
 
+        if (
+            self._contact_port is not None
+            and result.qualification_score >= request.minimum_qualification_score
+        ):
+            result = await self._discover_contacts(candidate, result)
+
         return result
+
+    async def _discover_contacts(
+        self,
+        candidate: CompanyCandidate,
+        result: CompanySearchResult,
+    ) -> CompanySearchResult:
+        try:
+            contacts = await self._contact_port.discover(
+                candidate=candidate,
+                website=str(result.website) if result.website else None,
+                target_role=result.decision_maker_role,
+            )
+        except Exception:
+            logger.exception("Contact discovery failed for candidate %s", candidate.company_name)
+            return result
+
+        if not contacts:
+            return result
+
+        return result.model_copy(
+            update={
+                "discovered_contacts": contacts,
+                "decision_maker_name": result.decision_maker_name or contacts[0].name,
+            }
+        )

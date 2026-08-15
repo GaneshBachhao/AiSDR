@@ -25,6 +25,21 @@ class EvidenceItem(BaseModel):
     signal_scope: Literal["company_specific", "industry_general"] = "industry_general"
 
 
+class DiscoveredContact(BaseModel):
+    """A public-web-discovered person at a researched company.
+
+    Best-effort, sourced from a public profile page (e.g. LinkedIn) --
+    never fabricated. ``role_title`` is the title observed on the source
+    page, which may differ from ``CompanySearchResult.decision_maker_role``
+    (the *targeted* role derived from the catalog match).
+    """
+
+    name: str
+    role_title: str | None = None
+    linkedin_url: HttpUrl | None = None
+    source_url: HttpUrl | None = None
+
+
 class DiscoverySourceMetadata(BaseModel):
     """Dynamic metadata captured from a discovery/directory source at run time."""
 
@@ -67,6 +82,7 @@ class CompanySearchResult(BaseModel):
     decision_maker_role: str | None = None
     decision_maker_name: str | None = None
     public_contact_channel: str | None = None
+    discovered_contacts: list[DiscoveredContact] = Field(default_factory=list)
     discovery_metadata: list[DiscoverySourceMetadata] = Field(default_factory=list)
     qualification_score: int = Field(ge=0, le=100)
     priority_tier: str

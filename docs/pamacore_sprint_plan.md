@@ -38,7 +38,7 @@ low-effort/independent epics bundled into one sprint (e.g. Sprint 1 below).
 | `[x]` Done | 5 | **Started early: Aug 13, 2026** (planned Sep 14–18) | EPIC-02 | 13 | A cheap discovery tier exists ahead of live Tavily search |
 | `[x]` Done | 6 | **Started early: Aug 13, 2026** (planned Sep 21–25) | EPIC-03 | 13 | Research candidates resolve into real, deduplicated `Company` records |
 | `[x]` Done | 7 | **Started early: Aug 15, 2026** (planned Sep 28–Oct 2) | EPIC-04 | 13 | `generate_recommendation` actually generates something, from a real shared catalog |
-| `[ ]` Planned | 8 | Oct 5 – Oct 9, 2026 | EPIC-05 | 8 | Qualified candidates get contact discovery, gated correctly |
+| `[x]` Done | 8 | **Started early: Aug 15, 2026** (planned Oct 5–9) | EPIC-05 | 8 | Qualified candidates get contact discovery, gated correctly |
 | `[ ]` Planned | 9 | Oct 12 – Oct 16, 2026 | EPIC-06 | 8 | **Milestone C** — full Company → Contact → Lead pipeline live end-to-end |
 | `[ ]` Planned | 10 | Oct 19 – Oct 23, 2026 | EPIC-08 | 8 | The full chain is observable and resumable, not silently swallowing failures |
 | `[ ]` Planned | 11 | Oct 26 – Oct 30, 2026 | EPIC-17 | 8 | **Milestone D** — enrichment waterfall live; junk-candidate rate measurably down |
@@ -122,6 +122,7 @@ form:
 | 5 | 13 | 13 | Also completed Aug 13 — the first genuinely new integration (EPIC-02), and it still didn't slow down. See recalibration and Sprint 5 notes below. |
 | 6 | 13 | 13 | Also completed Aug 13 — first sprint with a real decision gate (persistence default), confirmed with the user before starting. See Sprint 6 notes below. |
 | 7 | 13 | 13 | Completed **Aug 15** — a genuine 2-day gap since Sprint 6, the first real session-to-session pacing data point. Also the first sprint requiring a scope judgment call (see Sprint 7 notes) rather than pure implementation. |
+| 8 | 8 | 8 | Also completed Aug 15, same day as Sprint 7. First sprint with a real, previously-flagged decision gate resolved before writing code (company_research-specific port vs. shared contract). See Sprint 8 notes below. |
 
 Fill in "Actual" as sprints complete. After Sprint 3: compute a real average
 velocity, compare to the 10 pt/week assumption, and re-run the remaining-sprint
@@ -358,6 +359,43 @@ if you're planning to touch anything else in that module.
   bottleneck for sprints like this one was never raw coding throughput, it was
   the judgment call about what "fixing generate_recommendation" should actually
   mean once the obvious target turned out to be dead code.
+
+**Sprint 8 notes (2026-08-15):** Both EPIC-05 stories shipped, same day as
+Sprint 7 (no calendar gap this time). Story 5.1's decision gate — new
+company_research-specific `ContactDiscoveryPort` vs. implementing the
+existing unimplemented `ContactDiscoveryService` contract, flagged in the
+Parking Lot before Sprint 7 — was confirmed with the user before writing any
+code, per the same discipline as Sprint 6's persistence-flag gate. Went with
+the new port, matching the module's existing pattern
+(`CompanyDiscoveryPort`/`IdentityVerificationPort`/`EvidenceResearchPort`);
+the shared contract stays a Parking Lot candidate for if/when another module
+needs it.
+
+- `TavilyContactDiscoveryAdapter` mines real LinkedIn profile search results
+  (filtered strictly to `linkedin.com/in/...` URLs) and parses the standard
+  "Name - Title - Company | LinkedIn" title format — no profile found means
+  an empty list, never a guessed contact.
+- Gating (story 5.2) sits inside the same per-candidate pipeline step that
+  computes qualification score, so a sub-threshold candidate never triggers
+  a contact-discovery call at all, not just a discarded result. Role
+  targeting reuses the `decision_maker_role` Sprint 7's catalog match
+  already computes.
+- Added `CompanySearchResult.discovered_contacts` (a list, richer than the
+  pre-existing singular `decision_maker_name`) — the first request during
+  Sprint 8 planning surfaced that the user wants a frontend built against
+  this API eventually, so new response fields were shaped with that
+  consumer in mind (flat, typed, no internal leakage) even though no
+  frontend work is scheduled yet.
+- **Live-verified against real Tavily**, full discovery → evidence → scoring
+  → contact-discovery pipeline. Gemini identity verification hit its
+  free-tier **daily** quota (already exhausted from earlier live testing
+  today, not a new issue) — substituted a scripted trust-the-website stub
+  for identity only, the same workaround Sprint 4 used for the same known
+  limitation. For a real qualifying candidate ("Jabil", score 74), found a
+  genuine LinkedIn profile and correctly populated both
+  `discovered_contacts` and `decision_maker_name`; for pre-existing
+  discovery-tier noise candidates (already tracked under EPIC-17), correctly
+  returned an empty contact list rather than fabricating anyone.
 
 ---
 

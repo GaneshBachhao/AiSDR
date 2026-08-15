@@ -2,6 +2,7 @@ import pytest
 from pydantic import ValidationError
 
 from app.application.company_research.ports.company_discovery_port import CompanyDiscoveryPort
+from app.application.company_research.ports.contact_discovery_port import ContactDiscoveryPort
 from app.application.company_research.ports.identity_verification_port import (
     IdentityVerificationPort,
     IdentityVerificationResult,
@@ -9,6 +10,7 @@ from app.application.company_research.ports.identity_verification_port import (
 from app.application.company_research.dto.company_research_request import (
     CompanyResearchRequest,
 )
+from app.application.company_research.dto.company_research_response import DiscoveredContact
 from app.domain.company_research.entities.candidate import CompanyCandidate
 
 
@@ -71,3 +73,28 @@ async def test_fake_identity_adapter_never_silently_defaults_to_high_confidence(
 def test_identity_verification_result_rejects_unknown_confidence_value():
     with pytest.raises(ValidationError):
         IdentityVerificationResult(confidence="MAYBE", reason="x")
+
+
+class FakeContactDiscoveryAdapter(ContactDiscoveryPort):
+    async def discover(self, candidate, website, target_role):
+        return [DiscoveredContact(name="Jane Doe", role_title=target_role)]
+
+
+def test_contact_discovery_port_cannot_be_instantiated_directly():
+    with pytest.raises(TypeError):
+        ContactDiscoveryPort()  # type: ignore[abstract]
+
+
+@pytest.mark.asyncio
+async def test_fake_contact_discovery_adapter_satisfies_port_contract():
+    adapter: ContactDiscoveryPort = FakeContactDiscoveryAdapter()
+    candidate = CompanyCandidate(
+        company_name="Acme Manufacturing",
+        website="https://acme.example",
+        title="Acme Manufacturing",
+        content="",
+        source_url="https://acme.example",
+    )
+    contacts = await adapter.discover(candidate, "https://acme.example", "COO / Operations Leader")
+    assert contacts[0].name == "Jane Doe"
+    assert contacts[0].role_title == "COO / Operations Leader"

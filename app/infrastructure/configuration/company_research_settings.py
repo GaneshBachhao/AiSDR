@@ -34,3 +34,6 @@ class CompanyResearchSettings(BaseSettings):
     # Cheap-tier (directory) discovery: how long a sector/geography's mined
     # candidates are reused before re-querying Tavily.
     directory_cache_ttl_seconds: int = 3600
+
+    # Contact discovery: max public-profile contacts returned per candidate.
+    max_contacts_per_candidate: int = 3

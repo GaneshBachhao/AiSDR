@@ -29,6 +29,9 @@ from app.infrastructure.ai.composition import (
 from app.infrastructure.company_research.ai_identity_verification_adapter import (
     AiIdentityVerificationAdapter,
 )
+from app.infrastructure.company_research.tavily_contact_discovery_adapter import (
+    TavilyContactDiscoveryAdapter,
+)
 from app.infrastructure.company_research.tavily_directory_adapter import (
     TavilyDirectoryAdapter,
 )
@@ -120,6 +123,13 @@ def get_solution_catalog() -> list[SolutionCatalogEntry]:
     return load_existing_offerings()
 
 
+def get_contact_discovery_adapter(
+    client: AgneticTavilyClient = Depends(get_tavily_client),
+    settings: CompanyResearchSettings = Depends(get_company_research_settings),
+) -> TavilyContactDiscoveryAdapter:
+    return TavilyContactDiscoveryAdapter(client=client, settings=settings)
+
+
 def get_search_companies_handler(
     discovery: TavilyDiscoveryAdapter = Depends(get_discovery_adapter),
     directory: TavilyDirectoryAdapter = Depends(get_directory_adapter),
@@ -129,6 +139,7 @@ def get_search_companies_handler(
     budget_guard: AIBudgetPort = Depends(get_ai_budget_guard),
     candidate_promoter: PromoteCandidateToCompanyHandler = Depends(get_candidate_promoter),
     solution_catalog: list[SolutionCatalogEntry] = Depends(get_solution_catalog),
+    contact_discovery: TavilyContactDiscoveryAdapter = Depends(get_contact_discovery_adapter),
 ) -> SearchCompaniesHandler:
     return SearchCompaniesHandler(
         discovery_port=discovery,
@@ -141,6 +152,7 @@ def get_search_companies_handler(
         directory_port=directory,
         candidate_promoter=candidate_promoter,
         solution_catalog=solution_catalog,
+        contact_port=contact_discovery,
     )
 
 
