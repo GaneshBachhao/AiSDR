@@ -20,4 +20,6 @@ class LeadSource(StrEnum):
 
     PARTNER = "Partner"
 
+    AI_RESEARCH = "AI Research"
+
     OTHER = "Other"

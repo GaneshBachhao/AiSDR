@@ -14,12 +14,17 @@ from fastapi import Depends
 from app.application.ai.services.ai_execution_service import AIExecutionService
 from app.application.common.interfaces.unit_of_work import UnitOfWork
 from app.application.company.handlers.create_company_handler import CreateCompanyHandler
+from app.application.contact.handlers.create_contact_handler import CreateContactHandler
 from app.application.company_research.handlers.promote_candidate_to_company_handler import (
     PromoteCandidateToCompanyHandler,
+)
+from app.application.company_research.handlers.promote_candidate_to_lead_handler import (
+    PromoteCandidateToLeadHandler,
 )
 from app.application.company_research.handlers.search_companies_handler import (
     SearchCompaniesHandler,
 )
+from app.application.lead.handlers.create_lead_handler import CreateLeadHandler
 from app.application.ai.ports.ai_budget_port import AIBudgetPort
 from app.infrastructure.ai.composition import (
     build_ai_budget_guard,
@@ -49,7 +54,11 @@ from app.infrastructure.configuration.company_research_settings import (
     CompanyResearchSettings,
 )
 from app.integrations.tavily.tavily_client import AgneticTavilyClient
-from app.presentation.api.dependencies.handlers import get_create_company_handler
+from app.presentation.api.dependencies.handlers import (
+    get_create_company_handler,
+    get_create_contact_handler,
+    get_create_lead_handler,
+)
 from app.presentation.api.dependencies.persistence import get_unit_of_work
 
 
@@ -130,6 +139,18 @@ def get_contact_discovery_adapter(
     return TavilyContactDiscoveryAdapter(client=client, settings=settings)
 
 
+def get_lead_promoter(
+    uow: UnitOfWork = Depends(get_unit_of_work),
+    create_contact_handler: CreateContactHandler = Depends(get_create_contact_handler),
+    create_lead_handler: CreateLeadHandler = Depends(get_create_lead_handler),
+) -> PromoteCandidateToLeadHandler:
+    return PromoteCandidateToLeadHandler(
+        unit_of_work=uow,
+        create_contact_handler=create_contact_handler,
+        create_lead_handler=create_lead_handler,
+    )
+
+
 def get_search_companies_handler(
     discovery: TavilyDiscoveryAdapter = Depends(get_discovery_adapter),
     directory: TavilyDirectoryAdapter = Depends(get_directory_adapter),
@@ -140,6 +161,7 @@ def get_search_companies_handler(
     candidate_promoter: PromoteCandidateToCompanyHandler = Depends(get_candidate_promoter),
     solution_catalog: list[SolutionCatalogEntry] = Depends(get_solution_catalog),
     contact_discovery: TavilyContactDiscoveryAdapter = Depends(get_contact_discovery_adapter),
+    lead_promoter: PromoteCandidateToLeadHandler = Depends(get_lead_promoter),
 ) -> SearchCompaniesHandler:
     return SearchCompaniesHandler(
         discovery_port=discovery,
@@ -153,6 +175,7 @@ def get_search_companies_handler(
         candidate_promoter=candidate_promoter,
         solution_catalog=solution_catalog,
         contact_port=contact_discovery,
+        lead_promoter=lead_promoter,
     )
 
 

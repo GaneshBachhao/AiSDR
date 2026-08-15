@@ -45,7 +45,7 @@ Fibonacci (1, 2, 3, 5, 8, 13, 21). Priority uses MoSCoW (**M**ust / **S**hould /
 | `[x]` Done | EPIC-03 | 1 | Entity Resolution → canonical `Company` | 13 | **M** | EPIC-02 |
 | `[x]` Done | EPIC-04 | 1 | AI Solution Catalog + fix `generate_recommendation` | 13 | **M** | EPIC-01 |
 | `[x]` Done | EPIC-05 | 1 | Contact Discovery | 8 | **M** | EPIC-03, EPIC-04 |
-| `[ ]` Backlog | EPIC-06 | 1 | Lead creation bridge | 8 | **M** | EPIC-05 |
+| `[x]` Done | EPIC-06 | 1 | Lead creation bridge | 8 | **M** | EPIC-05 |
 | `[ ]` Backlog | EPIC-08 | 1 | Workflow orchestration | 8 | **S** | EPIC-06 |
 | `[ ]` Backlog | EPIC-17 | 5 | Enrichment waterfall | 8 | **S** | EPIC-02, EPIC-03 |
 | `[ ]` Backlog | EPIC-16 | 4 | Human-in-the-loop review queue & explainability | 13 | **M** | EPIC-06 |
@@ -439,13 +439,73 @@ sprint), contact discovery correctly returned an empty list instead of
 fabricating a person, confirming the never-guess contract holds under real
 data.
 
-### EPIC-06 — Lead creation bridge (8 pts) · Track 1
+### EPIC-06 — Lead creation bridge (8 pts) · Track 1 · `[x]` Done — Sprint 9
 
-| ID | Story | Acceptance Criteria | Pts |
-|---|---|---|---|
-| 6.1 | As the platform, I want to distinguish research-originated leads | Add `AI_RESEARCH` (or similar) value to `LeadSource` | 1 |
-| 6.2 | As the platform, I want qualified candidates to become real Leads | For candidates above threshold: create `Company` (EPIC-03) + `Contact` (EPIC-05) + `Lead`, carrying score/hypothesis/evidence as metadata | 5 |
-| 6.3 | As a QA reviewer, I want the full chain covered end-to-end | E2E test: one candidate above threshold → exactly one Company, one Contact, one Lead; no duplicates on rerun | 2 |
+| ID | Story | Acceptance Criteria | Pts | Status |
+|---|---|---|---|---|
+| 6.1 | As the platform, I want to distinguish research-originated leads | Add `AI_RESEARCH` (or similar) value to `LeadSource` | 1 | `[x]` Done |
+| 6.2 | As the platform, I want qualified candidates to become real Leads | For candidates above threshold: create `Company` (EPIC-03) + `Contact` (EPIC-05) + `Lead`, carrying score/hypothesis/evidence as metadata | 5 | `[x]` Done — see decision gate below |
+| 6.3 | As a QA reviewer, I want the full chain covered end-to-end | E2E test: one candidate above threshold → exactly one Company, one Contact, one Lead; no duplicates on rerun | 2 | `[x]` Done |
+
+**Decision gate resolved before starting (real, not hypothetical):**
+investigating story 6.2 found that `Lead.contact_id` is mandatory and
+`Contact.email` is a mandatory, validated field -- but Sprint 8's
+`DiscoveredContact` (LinkedIn-sourced) never carries an email, since
+LinkedIn search results don't expose one. Two options were laid out for the
+user: (A) pattern-guess an email (`firstname.lastname@domain`, the
+Apollo/Hunter.io convention) and flag it as unverified only via the Lead's
+free-text `notes`, or (B) only create Contact/Lead when a real, verified
+email actually exists somewhere in the pipeline -- which today is never, so
+the bridge ships fully tested but produces zero live Leads until EPIC-17
+adds a real email source. **Chose (B)**, confirmed with the user, for
+consistency with this module's existing never-fabricate discipline
+(`IdentityVerificationPort`, `ContactDiscoveryPort`) and because a guessed
+value in a *mandatory* schema field is a sharper foot-gun than the guesses
+this system already refuses to make elsewhere -- a future engagement
+send-path (Track 2) reading `Contact.email` directly wouldn't know to check
+`Lead.notes` first.
+
+Shipped `LeadSource.AI_RESEARCH` (story 6.1) and
+`PromoteCandidateToLeadHandler` (story 6.2, mirrors Sprint 6's
+`PromoteCandidateToCompanyHandler` shape) -- resolves/creates a Contact by
+email (via `ContactRepository.find_by_email`, catching `CreateContactHandler`'s
+`ConflictException` the same way company promotion catches its own), then
+resolves/creates a Lead (deduplicated via `LeadRepository.list(company_id,
+contact_id)`, no new repository method needed -- that filter combination
+already existed), with `notes` carrying qualification score, priority tier,
+business-problem hypothesis, evidence summary, and trigger event -- literally
+the free-text field this schema already has for exactly this purpose, so no
+new column was needed (unlike EPIC-04's `solutions` gap). Wired into
+`SearchCompaniesHandler._promote_results` right after company promotion
+succeeds, gated by the same `persist_as_companies` flag rather than a new
+one -- judgment call, documented here: this is the same "materialize this
+research result as CRM data" opt-in, not a separate decision, and since
+Contact/Lead creation is a no-op without a real email today, the practical
+blast radius of reusing the flag is zero live behavior change. `DiscoveredContact`
+gained an optional `email` field (always `None` from the current LinkedIn
+adapter) so a future enrichment source has somewhere to put a verified
+address without another DTO change. `CompanySearchResult` gained
+`persisted_contact_id`, `persisted_lead_id`, and
+`lead_creation_skipped_reason` -- the last one exists specifically so the
+"nothing happened" outcome is visible in the API response, not silent.
+
+**Story 6.3 E2E dedup test:** since no real email exists live, the test
+supplies one on the `DiscoveredContact` fixture (documented in the test's
+own docstring as simulating a future email source) and runs the real
+`PromoteCandidateToCompanyHandler` → `PromoteCandidateToLeadHandler` chain
+against a real in-memory DB twice: exactly one Company, one Contact, one
+Lead row after both runs, proving the bridge mechanism itself -- independent
+of today's missing-email gap.
+
+**Live-verified against real Tavily and the real production DB:** a real
+`persist_as_companies=true` search created three genuine Company rows.
+Contact discovery found two real LinkedIn profiles (no emails, as expected).
+All three results correctly reported `lead_creation_skipped_reason:
+"no_verified_email_found"` with `persisted_contact_id`/`persisted_lead_id`
+both `None` -- confirmed directly against the database that zero Contact/Lead
+rows were created by this run (the 3 existing rows found belong to Sprint
+7's live-verification chain, timestamped earlier the same day). Exactly the
+dormant-but-honest behavior Option B was chosen for.
 
 ### EPIC-08 — Workflow orchestration (8 pts) · Track 1
 
@@ -460,6 +520,12 @@ data.
 |---|---|---|---|
 | 17.1 | As the platform, I want a fallback order behind the discovery/enrichment ports | Cheap structured source (EPIC-02) → Tavily → room for a future paid enrichment API, same port contract | 5 |
 | 17.2 | As a QA reviewer, I want measurably fewer junk candidates | Regression test set using known-bad candidates from live testing ("Company search", "Browse by size...") — all rejected pre-research | 3 |
+
+**Load-bearing for EPIC-06, not just discovery quality:** whatever real
+paid enrichment source story 17.1 adds should also be checked for whether it
+can populate `DiscoveredContact.email` (added in Sprint 9, currently always
+`None`) -- that's the one missing piece keeping `PromoteCandidateToLeadHandler`
+dormant in live use. See the Risk Register entry and EPIC-06's notes above.
 
 ### EPIC-16 — Human-in-the-loop review queue & explainability (13 pts) · Track 4
 
@@ -546,5 +612,6 @@ need (see architecture doc §14 for full rationale):
 | Compliance violation (CAN-SPAM/GDPR/TCPA) from real outbound volume | Low-Medium | High (legal) | Suppression list + jurisdiction rules before real volume | EPIC-11 |
 | Discovery precision ceiling (junk candidates observed in live testing; reconfirmed Sprint 5 with a garbled directory-row name) | High | Low-Medium | Cheap tier `[x]` shipped Sprint 5; row-parsing quality still needs EPIC-17 | EPIC-02, EPIC-17 |
 | **New (Sprint 3):** Gemini per-minute rate limit (5 RPM free tier) distinct from the daily budget — concurrent fan-out can burst past it | High | Medium | Not yet mitigated — daily `AIBudgetGuard` doesn't cover RPM; needs a token-bucket/RPM limiter | Unscheduled — candidate for a Track 4 fast-follow |
+| **New (Sprint 9):** Lead creation bridge (EPIC-06) is fully shipped and tested but produces zero live Leads until a real email-enrichment source exists -- public LinkedIn discovery (EPIC-05) never surfaces an email, and `PromoteCandidateToLeadHandler` deliberately never guesses one | High (today) | Low (by design -- honest gap, not a bug) | Mitigated once EPIC-17 (Enrichment waterfall) adds a real email source; `lead_creation_skipped_reason` makes the gap visible via the API rather than silent | EPIC-17 |
 | Solo+AI velocity estimate is wrong | Medium | Medium (schedule slip, not scope loss) | Recalibrate after Sprint 2–3 actuals (see sprint plan) | — |
 | Scope creep beyond committed 17 epics | Medium | Medium | MoSCoW priority + Parking Lot boundary enforced | — |

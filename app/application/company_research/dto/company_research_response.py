@@ -31,13 +31,20 @@ class DiscoveredContact(BaseModel):
     Best-effort, sourced from a public profile page (e.g. LinkedIn) --
     never fabricated. ``role_title`` is the title observed on the source
     page, which may differ from ``CompanySearchResult.decision_maker_role``
-    (the *targeted* role derived from the catalog match).
+    (the *targeted* role derived from the catalog match). ``email`` is a
+    verified address, when one is actually known -- public LinkedIn-profile
+    discovery never populates it; the field exists so a future real
+    email-enrichment source (EPIC-17) has somewhere to put one without
+    another DTO change. ``PromoteCandidateToLeadHandler`` (EPIC-06) requires
+    ``email`` to be set before it will create a CRM Contact/Lead -- it never
+    guesses one, per this module's never-fabricate discipline.
     """
 
     name: str
     role_title: str | None = None
     linkedin_url: HttpUrl | None = None
     source_url: HttpUrl | None = None
+    email: str | None = None
 
 
 class DiscoverySourceMetadata(BaseModel):
@@ -56,7 +63,12 @@ class CompanySearchResult(BaseModel):
     Not persisted as CRM data by default. Set
     ``CompanyResearchRequest.persist_as_companies`` to also resolve/create a
     real CRM Company record per qualified result -- when that happens,
-    ``persisted_company_id`` is populated.
+    ``persisted_company_id`` is populated. The same flag additionally
+    attempts a Contact + Lead (``persisted_contact_id``/``persisted_lead_id``)
+    once a ``discovered_contacts`` entry has a verified ``email`` -- until a
+    real email-enrichment source exists (EPIC-17), that's rare, and
+    ``lead_creation_skipped_reason`` explains why no Lead was created rather
+    than leaving the gap silent.
     """
 
     company_name: str
@@ -92,3 +104,6 @@ class CompanySearchResult(BaseModel):
     confidence_level: str
     source: str = "public_web_research"
     persisted_company_id: str | None = None
+    persisted_contact_id: str | None = None
+    persisted_lead_id: str | None = None
+    lead_creation_skipped_reason: str | None = None

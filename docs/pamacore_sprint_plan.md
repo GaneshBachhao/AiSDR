@@ -39,7 +39,7 @@ low-effort/independent epics bundled into one sprint (e.g. Sprint 1 below).
 | `[x]` Done | 6 | **Started early: Aug 13, 2026** (planned Sep 21–25) | EPIC-03 | 13 | Research candidates resolve into real, deduplicated `Company` records |
 | `[x]` Done | 7 | **Started early: Aug 15, 2026** (planned Sep 28–Oct 2) | EPIC-04 | 13 | `generate_recommendation` actually generates something, from a real shared catalog |
 | `[x]` Done | 8 | **Started early: Aug 15, 2026** (planned Oct 5–9) | EPIC-05 | 8 | Qualified candidates get contact discovery, gated correctly |
-| `[ ]` Planned | 9 | Oct 12 – Oct 16, 2026 | EPIC-06 | 8 | **Milestone C** — full Company → Contact → Lead pipeline live end-to-end |
+| `[x]` Done | 9 | **Started early: Aug 15, 2026** (planned Oct 12–16) | EPIC-06 | 8 | **Milestone C** — full Company → Contact → Lead pipeline live end-to-end (mechanism live; Lead creation dormant until EPIC-17 adds a real email source — see notes) |
 | `[ ]` Planned | 10 | Oct 19 – Oct 23, 2026 | EPIC-08 | 8 | The full chain is observable and resumable, not silently swallowing failures |
 | `[ ]` Planned | 11 | Oct 26 – Oct 30, 2026 | EPIC-17 | 8 | **Milestone D** — enrichment waterfall live; junk-candidate rate measurably down |
 | `[ ]` Planned | 12 | Nov 2 – Nov 6, 2026 | EPIC-16 | 13 | Nothing sends autonomously; every Lead has an inspectable evidence trail and a review gate |
@@ -80,7 +80,7 @@ Aug 17 ────────────────────────�
 |---|---|---|
 | **A — Resilience Baseline** ✅ | Reached Aug 12 (planned Aug 28) | AI provider fallback, quota governance, config diagnostics — the platform stops silently breaking on provider issues |
 | **B — Trusted Research Core** ✅ | Reached Aug 13 (planned Sep 11) | Domain Profile + Evidence v2 — company_research's own output quality improves, independent of anything downstream |
-| **C — Company Universe MVP** | Sprint 9 (Oct 16) | A qualified research candidate becomes a real Company + Contact + Lead, end-to-end, for the first time |
+| **C — Company Universe MVP** ⚙ Mechanism shipped | Code shipped Aug 15 (planned Oct 16) | A qualified research candidate becomes a real Company + Contact + Lead, end-to-end, for the first time -- the code path is real, tested, and live-verified, but Contact/Lead creation is dormant until EPIC-17 adds a real email source (see Sprint 9 notes). Full-milestone claim held back deliberately rather than declared reached on a technicality. |
 | **D — Orchestrated & Enriched** | Sprint 11 (Oct 30) | The pipeline is observable/resumable, and less prone to junk candidates |
 | **E — Trusted Engagement Launch** | Sprint 16 (Dec 4) | First real multi-touch outbound campaigns can run safely (review gate + compliance both live) |
 | **F — Self-Improving Loop** | Sprint 17 (Dec 11) + 2–4 wks | Real outcomes start recalibrating scoring, not just being recorded |
@@ -123,6 +123,7 @@ form:
 | 6 | 13 | 13 | Also completed Aug 13 — first sprint with a real decision gate (persistence default), confirmed with the user before starting. See Sprint 6 notes below. |
 | 7 | 13 | 13 | Completed **Aug 15** — a genuine 2-day gap since Sprint 6, the first real session-to-session pacing data point. Also the first sprint requiring a scope judgment call (see Sprint 7 notes) rather than pure implementation. |
 | 8 | 8 | 8 | Also completed Aug 15, same day as Sprint 7. First sprint with a real, previously-flagged decision gate resolved before writing code (company_research-specific port vs. shared contract). See Sprint 8 notes below. |
+| 9 | 8 | 8 | Also completed Aug 15. Second decision gate in a row, this one discovered mid-sprint rather than flagged in advance: a mandatory-schema-field gap (no email source exists) that shapes whether the epic's output is live or dormant. See Sprint 9 notes below. |
 
 Fill in "Actual" as sprints complete. After Sprint 3: compute a real average
 velocity, compare to the 10 pt/week assumption, and re-run the remaining-sprint
@@ -396,6 +397,41 @@ needs it.
   `discovered_contacts` and `decision_maker_name`; for pre-existing
   discovery-tier noise candidates (already tracked under EPIC-17), correctly
   returned an empty contact list rather than fabricating anyone.
+
+**Sprint 9 notes (2026-08-15):** All three EPIC-06 stories shipped, same day
+as Sprints 7 and 8. Story 6.2 surfaced a real blocker before any code was
+written: `Contact.email` is mandatory and validated, but Sprint 8's
+LinkedIn-sourced `DiscoveredContact` never carries one -- LinkedIn search
+results don't expose emails. Laid out two options for the user (pattern-guess
+an email vs. only create Contact/Lead when a real one exists) and confirmed
+**the never-guess option** before writing the bridge, consistent with
+`IdentityVerificationPort`/`ContactDiscoveryPort`'s existing discipline of
+treating absent evidence as a hard stop, not a best-effort guess.
+
+- `PromoteCandidateToLeadHandler` mirrors Sprint 6's
+  `PromoteCandidateToCompanyHandler` shape: resolve-or-create Contact
+  (dedup by email), resolve-or-create Lead (dedup by company+contact, reusing
+  `LeadRepository.list`'s existing filters -- no new repository method
+  needed), `notes` carrying score/hypothesis/evidence/trigger-event using the
+  Lead schema's existing free-text field.
+- Reused the existing `persist_as_companies` flag rather than adding a new
+  one -- judgment call, documented in the backlog: since Contact/Lead
+  creation is a no-op without a real email today, this changes zero live
+  behavior for existing callers.
+- Story 6.3's E2E dedup test supplies a scripted email on the test fixture
+  (documented as simulating a future email source) to prove the mechanism
+  itself against a real DB, independent of today's missing-email gap:
+  running the same result through promotion twice produces exactly one
+  Company, one Contact, one Lead.
+- **Live-verified against real Tavily and the real production DB:** a real
+  `persist_as_companies=true` search created three genuine Company rows and
+  found two real LinkedIn profiles via Sprint 8's contact discovery (no
+  emails, as expected). All three results correctly reported
+  `lead_creation_skipped_reason: "no_verified_email_found"` -- confirmed
+  directly against the database that zero new Contact/Lead rows were
+  created. Milestone C is therefore marked "mechanism shipped," not "reached"
+  -- see §3 above -- since a qualified candidate doesn't yet become a live
+  Lead without EPIC-17 adding a real email source.
 
 ---
 

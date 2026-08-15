@@ -30,6 +30,9 @@ from app.application.company_research.dto.company_research_response import (
 from app.application.company_research.handlers.promote_candidate_to_company_handler import (
     PromoteCandidateToCompanyHandler,
 )
+from app.application.company_research.handlers.promote_candidate_to_lead_handler import (
+    PromoteCandidateToLeadHandler,
+)
 from app.application.company_research.ports.company_directory_port import (
     CompanyDirectoryPort,
 )
@@ -84,6 +87,7 @@ class SearchCompaniesHandler:
         candidate_promoter: PromoteCandidateToCompanyHandler | None = None,
         solution_catalog: list[SolutionCatalogEntry] | None = None,
         contact_port: ContactDiscoveryPort | None = None,
+        lead_promoter: PromoteCandidateToLeadHandler | None = None,
     ) -> None:
         self._discovery_port = discovery_port
         self._identity_port = identity_port
@@ -97,6 +101,7 @@ class SearchCompaniesHandler:
         self._candidate_promoter = candidate_promoter
         self._solution_catalog = solution_catalog
         self._contact_port = contact_port
+        self._lead_promoter = lead_promoter
 
     async def handle(self, request: CompanyResearchRequest) -> list[CompanySearchResult]:
         candidates = await self._discover_candidates(request)
@@ -154,7 +159,7 @@ class SearchCompaniesHandler:
         for result in results:
             try:
                 company_id = await self._candidate_promoter.handle(result)
-                promoted.append(result.model_copy(update={"persisted_company_id": company_id}))
+                result = result.model_copy(update={"persisted_company_id": company_id})
             except Exception:
                 logger.exception(
                     "Failed to persist Company for %s -- returning research "
@@ -162,7 +167,33 @@ class SearchCompaniesHandler:
                     result.company_name,
                 )
                 promoted.append(result)
+                continue
+
+            if self._lead_promoter is not None:
+                result = await self._promote_lead(result, company_id)
+            promoted.append(result)
         return promoted
+
+    async def _promote_lead(
+        self, result: CompanySearchResult, company_id: str
+    ) -> CompanySearchResult:
+        try:
+            outcome = await self._lead_promoter.handle(result, company_id)
+        except Exception:
+            logger.exception(
+                "Failed to persist Contact/Lead for %s -- returning research "
+                "result without persisted_contact_id/persisted_lead_id",
+                result.company_name,
+            )
+            return result
+
+        return result.model_copy(
+            update={
+                "persisted_contact_id": outcome.contact_id,
+                "persisted_lead_id": outcome.lead_id,
+                "lead_creation_skipped_reason": outcome.skipped_reason,
+            }
+        )
 
     async def _discover_candidates(
         self, request: CompanyResearchRequest

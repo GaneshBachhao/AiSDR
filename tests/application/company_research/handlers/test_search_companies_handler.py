@@ -463,6 +463,136 @@ async def test_persist_as_companies_true_without_a_promoter_configured_is_a_noop
 
 
 @pytest.mark.asyncio
+async def test_lead_promoter_not_invoked_when_persist_as_companies_is_false():
+    candidate = _candidate("Acme Manufacturing", "https://acme.example")
+    promoter = AsyncMock()
+    promoter.handle.return_value = "company-123"
+    lead_promoter = AsyncMock()
+    handler = SearchCompaniesHandler(
+        ScriptedDiscoveryAdapter([candidate]),
+        ScriptedIdentityAdapter({"Acme Manufacturing": _verified("https://acme.example")}),
+        ScriptedEvidenceAdapter({"Acme Manufacturing": _hiring_evidence("Acme Manufacturing")}),
+        candidate_promoter=promoter,
+        lead_promoter=lead_promoter,
+    )
+    request = CompanyResearchRequest(geography="India", industries=["Manufacturing"])
+    # persist_as_companies defaults to False.
+    results = await handler.handle(request)
+
+    lead_promoter.handle.assert_not_awaited()
+    assert results[0].persisted_lead_id is None
+
+
+@pytest.mark.asyncio
+async def test_lead_promoter_invoked_with_the_persisted_company_id_after_company_promotion():
+    from app.application.company_research.handlers.promote_candidate_to_lead_handler import (
+        LeadPromotionOutcome,
+    )
+
+    candidate = _candidate("Acme Manufacturing", "https://acme.example")
+    promoter = AsyncMock()
+    promoter.handle.return_value = "company-123"
+    lead_promoter = AsyncMock()
+    lead_promoter.handle.return_value = LeadPromotionOutcome(
+        contact_id="contact-1", lead_id="lead-1"
+    )
+    handler = SearchCompaniesHandler(
+        ScriptedDiscoveryAdapter([candidate]),
+        ScriptedIdentityAdapter({"Acme Manufacturing": _verified("https://acme.example")}),
+        ScriptedEvidenceAdapter({"Acme Manufacturing": _hiring_evidence("Acme Manufacturing")}),
+        candidate_promoter=promoter,
+        lead_promoter=lead_promoter,
+    )
+    request = CompanyResearchRequest(
+        geography="India", industries=["Manufacturing"], persist_as_companies=True
+    )
+    results = await handler.handle(request)
+
+    lead_promoter.handle.assert_awaited_once()
+    called_result, called_company_id = lead_promoter.handle.call_args.args
+    assert called_company_id == "company-123"
+    assert results[0].persisted_contact_id == "contact-1"
+    assert results[0].persisted_lead_id == "lead-1"
+    assert results[0].lead_creation_skipped_reason is None
+
+
+@pytest.mark.asyncio
+async def test_lead_creation_skipped_reason_surfaces_when_no_email_found():
+    from app.application.company_research.handlers.promote_candidate_to_lead_handler import (
+        LeadPromotionOutcome,
+    )
+
+    candidate = _candidate("Acme Manufacturing", "https://acme.example")
+    promoter = AsyncMock()
+    promoter.handle.return_value = "company-123"
+    lead_promoter = AsyncMock()
+    lead_promoter.handle.return_value = LeadPromotionOutcome(
+        skipped_reason="no_verified_email_found"
+    )
+    handler = SearchCompaniesHandler(
+        ScriptedDiscoveryAdapter([candidate]),
+        ScriptedIdentityAdapter({"Acme Manufacturing": _verified("https://acme.example")}),
+        ScriptedEvidenceAdapter({"Acme Manufacturing": _hiring_evidence("Acme Manufacturing")}),
+        candidate_promoter=promoter,
+        lead_promoter=lead_promoter,
+    )
+    request = CompanyResearchRequest(
+        geography="India", industries=["Manufacturing"], persist_as_companies=True
+    )
+    results = await handler.handle(request)
+
+    assert results[0].persisted_contact_id is None
+    assert results[0].persisted_lead_id is None
+    assert results[0].lead_creation_skipped_reason == "no_verified_email_found"
+
+
+@pytest.mark.asyncio
+async def test_lead_promoter_not_invoked_when_company_promotion_itself_failed():
+    candidate = _candidate("Acme Manufacturing", "https://acme.example")
+    promoter = AsyncMock()
+    promoter.handle.side_effect = RuntimeError("db unavailable")
+    lead_promoter = AsyncMock()
+    handler = SearchCompaniesHandler(
+        ScriptedDiscoveryAdapter([candidate]),
+        ScriptedIdentityAdapter({"Acme Manufacturing": _verified("https://acme.example")}),
+        ScriptedEvidenceAdapter({"Acme Manufacturing": _hiring_evidence("Acme Manufacturing")}),
+        candidate_promoter=promoter,
+        lead_promoter=lead_promoter,
+    )
+    request = CompanyResearchRequest(
+        geography="India", industries=["Manufacturing"], persist_as_companies=True
+    )
+    results = await handler.handle(request)
+
+    lead_promoter.handle.assert_not_awaited()
+    assert results[0].persisted_lead_id is None
+
+
+@pytest.mark.asyncio
+async def test_lead_promotion_failure_does_not_break_the_research_response():
+    candidate = _candidate("Acme Manufacturing", "https://acme.example")
+    promoter = AsyncMock()
+    promoter.handle.return_value = "company-123"
+    lead_promoter = AsyncMock()
+    lead_promoter.handle.side_effect = RuntimeError("db unavailable")
+    handler = SearchCompaniesHandler(
+        ScriptedDiscoveryAdapter([candidate]),
+        ScriptedIdentityAdapter({"Acme Manufacturing": _verified("https://acme.example")}),
+        ScriptedEvidenceAdapter({"Acme Manufacturing": _hiring_evidence("Acme Manufacturing")}),
+        candidate_promoter=promoter,
+        lead_promoter=lead_promoter,
+    )
+    request = CompanyResearchRequest(
+        geography="India", industries=["Manufacturing"], persist_as_companies=True
+    )
+    results = await handler.handle(request)
+
+    assert len(results) == 1
+    assert results[0].persisted_company_id == "company-123"
+    assert results[0].persisted_lead_id is None
+
+
+@pytest.mark.asyncio
 async def test_contact_discovery_not_invoked_when_no_contact_port_configured():
     candidate = _candidate("Acme Manufacturing", "https://acme.example")
     handler = SearchCompaniesHandler(
