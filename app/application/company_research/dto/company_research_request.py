@@ -18,6 +18,14 @@ class CompanyResearchRequest(BaseModel):
     minimum_qualification_score: int = Field(default=0, ge=0, le=100)
     preferred_decision_makers: list[str] = Field(default_factory=list)
     target_language: str = "English"
+    persist_as_companies: bool = Field(
+        default=False,
+        description=(
+            "Opt-in: when true, qualified results are also resolved/created "
+            "as real CRM Company records. Defaults to false so existing "
+            "callers keep today's research-only, no-side-effects contract."
+        ),
+    )
 
     @field_validator("industries", "company_size", "technologies", "services", "preferred_decision_makers")
     @classmethod

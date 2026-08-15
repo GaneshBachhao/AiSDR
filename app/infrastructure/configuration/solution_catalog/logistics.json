@@ -1,0 +1,32 @@
+[
+  {
+    "id": "logistics-shipment-exception-assistant",
+    "sector": "logistics",
+    "pain_point": "Manual shipment tracking and exception handling",
+    "solution_type": "Copilot",
+    "title": "Shipment Tracking & Exception-Handling Assistant",
+    "description": "Surfaces at-risk shipments and drafts exception-resolution communications automatically.",
+    "is_existing_offering": false,
+    "signals": []
+  },
+  {
+    "id": "logistics-route-optimization-insights",
+    "sector": "logistics",
+    "pain_point": "Inefficient route and capacity planning",
+    "solution_type": "Analytics",
+    "title": "Route & Capacity Optimization Insights",
+    "description": "Analyzes historical routing/capacity data to recommend efficiency improvements.",
+    "is_existing_offering": false,
+    "signals": []
+  },
+  {
+    "id": "logistics-freight-document-automation",
+    "sector": "logistics",
+    "pain_point": "Manual freight document processing",
+    "solution_type": "Document Intelligence",
+    "title": "Freight Document Processing Automation",
+    "description": "Extracts and validates data from bills of lading, customs forms, and manifests.",
+    "is_existing_offering": false,
+    "signals": []
+  }
+]

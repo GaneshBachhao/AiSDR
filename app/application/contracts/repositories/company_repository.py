@@ -21,6 +21,10 @@ class CompanyRepository(Repository[Company, CompanyId]):
         raise NotImplementedError
 
     @abstractmethod
+    async def find_by_website(self, website: str) -> Company | None:
+        raise NotImplementedError
+
+    @abstractmethod
     async def list(self, skip: int = 0, limit: int = 100) -> list[Company]:
         raise NotImplementedError
 

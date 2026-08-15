@@ -62,6 +62,12 @@ class Solution:
 
     solution_id: UUID = field(default_factory=uuid4)
 
+    is_existing_offering: bool = True
+    """Whether this is a real, existing Pamacore/AgneticAI service offering
+    versus a generic, defensible industry opportunity suggested when no
+    catalog entry fits. See docs/pamacore_aisdr_summary.md §7's labeling
+    rule -- must always be surfaced distinctly, never blurred."""
+
 
     def __post_init__(self) -> None:
 

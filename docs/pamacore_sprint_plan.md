@@ -36,8 +36,8 @@ low-effort/independent epics bundled into one sprint (e.g. Sprint 1 below).
 | `[x]` Done | 3 | **Started early: Aug 12, 2026** (planned Aug 31–Sep 4) | EPIC-00 | 8 | Industry/ICP vocabulary is data, not hardcoded Python |
 | `[x]` Done | 4 | **Started early: Aug 13, 2026** (planned Sep 7–11) | EPIC-01 | 8 | Evidence carries `signal_scope`; `CONFIRMED_NEED` can no longer be faked by industry noise |
 | `[x]` Done | 5 | **Started early: Aug 13, 2026** (planned Sep 14–18) | EPIC-02 | 13 | A cheap discovery tier exists ahead of live Tavily search |
-| `[ ]` Planned | 6 | Sep 21 – Sep 25, 2026 | EPIC-03 | 13 | Research candidates resolve into real, deduplicated `Company` records |
-| `[ ]` Planned | 7 | Sep 28 – Oct 2, 2026 | EPIC-04 | 13 | `generate_recommendation` actually generates something, from a real shared catalog |
+| `[x]` Done | 6 | **Started early: Aug 13, 2026** (planned Sep 21–25) | EPIC-03 | 13 | Research candidates resolve into real, deduplicated `Company` records |
+| `[x]` Done | 7 | **Started early: Aug 15, 2026** (planned Sep 28–Oct 2) | EPIC-04 | 13 | `generate_recommendation` actually generates something, from a real shared catalog |
 | `[ ]` Planned | 8 | Oct 5 – Oct 9, 2026 | EPIC-05 | 8 | Qualified candidates get contact discovery, gated correctly |
 | `[ ]` Planned | 9 | Oct 12 – Oct 16, 2026 | EPIC-06 | 8 | **Milestone C** — full Company → Contact → Lead pipeline live end-to-end |
 | `[ ]` Planned | 10 | Oct 19 – Oct 23, 2026 | EPIC-08 | 8 | The full chain is observable and resumable, not silently swallowing failures |
@@ -120,6 +120,8 @@ form:
 | 3 | 8 | 8 | Also completed Aug 12. Three sprints, zero variance so far. See Sprint 3 notes below. |
 | 4 | 8 | 8 | Completed **Aug 13** — a genuinely new day, not the same sitting as 1–3. See Sprint 4 notes below. |
 | 5 | 13 | 13 | Also completed Aug 13 — the first genuinely new integration (EPIC-02), and it still didn't slow down. See recalibration and Sprint 5 notes below. |
+| 6 | 13 | 13 | Also completed Aug 13 — first sprint with a real decision gate (persistence default), confirmed with the user before starting. See Sprint 6 notes below. |
+| 7 | 13 | 13 | Completed **Aug 15** — a genuine 2-day gap since Sprint 6, the first real session-to-session pacing data point. Also the first sprint requiring a scope judgment call (see Sprint 7 notes) rather than pure implementation. |
 
 Fill in "Actual" as sprints complete. After Sprint 3: compute a real average
 velocity, compare to the 10 pt/week assumption, and re-run the remaining-sprint
@@ -292,6 +294,70 @@ test of whether the pace would hold. It held. See the recalibration note above.
   stuck onto the company name). This is the pre-existing row parser, unchanged
   this sprint — confirms the already-tracked "Discovery precision ceiling" risk
   rather than introducing a new one. EPIC-17 remains the right fix.
+
+**Sprint 6 notes (2026-08-13):** All four EPIC-03 stories shipped, including the
+decision gate itself (story 3.1) — confirmed with the user via a direct question
+before writing any code, since it changes the `/company-research/search` contract:
+**opt-in** (`persist_as_companies: bool = False`), matching the architecture doc's
+own recommendation.
+
+- Entity resolution matches by normalized **website** first, then falls back to
+  `CreateCompanyHandler`'s existing name-based duplicate check (catching its
+  `ConflictException` rather than treating a match as an error) — website is the
+  more reliable identity key since names vary across sources but domains don't.
+  Verified with a dedicated test: a name *variant* ("Acme Manufacturing" vs.
+  "Acme Manufacturing Pvt Ltd") sharing the same website still dedups to one row.
+- Added `find_by_website()` to the "Architecture Freeze v5.0"-labeled
+  `CompanyRepository` interface — a judgment call on what the freeze protects
+  (transaction/aggregate boundaries, not literally every method list); documented
+  explicitly in `product_backlog.md` rather than treated as routine.
+- Live-verified against the **real production database**, not just the in-memory
+  test fixture: a real `persist_as_companies=true` search created an actual
+  `Company` row for Samsung India Electronics with a correctly normalized website
+  and mapped industry. Re-running the same candidate against the same real DB
+  resolved to the identical company id with the row count still at 1 — the
+  clearest possible proof of story 3.4's dedup guarantee.
+- Also reconfirmed Sprint 3's known Gemini per-minute rate-limit finding during
+  live testing (unrelated to this sprint's own logic, already tracked, not
+  re-logged as new).
+
+**Sprint 7 notes (2026-08-15):** All three EPIC-04 stories shipped, but this
+sprint needed a real scope judgment call before the "3 stories" framing even
+applied. Investigating story 4.2 found that `GenerateRecommendationHandler` (the
+handler this story originally named) was **completely unreachable** — no route,
+no DI wiring, and it called a repository method that doesn't exist on the real
+repository. It could never have run. Rather than fix dead code, the AI-generation
+work went into `CreateRecommendationHandler` (the only recommendation handler
+actually reachable via `POST /recommendations`), and the three confirmed-orphaned
+files were deleted. Full reasoning and the much bigger "Universe A vs Universe B"
+finding (the `recommendation` module has an entire second, parallel,
+unreachable implementation) are documented in `product_backlog.md` — worth reading
+if you're planning to touch anything else in that module.
+
+- Also found `RecommendationModel` had no column to persist `solutions` at all —
+  fixed with a new `TEXT` column (JSON-serialized) plus a one-time `ALTER TABLE`
+  on the existing local `aisdr.db`, matching the pattern already used for
+  EPIC-14's `ai_usage_log` table.
+- My own test suite caught a real bug before it shipped: the "assessment has no
+  content" guard could never trigger, because `maturity_level` always has a
+  default value. Fixed to check the actual analysis text fields instead.
+- `OpportunityMapper.map_signals()` now reads from the shared catalog with a
+  domain-owned fallback for regression safety — verified byte-identical to the
+  old hardcoded output for every existing test case, and confirmed the real
+  catalog produces the same result too (genuinely one source of truth).
+- **Live-verified end-to-end**, real app + real DB + real Gemini: built a full
+  Company → Contact → Lead → Discovery → Assessment chain via the real API, then
+  called `POST /recommendations`. Gemini correctly matched an existing catalog
+  offering (Business Process Automation) against the assessment's actual
+  weakness, proposed two sector-appropriate generic ideas not in the catalog, and
+  labeled all three correctly (`is_existing_offering: true`/`false`) — exactly the
+  architecture doc's intended recommendation order. A separate, fresh `GET`
+  confirmed all three solutions survived the round trip through the real database.
+- **Pacing:** first genuine multi-day gap (Aug 13 → Aug 15) since this project
+  started. Doesn't change the recalibration conclusion from Sprint 5 — the
+  bottleneck for sprints like this one was never raw coding throughput, it was
+  the judgment call about what "fixing generate_recommendation" should actually
+  mean once the obvious target turned out to be dead code.
 
 ---
 

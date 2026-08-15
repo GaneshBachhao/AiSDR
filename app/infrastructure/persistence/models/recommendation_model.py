@@ -40,6 +40,12 @@ class RecommendationModel(BaseModel):
         nullable=False,
     )
 
+    solutions: Mapped[str] = mapped_column(
+        Text,
+        nullable=False,
+        default="[]",
+    )
+
     # -------------------------------------------------------------------------
     # Relationships
     # -------------------------------------------------------------------------

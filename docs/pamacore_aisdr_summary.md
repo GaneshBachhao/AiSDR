@@ -503,6 +503,55 @@ land.
 
 ---
 
+## 16. Future Direction — Genuine Agentic AI (documented, not committed, no points allocated)
+
+Everything in Tracks 1–6 is **AI-assisted automation**, not agentic AI in the
+technical sense: single-shot LLM calls at fixed points in an otherwise
+deterministic pipeline (one Gemini call for identity verification, one for
+recommendation generation). The AI never decides what to do next, never calls
+tools autonomously, never loops or self-corrects. This section exists so the
+distinction — and the reasoning for not pursuing it yet — isn't lost.
+
+**What genuine agentic behavior would require**, none of which exists today:
+tool use/function calling (the AI chooses which function to invoke next, not a
+human-coded sequence calling it once); a control loop (act → observe → decide
+next action → repeat, not one prompt → one response → done); state across the
+loop (a working memory of what's already been tried/found); self-evaluation (the
+AI judges "do I have enough evidence?" instead of a hardcoded threshold); and
+hard stopping criteria/guardrails, since a loop that decides its own next move
+can also decide to loop forever or spend without limit.
+
+**Where it would fit, if pursued:** company_research's per-candidate research
+step (`SearchCompaniesHandler._research_candidate`) is the natural candidate —
+today every candidate gets the same fixed sequence (verify → gather 2-3 fixed
+evidence queries → classify → score) regardless of what's actually found, where
+an adaptive agent could search again on ambiguous evidence or stop early on a
+clear dead end. Recommendation generation is a weaker candidate since its input
+(a human-validated Assessment) is already complete — less for an agent to
+adaptively go find out.
+
+**Why this isn't scheduled:** real, concrete constraints already hit earlier in
+this project would get worse under a naive agentic redesign, not better --
+Gemini's 5 requests/minute free-tier limit (Track 4 Phase 13's finding) would be
+strained by an agent that costs 3-6 calls per candidate instead of 1;
+`AIBudgetGuard` (Phase 14) assumes one call per candidate and would need a
+worst-case-steps redesign before it's safe; test strategy shifts from "assert
+exact output" to "assert valid state," since an agent can legitimately choose a
+different tool sequence for identical input across runs; and "why did it decide
+X" needs first-class tool-call tracing, not an afterthought, or the
+evidence-traceability principle this whole architecture is built around is lost.
+
+**If this gets revisited**, the shape of a safe pilot: three tools for the
+evidence-gathering step only (`search(query)`, `classify_scope(text)` — reusing
+Track 1 Phase 1's existing function as-is, `stop()`); a hard cap of 3 tool calls
+per candidate (barely more than today's fixed 2 queries); routed through the same
+`AIBudgetGuard`, pre-charged for the worst case; feature-flagged against the
+existing deterministic path so the two can be compared on a sample before any
+further commitment. Scoped narrowly enough to validate the idea without betting
+the whole module on it, and it wouldn't touch identity verification or scoring.
+
+---
+
 ## Appendix A — AI Solution Catalog (seed content, cleaned)
 
 Recommendation order for every generated opportunity: (1) identify pain points, (2)

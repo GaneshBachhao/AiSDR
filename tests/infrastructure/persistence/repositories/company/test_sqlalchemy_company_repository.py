@@ -47,6 +47,27 @@ async def test_find_by_name(async_session):
 
 
 @pytest.mark.asyncio
+async def test_find_by_website(async_session):
+    repository = SqlAlchemyCompanyRepository(async_session)
+
+    company = Company(name="Acme Manufacturing", website="https://acme.example")
+
+    await repository.add(company)
+    await async_session.commit()
+
+    loaded = await repository.find_by_website("https://acme.example")
+
+    assert loaded is not None
+    assert loaded.name == "Acme Manufacturing"
+
+
+@pytest.mark.asyncio
+async def test_find_by_website_returns_none_when_not_found(async_session):
+    repository = SqlAlchemyCompanyRepository(async_session)
+    assert await repository.find_by_website("https://nowhere.example") is None
+
+
+@pytest.mark.asyncio
 async def test_list_companies(async_session):
     repository = SqlAlchemyCompanyRepository(async_session)
 

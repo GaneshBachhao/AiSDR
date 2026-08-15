@@ -36,7 +36,13 @@ class DiscoverySourceMetadata(BaseModel):
 
 
 class CompanySearchResult(BaseModel):
-    """Research result. It is intentionally not persisted as CRM data."""
+    """Research result.
+
+    Not persisted as CRM data by default. Set
+    ``CompanyResearchRequest.persist_as_companies`` to also resolve/create a
+    real CRM Company record per qualified result -- when that happens,
+    ``persisted_company_id`` is populated.
+    """
 
     company_name: str
     industry: str | None = None
@@ -69,3 +75,4 @@ class CompanySearchResult(BaseModel):
     sources: list[EvidenceItem] = Field(default_factory=list)
     confidence_level: str
     source: str = "public_web_research"
+    persisted_company_id: str | None = None

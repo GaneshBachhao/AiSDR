@@ -1,0 +1,32 @@
+[
+  {
+    "id": "construction-rfi-drafting",
+    "sector": "construction",
+    "pain_point": "Slow project documentation and RFI drafting",
+    "solution_type": "Document Intelligence",
+    "title": "Project Documentation & RFI Drafting Assistant",
+    "description": "Drafts requests for information and project documentation from raw project notes.",
+    "is_existing_offering": false,
+    "signals": []
+  },
+  {
+    "id": "construction-site-report-summarization",
+    "sector": "construction",
+    "pain_point": "Manual site-report compilation",
+    "solution_type": "Document Intelligence",
+    "title": "Site Report Summarization",
+    "description": "Summarizes daily site logs and photos into structured progress reports.",
+    "is_existing_offering": false,
+    "signals": []
+  },
+  {
+    "id": "construction-bid-proposal-generator",
+    "sector": "construction",
+    "pain_point": "Slow bid/proposal turnaround",
+    "solution_type": "Document Intelligence",
+    "title": "Bid & Proposal Generator",
+    "description": "Drafts bids and proposals from specs and historical pricing data.",
+    "is_existing_offering": false,
+    "signals": []
+  }
+]

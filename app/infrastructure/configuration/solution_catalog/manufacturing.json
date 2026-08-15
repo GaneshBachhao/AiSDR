@@ -1,0 +1,32 @@
+[
+  {
+    "id": "manufacturing-proposal-generator",
+    "sector": "manufacturing",
+    "pain_point": "Slow RFP/quote response time",
+    "solution_type": "Document Intelligence",
+    "title": "Proposal & Quote Generator",
+    "description": "Drafts RFP responses and quotes from spec sheets and pricing data.",
+    "is_existing_offering": false,
+    "signals": []
+  },
+  {
+    "id": "manufacturing-technical-docs",
+    "sector": "manufacturing",
+    "pain_point": "Technical documentation burden",
+    "solution_type": "Document Intelligence",
+    "title": "Technical Documentation Assistant",
+    "description": "Generates SOPs, manuals, and safety datasheets from raw engineering notes.",
+    "is_existing_offering": false,
+    "signals": []
+  },
+  {
+    "id": "manufacturing-lead-qualification-bot",
+    "sector": "manufacturing",
+    "pain_point": "Lead qualification from inbound inquiries",
+    "solution_type": "Chatbot",
+    "title": "Inbound Lead Qualification Bot",
+    "description": "Qualifies website/WhatsApp inquiries and routes hot leads to sales.",
+    "is_existing_offering": false,
+    "signals": []
+  }
+]

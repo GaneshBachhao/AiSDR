@@ -401,3 +401,79 @@ async def test_falls_back_to_expensive_tier_when_cheap_tier_is_insufficient():
     directory.discover.assert_awaited_once_with(request)
     discovery.discover.assert_awaited_once_with(request)
     assert {r.company_name for r in results} == {"Acme A", "Acme B"}
+
+
+@pytest.mark.asyncio
+async def test_persist_as_companies_false_never_calls_the_promoter():
+    candidate = _candidate("Acme Manufacturing", "https://acme.example")
+    promoter = AsyncMock()
+    handler = SearchCompaniesHandler(
+        ScriptedDiscoveryAdapter([candidate]),
+        ScriptedIdentityAdapter({"Acme Manufacturing": _verified("https://acme.example")}),
+        ScriptedEvidenceAdapter({"Acme Manufacturing": _hiring_evidence("Acme Manufacturing")}),
+        candidate_promoter=promoter,
+    )
+    request = CompanyResearchRequest(geography="India", industries=["Manufacturing"])
+    # persist_as_companies defaults to False.
+    results = await handler.handle(request)
+
+    promoter.handle.assert_not_awaited()
+    assert results[0].persisted_company_id is None
+
+
+@pytest.mark.asyncio
+async def test_persist_as_companies_true_promotes_each_final_result():
+    candidate = _candidate("Acme Manufacturing", "https://acme.example")
+    promoter = AsyncMock()
+    promoter.handle.return_value = "company-123"
+    handler = SearchCompaniesHandler(
+        ScriptedDiscoveryAdapter([candidate]),
+        ScriptedIdentityAdapter({"Acme Manufacturing": _verified("https://acme.example")}),
+        ScriptedEvidenceAdapter({"Acme Manufacturing": _hiring_evidence("Acme Manufacturing")}),
+        candidate_promoter=promoter,
+    )
+    request = CompanyResearchRequest(
+        geography="India", industries=["Manufacturing"], persist_as_companies=True
+    )
+    results = await handler.handle(request)
+
+    promoter.handle.assert_awaited_once()
+    assert results[0].persisted_company_id == "company-123"
+
+
+@pytest.mark.asyncio
+async def test_persist_as_companies_true_without_a_promoter_configured_is_a_noop():
+    candidate = _candidate("Acme Manufacturing", "https://acme.example")
+    handler = SearchCompaniesHandler(
+        ScriptedDiscoveryAdapter([candidate]),
+        ScriptedIdentityAdapter({"Acme Manufacturing": _verified("https://acme.example")}),
+        ScriptedEvidenceAdapter({"Acme Manufacturing": _hiring_evidence("Acme Manufacturing")}),
+        # no candidate_promoter configured
+    )
+    request = CompanyResearchRequest(
+        geography="India", industries=["Manufacturing"], persist_as_companies=True
+    )
+    results = await handler.handle(request)
+
+    assert len(results) == 1
+    assert results[0].persisted_company_id is None
+
+
+@pytest.mark.asyncio
+async def test_promotion_failure_does_not_break_the_research_response():
+    candidate = _candidate("Acme Manufacturing", "https://acme.example")
+    promoter = AsyncMock()
+    promoter.handle.side_effect = RuntimeError("db unavailable")
+    handler = SearchCompaniesHandler(
+        ScriptedDiscoveryAdapter([candidate]),
+        ScriptedIdentityAdapter({"Acme Manufacturing": _verified("https://acme.example")}),
+        ScriptedEvidenceAdapter({"Acme Manufacturing": _hiring_evidence("Acme Manufacturing")}),
+        candidate_promoter=promoter,
+    )
+    request = CompanyResearchRequest(
+        geography="India", industries=["Manufacturing"], persist_as_companies=True
+    )
+    results = await handler.handle(request)
+
+    assert len(results) == 1
+    assert results[0].persisted_company_id is None

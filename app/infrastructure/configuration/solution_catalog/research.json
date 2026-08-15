@@ -1,0 +1,32 @@
+[
+  {
+    "id": "research-summarization-citation",
+    "sector": "research",
+    "pain_point": "Slow literature review",
+    "solution_type": "Knowledge Assistant",
+    "title": "Research Summarization & Citation Assistant",
+    "description": "Condenses papers, extracts methodology/results, builds literature matrices.",
+    "is_existing_offering": false,
+    "signals": []
+  },
+  {
+    "id": "research-data-to-insight",
+    "sector": "research",
+    "pain_point": "Slow data-analysis reporting",
+    "solution_type": "Analytics",
+    "title": "Data-to-Insight Generator",
+    "description": "Turns raw experimental/statistical output into narrative findings and visualizations.",
+    "is_existing_offering": false,
+    "signals": []
+  },
+  {
+    "id": "research-grant-matcher",
+    "sector": "research",
+    "pain_point": "Grant-writing bottleneck",
+    "solution_type": "Predictive AI",
+    "title": "Grant & Funding Matcher",
+    "description": "Matches a research profile to relevant grants and auto-drafts proposal sections.",
+    "is_existing_offering": false,
+    "signals": []
+  }
+]

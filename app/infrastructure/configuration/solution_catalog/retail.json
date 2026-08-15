@@ -1,0 +1,32 @@
+[
+  {
+    "id": "retail-product-listing-generator",
+    "sector": "retail",
+    "pain_point": "Slow product listing creation",
+    "solution_type": "Document Intelligence",
+    "title": "AI Product Listing Generator",
+    "description": "Auto-writes SEO-optimized titles, descriptions, and bullet points from a photo and a few keywords.",
+    "is_existing_offering": false,
+    "signals": []
+  },
+  {
+    "id": "retail-shopping-assistant",
+    "sector": "retail",
+    "pain_point": "Generic, slow customer support",
+    "solution_type": "Chatbot",
+    "title": "AI Shopping Assistant",
+    "description": "Answers sizing, returns, and order-status questions 24/7 via chat/WhatsApp.",
+    "is_existing_offering": false,
+    "signals": []
+  },
+  {
+    "id": "retail-personalized-campaign-generator",
+    "sector": "retail",
+    "pain_point": "Cart abandonment and poor personalization",
+    "solution_type": "Automation",
+    "title": "Personalized Campaign Generator",
+    "description": "Auto-drafts abandoned-cart and re-engagement copy per customer segment.",
+    "is_existing_offering": false,
+    "signals": []
+  }
+]

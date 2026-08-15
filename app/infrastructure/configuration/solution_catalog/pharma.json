@@ -1,0 +1,32 @@
+[
+  {
+    "id": "pharma-literature-review",
+    "sector": "pharma",
+    "pain_point": "Literature overload during drug discovery",
+    "solution_type": "Knowledge Assistant",
+    "title": "Literature Review & Synthesis Assistant",
+    "description": "Scans and summarizes papers/patents for a given target or pathway, flagging relevant findings.",
+    "is_existing_offering": false,
+    "signals": []
+  },
+  {
+    "id": "pharma-regulatory-drafting",
+    "sector": "pharma",
+    "pain_point": "Regulatory writing burden",
+    "solution_type": "Document Intelligence",
+    "title": "Regulatory Document Drafting",
+    "description": "Auto-generates draft sections for IND filings, safety reports, and SOPs from study data.",
+    "is_existing_offering": false,
+    "signals": []
+  },
+  {
+    "id": "pharma-lab-notebook-report",
+    "sector": "pharma",
+    "pain_point": "Experimental documentation burden",
+    "solution_type": "Document Intelligence",
+    "title": "Lab Notebook-to-Report Assistant",
+    "description": "Converts raw experimental notes/data into structured reports or manuscript drafts.",
+    "is_existing_offering": false,
+    "signals": []
+  }
+]

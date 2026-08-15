@@ -1,0 +1,32 @@
+[
+  {
+    "id": "healthcare-medical-scribe",
+    "sector": "healthcare",
+    "pain_point": "Doctor time spent on documentation",
+    "solution_type": "Document Intelligence",
+    "title": "AI Medical Scribe",
+    "description": "Converts doctor-patient conversations into structured clinical notes.",
+    "is_existing_offering": false,
+    "signals": []
+  },
+  {
+    "id": "healthcare-reminder-bot",
+    "sector": "healthcare",
+    "pain_point": "Missed follow-ups and patient no-shows",
+    "solution_type": "Automation",
+    "title": "Appointment Reminder & Follow-up Bot",
+    "description": "Personalized, multilingual appointment reminders and follow-ups via SMS/WhatsApp.",
+    "is_existing_offering": false,
+    "signals": []
+  },
+  {
+    "id": "healthcare-patient-faq",
+    "sector": "healthcare",
+    "pain_point": "Admin overload from routine patient questions",
+    "solution_type": "Chatbot",
+    "title": "Patient FAQ Assistant",
+    "description": "Handles pre/post-procedure instructions and insurance queries.",
+    "is_existing_offering": false,
+    "signals": []
+  }
+]

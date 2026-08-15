@@ -12,6 +12,8 @@ from typing import Annotated, Any, Callable, TypeVar
 from fastapi import Depends
 from pydantic import validator
 
+from app.application.ai.services.ai_execution_service import AIExecutionService
+from app.infrastructure.ai.composition import build_ai_execution_service, default_ai_provider
 
 from app.application.company.company_mapper import (
     CompanyMapper,
@@ -609,10 +611,19 @@ def get_delete_qualification_handler(
 # Recommendation
 # -------------------------
 
+def get_ai_execution_service_for_recommendation() -> AIExecutionService:
+    return build_ai_execution_service()
+
+
 def get_create_recommendation_handler(
     uow: UnitOfWork = Depends(get_unit_of_work),
+    ai_execution_service: AIExecutionService = Depends(get_ai_execution_service_for_recommendation),
 ) -> CreateRecommendationHandler:
-    return CreateRecommendationHandler(unit_of_work=uow)
+    return CreateRecommendationHandler(
+        unit_of_work=uow,
+        ai_execution_service=ai_execution_service,
+        ai_provider_name=default_ai_provider(),
+    )
 
 
 def get_get_recommendation_handler(

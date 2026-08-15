@@ -42,8 +42,8 @@ Fibonacci (1, 2, 3, 5, 8, 13, 21). Priority uses MoSCoW (**M**ust / **S**hould /
 | `[x]` Done | EPIC-00 | 1 | Domain Profile foundation | 8 | **M** | — |
 | `[x]` Done | EPIC-01 | 1 | Evidence Model v2 (`signal_scope`) | 8 | **M** | — |
 | `[x]` Done | EPIC-02 | 1 | Company Universe cheap-discovery tier | 13 | **M** | EPIC-00 |
-| `[ ]` Backlog | EPIC-03 | 1 | Entity Resolution → canonical `Company` | 13 | **M** | EPIC-02 |
-| `[ ]` Backlog | EPIC-04 | 1 | AI Solution Catalog + fix `generate_recommendation` | 13 | **M** | EPIC-01 |
+| `[x]` Done | EPIC-03 | 1 | Entity Resolution → canonical `Company` | 13 | **M** | EPIC-02 |
+| `[x]` Done | EPIC-04 | 1 | AI Solution Catalog + fix `generate_recommendation` | 13 | **M** | EPIC-01 |
 | `[ ]` Backlog | EPIC-05 | 1 | Contact Discovery | 8 | **M** | EPIC-03, EPIC-04 |
 | `[ ]` Backlog | EPIC-06 | 1 | Lead creation bridge | 8 | **M** | EPIC-05 |
 | `[ ]` Backlog | EPIC-08 | 1 | Workflow orchestration | 8 | **S** | EPIC-06 |
@@ -249,22 +249,137 @@ already-tracked "Discovery precision ceiling" risk below rather than introducing
 new one; EPIC-17 (Enrichment Waterfall) remains the right place to improve
 directory-row parsing quality.
 
-### EPIC-03 — Entity Resolution → canonical `Company` (13 pts) · Track 1
+### EPIC-03 — Entity Resolution → canonical `Company` (13 pts) · Track 1 · `[x]` Done — Sprint 6
 
-| ID | Story | Acceptance Criteria | Pts |
-|---|---|---|---|
-| 3.1 | **Decision gate:** opt-in `persist_as_companies` flag vs. always-on | Resolved per architecture doc §11 decision #1 before this epic starts | 1 |
-| 3.2 | As the platform, I want candidates normalized and matched against existing companies | Normalize name+website; check `CompanyRepository` for an existing match before creating | 5 |
-| 3.3 | As the platform, I want a new `Company` created only when no match exists | Wired through the existing `CreateCompanyHandler`/`company_commands` path | 4 |
-| 3.4 | As a QA reviewer, I want re-running the same search to not duplicate companies | Dedup regression test: same search run twice → same `Company` row count | 3 |
+| ID | Story | Acceptance Criteria | Pts | Status |
+|---|---|---|---|---|
+| 3.1 | **Decision gate:** opt-in `persist_as_companies` flag vs. always-on | Resolved per architecture doc §11 decision #1 before this epic starts | 1 | `[x]` Done — **opt-in**, confirmed with user before starting |
+| 3.2 | As the platform, I want candidates normalized and matched against existing companies | Normalize name+website; check `CompanyRepository` for an existing match before creating | 5 | `[x]` Done |
+| 3.3 | As the platform, I want a new `Company` created only when no match exists | Wired through the existing `CreateCompanyHandler`/`company_commands` path | 4 | `[x]` Done |
+| 3.4 | As a QA reviewer, I want re-running the same search to not duplicate companies | Dedup regression test: same search run twice → same `Company` row count | 3 | `[x]` Done |
 
-### EPIC-04 — AI Solution Catalog + fix `generate_recommendation` (13 pts) · Track 1
+Shipped `CompanyResearchRequest.persist_as_companies: bool = False` (opt-in, per
+the confirmed decision) and `CompanySearchResult.persisted_company_id: str | None`.
+New `PromoteCandidateToCompanyHandler` (application layer, the first
+company_research component to own a `UnitOfWork`) resolves entity identity in two
+steps: match by **normalized website** first (more reliable than name — names vary
+across sources, domains usually don't), then fall back to the existing
+`CreateCompanyHandler`'s own name-based duplicate check (catching its
+`ConflictException` and resolving to the existing row rather than treating it as
+an error). A new `Company` is created only when neither check finds a match.
+`SearchCompaniesHandler` calls this only for the final, truncated result set, and
+only when `persist_as_companies=True` — persistence failures are logged and
+swallowed per-candidate so a DB hiccup never breaks the research response itself.
 
-| ID | Story | Acceptance Criteria | Pts |
-|---|---|---|---|
-| 4.1 | As the platform, I want the AI Solution Catalog as structured data | New `SolutionCatalogEntry` value object; seeded from Appendix A of the architecture doc (sector, pain point, `SolutionType`, catalog-offering vs. generic-opportunity flag) | 5 |
-| 4.2 | As a sales rep, I want `generate_recommendation` to actually generate something | `GenerateRecommendationHandler` calls `AIExecutionService` with Assessment findings + matched catalog entries, populates real `Solution` entries via the existing `add_solution` command | 5 |
-| 4.3 | As the platform, I want one catalog, not two | `OpportunityMapper` in company_research reads the same catalog instead of its own hardcoded list | 3 |
+**Repository extension:** added `find_by_website()` to `CompanyRepository`
+(interface + `SqlAlchemyCompanyRepository`) — a small, additive query method on an
+"Architecture Freeze v5.0"-labeled interface. Judgment call: interpreted the freeze
+as protecting transaction/aggregate boundaries (matching how AI was deliberately
+excluded from `UnitOfWork` earlier), not as forbidding any new query method on an
+actively-maintained, single-implementer interface. Flagging the interpretation
+here rather than treating it as an unremarkable change.
+
+Live-verified against the **real production database** (not just the in-memory
+test fixture): a real `/company-research/search?persist_as_companies=true` call
+created a genuine `Company` row for Samsung India Electronics with a correctly
+normalized website (`https://www.samsung.com/in/business/info/legal` →
+`https://samsung.com`) and correctly mapped industry ("Manufacturing"). Re-running
+`PromoteCandidateToCompanyHandler` for the same candidate against the same real DB
+resolved to the identical company id, with the row count confirmed still at 1.
+
+### EPIC-04 — AI Solution Catalog + fix `generate_recommendation` (13 pts) · Track 1 · `[x]` Done — Sprint 7
+
+| ID | Story | Acceptance Criteria | Pts | Status |
+|---|---|---|---|---|
+| 4.1 | As the platform, I want the AI Solution Catalog as structured data | New `SolutionCatalogEntry` value object; seeded from Appendix A of the architecture doc (sector, pain point, `SolutionType`, catalog-offering vs. generic-opportunity flag) | 5 | `[x]` Done |
+| 4.2 | As a sales rep, I want `generate_recommendation` to actually generate something | ~~`GenerateRecommendationHandler` calls `AIExecutionService`~~ **`CreateRecommendationHandler`** calls `AIExecutionService` with Assessment findings + matched catalog entries, populates real `Solution` entries | 5 | `[x]` Done (target handler changed — see finding below) |
+| 4.3 | As the platform, I want one catalog, not two | `OpportunityMapper` in company_research reads the same catalog instead of its own hardcoded list | 3 | `[x]` Done |
+
+**Major finding: the `recommendation` module has two parallel, disconnected
+implementations.** Investigating story 4.2 surfaced that `GenerateRecommendationHandler`
+(the handler this story originally named) was never reachable at all:
+`recommendation_router.py` has no `/generate` route, no DI dependency was ever
+wired for it, and it calls `recommendation_repository.get_by_assessment(...)` — a
+method that **does not exist** on the real, concrete repository (the real one is
+`get_by_assessment_id`). It could never have run successfully even if wired. The
+same "second universe" pattern extends further than this one handler:
+`app/application/recommendation/{handlers,commands,validators,mappers}/__init__.py`
+each contain **inline, fully-duplicate class definitions** (e.g. a second
+`UpdateROIHandler`) built against a *different*, domain-layer
+`RecommendationRepository` interface (`app/domain/recommendation/repositories/`)
+that has no concrete implementation anywhere. Several standalone handler files
+(`add_solution_handler.py`, `submit_recommendation_handler.py`,
+`approve_recommendation_handler.py`, `update_roi_handler.py`, ...) and DTOs
+(`solution_dto.py`, `mappers/solution_mapper.py` — which itself references fields
+that don't exist on the real `Recommendation` entity) belong to this same
+unreachable universe. `tests/domain/recommendation/test_recommendation.py` and
+`tests/application/recommendation/handlers/test_reject_recommendation_handler.py`
+are both **empty files** (0 bytes); the existing `FakeRecommendationRepository`
+test double is built against the dead domain-layer interface too — meaning the
+pre-existing recommendation test suite was entirely testing (or rather, not
+testing) code nothing can reach.
+
+**Decision:** rather than fix a handler nothing calls, the AI generation work went
+into `CreateRecommendationHandler` — the only recommendation handler actually
+reachable via `POST /recommendations`, which previously just set a hardcoded
+`executive_summary="Recommendation generated successfully."` string (a lie) and
+saved an empty shell. Deleted the three files most directly superseded
+(`generate_recommendation_handler.py` + its command + validator — confirmed zero
+callers). Left the broader "Universe B" mess (the `__init__.py` duplicates, the
+other orphaned handlers, `solution_mapper.py`) untouched — it's real, substantial,
+separate cleanup, not a Sprint 7 side quest. **New backlog candidate:** a dedicated
+cleanup epic for the whole `recommendation` module (needs its own scoping).
+
+**Second, smaller finding:** `RecommendationModel` had **no column to persist
+`solutions` at all** — even a correctly-populated `Recommendation.solutions` list
+would silently vanish on save/reload. Added a `solutions` `TEXT` column
+(JSON-serialized) + mapper serialization, and applied a one-time `ALTER TABLE` to
+the existing local `aisdr.db` (fresh/test DBs get the column automatically via
+`create_all()`, matching the established pattern from EPIC-14's `ai_usage_log`
+table). Also enriched `RecommendationDTO.solutions` from `list[str]` (titles only)
+to full `SolutionSummaryDTO` objects (title/description/type/priority/
+`is_existing_offering`) — a bare title string would have made the AI-generated
+detail invisible to API callers, which defeats the point of this story.
+
+**Bug caught by my own test, before it shipped:** the "assessment has no content"
+guard (`_generate_solutions`) initially could never trigger, because
+`Assessment.maturity_level` defaults to `MaturityLevel.INITIAL` (never `None`), so
+the context-assembly string was never actually empty. Fixed by checking the
+meaningful text fields (`summary`/`strengths`/`weaknesses`/`opportunities_summary`/
+`risks`) directly rather than the full assembled prompt string.
+
+**Catalog design:** `SolutionCatalogEntry` (new, in `app/domain/recommendation/`)
+has two kinds of entries — `is_existing_offering=True, sector="general"` for the 5
+real Pamacore service lines (each carrying `signals` so `OpportunityMapper` can
+still match deterministically), and `is_existing_offering=False, sector=<specific>`
+for sector-appropriate generic ideas seeded from Appendix A, covering the same 9
+sectors as Track 1 Phase 0's Domain Profiles (31 entries total). Two sectors
+(Logistics, Construction) weren't in the architecture doc's original Appendix A
+table — seeded reasonable, defensible entries for them using the doc's own "wedge
+offer" pattern (content-gen / chatbot / reporting-automation) rather than leaving
+gaps; flagging this honestly rather than claiming a literal, complete Appendix A
+transcription. Remaining Appendix A sectors not seeded are a low-risk, data-only
+follow-up, not blocking.
+
+`OpportunityMapper.map_signals()` now takes an optional `catalog` parameter and
+reads from it; when omitted, a domain-owned default (identical in content to
+`general.json`) preserves exact prior behavior — same "default profile, optional
+injected override" pattern as `IndustryClassifier`/`IcpMatcher` from Track 1 Phase
+0, verified byte-identical against the old hardcoded output for every existing
+test case. In production, `SearchCompaniesHandler` now receives the real loaded
+catalog via DI, so there is genuinely one source of truth in practice.
+
+**Live-verified end-to-end against the real app, real DB, and real Gemini** (not
+mocks): built a full Company → Contact → Lead → Discovery → Assessment chain via
+the real API, then called `POST /recommendations`. Gemini correctly matched
+"Business Process Automation" from the real catalog (`is_existing_offering: true`)
+against the assessment's manual-workflow weakness, and proposed two sector-
+appropriate generic ideas not in the catalog ("ERP-Finance Integration Solution",
+"Automated Financial Reporting"), both correctly labeled
+`is_existing_offering: false` — exactly the architecture doc's §7 recommendation
+order (map to catalog first, propose generic only when nothing fits, always label
+which is which). A fresh `GET /recommendations/{id}` in a separate call confirmed
+all three solutions round-tripped through the real database with full detail.
 
 ### EPIC-05 — Contact Discovery (8 pts) · Track 1
 
@@ -347,6 +462,22 @@ need (see architecture doc §14 for full rationale):
 - **Data retention & PII policy** — needed before EPIC-05 goes live at real volume.
 - **Audit logging** — needed for any regulated-industry customer (Healthcare/Pharma/
   Financial Services are explicit target domains).
+
+## Parking Lot — unscoped cleanup candidates (found during delivery, not yet estimated)
+
+- **`recommendation` module "Universe B" cleanup** (found Sprint 7) — an entire
+  parallel, unreachable set of handlers/commands/validators/mappers
+  (`__init__.py`-inlined duplicates + standalone orphans, built against a
+  domain-layer `RecommendationRepository` with no concrete implementation).
+  Needs its own scoping pass before touching — likely 8-13 points on its own.
+- **`ContactDiscoveryService` reconsideration for EPIC-05** (found before Sprint 7)
+  — an unimplemented contact-discovery contract already exists in
+  `app/application/contracts/services/`. EPIC-05 was planned as a new
+  company_research-specific port; worth deciding whether to implement *that*
+  existing contract instead so contact discovery isn't company_research-private.
+- **`complete_assessment_handler.py`** (found before Sprint 7) — completely empty
+  file, no `/complete` route wired; assessment "completion" today only happens
+  indirectly via the generic update endpoint.
 
 ---
 

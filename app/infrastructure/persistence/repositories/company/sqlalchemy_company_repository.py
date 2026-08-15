@@ -38,6 +38,15 @@ class SqlAlchemyCompanyRepository(
         model = result.scalar_one_or_none()
         return None if model is None else self.mapper.to_domain(model)
 
+    async def find_by_website(self, website: str) -> Company | None:
+        result = await self._session.execute(
+            select(CompanyModel).where(
+                CompanyModel.website == website.strip()
+            )
+        )
+        model = result.scalar_one_or_none()
+        return None if model is None else self.mapper.to_domain(model)
+
     async def list(
         self,
         skip: int = 0,

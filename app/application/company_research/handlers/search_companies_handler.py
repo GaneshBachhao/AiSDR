@@ -3,10 +3,13 @@ Search Companies application handler.
 
 Orchestrates the full research pipeline: discover -> deterministic gate ->
 identity verification -> evidence gathering -> deterministic classification
-and scoring -> response assembly. This is a stateless research operation
-(no persistence), so it is shaped like ``AIExecutionService`` — ports
-injected via the constructor, no ``UnitOfWork`` — rather than the
-repository-backed CQRS handlers used by persisted CRM aggregates.
+and scoring -> response assembly. This is a stateless research operation by
+default -- ports injected via the constructor, no ``UnitOfWork`` of its own,
+shaped like ``AIExecutionService`` rather than the repository-backed CQRS
+handlers used by persisted CRM aggregates. The one exception is opt-in:
+when ``CompanyResearchRequest.persist_as_companies`` is set, results are
+additionally resolved/created as real Company records via
+``PromoteCandidateToCompanyHandler`` (which does own a ``UnitOfWork``).
 """
 
 from __future__ import annotations
@@ -23,6 +26,9 @@ from app.application.company_research.dto.company_research_request import (
 )
 from app.application.company_research.dto.company_research_response import (
     CompanySearchResult,
+)
+from app.application.company_research.handlers.promote_candidate_to_company_handler import (
+    PromoteCandidateToCompanyHandler,
 )
 from app.application.company_research.ports.company_directory_port import (
     CompanyDirectoryPort,
@@ -45,6 +51,9 @@ from app.domain.company_research.services.evidence_signal_extractor import (
 from app.domain.company_research.services.icp_matcher import IcpMatcher
 from app.domain.company_research.services.industry_classifier import IndustryClassifier
 from app.domain.company_research.services.opportunity_mapper import OpportunityMapper
+from app.domain.recommendation.value_objects.solution_catalog_entry import (
+    SolutionCatalogEntry,
+)
 from app.domain.company_research.services.qualification_scorer import (
     QualificationScorer,
     ScoringInputs,
@@ -69,6 +78,8 @@ class SearchCompaniesHandler:
         budget_port: AIBudgetPort | None = None,
         ai_provider_name: str | None = None,
         directory_port: CompanyDirectoryPort | None = None,
+        candidate_promoter: PromoteCandidateToCompanyHandler | None = None,
+        solution_catalog: list[SolutionCatalogEntry] | None = None,
     ) -> None:
         self._discovery_port = discovery_port
         self._identity_port = identity_port
@@ -79,6 +90,8 @@ class SearchCompaniesHandler:
         self._budget_port = budget_port
         self._ai_provider_name = ai_provider_name
         self._directory_port = directory_port
+        self._candidate_promoter = candidate_promoter
+        self._solution_catalog = solution_catalog
 
     async def handle(self, request: CompanyResearchRequest) -> list[CompanySearchResult]:
         candidates = await self._discover_candidates(request)
@@ -122,7 +135,29 @@ class SearchCompaniesHandler:
             if result is not None and result.qualification_score >= request.minimum_qualification_score
         ]
         results.sort(key=lambda item: item.qualification_score, reverse=True)
-        return results[: request.number_of_companies]
+        final_results = results[: request.number_of_companies]
+
+        if request.persist_as_companies and self._candidate_promoter is not None:
+            final_results = await self._promote_results(final_results)
+
+        return final_results
+
+    async def _promote_results(
+        self, results: list[CompanySearchResult]
+    ) -> list[CompanySearchResult]:
+        promoted: list[CompanySearchResult] = []
+        for result in results:
+            try:
+                company_id = await self._candidate_promoter.handle(result)
+                promoted.append(result.model_copy(update={"persisted_company_id": company_id}))
+            except Exception:
+                logger.exception(
+                    "Failed to persist Company for %s -- returning research "
+                    "result without persisted_company_id",
+                    result.company_name,
+                )
+                promoted.append(result)
+        return promoted
 
     async def _discover_candidates(
         self, request: CompanyResearchRequest
@@ -201,7 +236,7 @@ class SearchCompaniesHandler:
         )
         scale_signal = EvidenceSignalExtractor.scale_signal(combined)
 
-        _, recommended_services = OpportunityMapper.map_signals(signals)
+        _, recommended_services = OpportunityMapper.map_signals(signals, self._solution_catalog)
         services_matched = OpportunityMapper.any_service_matches(recommended_services, request.services)
 
         score = QualificationScorer.score(

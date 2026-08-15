@@ -1,0 +1,52 @@
+[
+  {
+    "id": "ai-consulting",
+    "sector": "general",
+    "pain_point": "AI / Generative AI",
+    "solution_type": "AI Agent",
+    "title": "AI Consulting",
+    "description": "Advisory and hands-on delivery for adopting generative AI, automation, and AI-assisted workflows.",
+    "is_existing_offering": true,
+    "signals": ["ai"]
+  },
+  {
+    "id": "business-process-automation",
+    "sector": "general",
+    "pain_point": "Workflow / Process Improvement",
+    "solution_type": "Automation",
+    "title": "Business Process Automation",
+    "description": "Automate manual, document-heavy, or multi-system operational workflows.",
+    "is_existing_offering": true,
+    "signals": ["process"]
+  },
+  {
+    "id": "custom-application-development",
+    "sector": "general",
+    "pain_point": "Cloud / Software Modernization",
+    "solution_type": "Custom",
+    "title": "Custom Application Development",
+    "description": "Design and build internal or customer-facing applications tailored to the business.",
+    "is_existing_offering": true,
+    "signals": ["technology"]
+  },
+  {
+    "id": "azure-modernization",
+    "sector": "general",
+    "pain_point": "Cloud / Software Modernization",
+    "solution_type": "Custom",
+    "title": "Azure Modernization",
+    "description": "Migrate and modernize legacy applications and infrastructure onto Azure.",
+    "is_existing_offering": true,
+    "signals": ["technology"]
+  },
+  {
+    "id": "architecture-review",
+    "sector": "general",
+    "pain_point": "Cloud / Software Modernization",
+    "solution_type": "Custom",
+    "title": "Architecture Review",
+    "description": "Assess current application/integration architecture and produce a modernization roadmap.",
+    "is_existing_offering": true,
+    "signals": ["technology"]
+  }
+]

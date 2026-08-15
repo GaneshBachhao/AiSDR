@@ -1,0 +1,32 @@
+[
+  {
+    "id": "financial-report-summarizer",
+    "sector": "financial services",
+    "pain_point": "Client communication overhead",
+    "solution_type": "Document Intelligence",
+    "title": "Financial Report Summarizer",
+    "description": "Turns raw statements into client-friendly summaries.",
+    "is_existing_offering": false,
+    "signals": []
+  },
+  {
+    "id": "financial-client-query-chatbot",
+    "sector": "financial services",
+    "pain_point": "Routine tax/policy question volume",
+    "solution_type": "Chatbot",
+    "title": "Client Query Chatbot",
+    "description": "Handles routine client questions about accounts, tax, or policy terms.",
+    "is_existing_offering": false,
+    "signals": []
+  },
+  {
+    "id": "financial-policy-comparison",
+    "sector": "financial services",
+    "pain_point": "Explaining complex options simply",
+    "solution_type": "Analytics",
+    "title": "Policy/Plan Comparison Generator",
+    "description": "Generates simple, side-by-side comparisons for insurance or investment options.",
+    "is_existing_offering": false,
+    "signals": []
+  }
+]

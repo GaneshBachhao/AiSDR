@@ -1,0 +1,22 @@
+[
+  {
+    "id": "biotech-molecule-prediction",
+    "sector": "biotech",
+    "pain_point": "Slow candidate screening",
+    "solution_type": "Predictive AI",
+    "title": "Molecule/Protein Generation & Property Prediction",
+    "description": "Generative models proposing candidate molecules or protein sequences for further screening.",
+    "is_existing_offering": false,
+    "signals": []
+  },
+  {
+    "id": "biotech-grant-proposal",
+    "sector": "biotech",
+    "pain_point": "Grant-writing bottleneck",
+    "solution_type": "Document Intelligence",
+    "title": "Grant Proposal Writing Assistant",
+    "description": "Drafts and formats grant applications aligned to funding body requirements.",
+    "is_existing_offering": false,
+    "signals": []
+  }
+]

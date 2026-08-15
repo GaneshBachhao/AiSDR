@@ -12,6 +12,11 @@ from typing import Annotated
 from fastapi import Depends
 
 from app.application.ai.services.ai_execution_service import AIExecutionService
+from app.application.common.interfaces.unit_of_work import UnitOfWork
+from app.application.company.handlers.create_company_handler import CreateCompanyHandler
+from app.application.company_research.handlers.promote_candidate_to_company_handler import (
+    PromoteCandidateToCompanyHandler,
+)
 from app.application.company_research.handlers.search_companies_handler import (
     SearchCompaniesHandler,
 )
@@ -33,10 +38,16 @@ from app.infrastructure.company_research.tavily_discovery_adapter import (
 from app.infrastructure.company_research.tavily_evidence_adapter import (
     TavilyEvidenceAdapter,
 )
+from app.domain.recommendation.value_objects.solution_catalog_entry import (
+    SolutionCatalogEntry,
+)
+from app.infrastructure.configuration.solution_catalog import load_existing_offerings
 from app.infrastructure.configuration.company_research_settings import (
     CompanyResearchSettings,
 )
 from app.integrations.tavily.tavily_client import AgneticTavilyClient
+from app.presentation.api.dependencies.handlers import get_create_company_handler
+from app.presentation.api.dependencies.persistence import get_unit_of_work
 
 
 def get_company_research_settings() -> CompanyResearchSettings:
@@ -95,6 +106,20 @@ def get_identity_adapter(
     )
 
 
+def get_candidate_promoter(
+    uow: UnitOfWork = Depends(get_unit_of_work),
+    create_company_handler: CreateCompanyHandler = Depends(get_create_company_handler),
+) -> PromoteCandidateToCompanyHandler:
+    return PromoteCandidateToCompanyHandler(
+        unit_of_work=uow,
+        create_company_handler=create_company_handler,
+    )
+
+
+def get_solution_catalog() -> list[SolutionCatalogEntry]:
+    return load_existing_offerings()
+
+
 def get_search_companies_handler(
     discovery: TavilyDiscoveryAdapter = Depends(get_discovery_adapter),
     directory: TavilyDirectoryAdapter = Depends(get_directory_adapter),
@@ -102,6 +127,8 @@ def get_search_companies_handler(
     evidence: TavilyEvidenceAdapter = Depends(get_evidence_adapter),
     settings: CompanyResearchSettings = Depends(get_company_research_settings),
     budget_guard: AIBudgetPort = Depends(get_ai_budget_guard),
+    candidate_promoter: PromoteCandidateToCompanyHandler = Depends(get_candidate_promoter),
+    solution_catalog: list[SolutionCatalogEntry] = Depends(get_solution_catalog),
 ) -> SearchCompaniesHandler:
     return SearchCompaniesHandler(
         discovery_port=discovery,
@@ -112,6 +139,8 @@ def get_search_companies_handler(
         budget_port=budget_guard,
         ai_provider_name=default_ai_provider(),
         directory_port=directory,
+        candidate_promoter=candidate_promoter,
+        solution_catalog=solution_catalog,
     )
 
 

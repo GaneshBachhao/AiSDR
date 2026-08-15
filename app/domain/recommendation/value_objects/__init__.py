@@ -3,6 +3,7 @@ from .cost_estimate import CostEstimate
 from .dependency import Dependency
 from .implementation_risk import ImplementationRisk
 from .expected_roi import ROI
+from .solution_catalog_entry import SolutionCatalogEntry
 from .technology_stack import TechnologyStack
 
 __all__ = [
@@ -12,4 +13,5 @@ __all__ = [
     "Dependency",
     "ROI",
     "CostEstimate",
+    "SolutionCatalogEntry",
 ]
