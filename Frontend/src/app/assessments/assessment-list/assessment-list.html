@@ -1,0 +1,44 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h1>Assessments</h1>
+      <p class="subtitle">{{ assessments().length }} shown (up to 200 — no search endpoint exists for this module).</p>
+    </div>
+    <a class="button" routerLink="new">+ New Assessment</a>
+  </header>
+
+  @if (errorMessage()) {
+    <p class="error">{{ errorMessage() }}</p>
+  }
+
+  @if (loading()) {
+    <p class="loading">Loading…</p>
+  } @else if (assessments().length === 0) {
+    <p class="empty">No assessments found.</p>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th>Discovery</th>
+          <th>Maturity level</th>
+          <th>Readiness</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (assessment of assessments(); track assessment.assessment_id) {
+          <tr [routerLink]="[assessment.assessment_id]" class="row-link">
+            <td class="discovery-label">{{ discoveryLabelFor(assessment) }}</td>
+            <td>{{ assessment.maturity_level }}</td>
+            <td class="score">{{ assessment.readiness_score }}</td>
+            <td>
+              <span class="badge {{ assessmentStatusBadgeClass(assessment.status) }}">{{
+                assessment.status
+              }}</span>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

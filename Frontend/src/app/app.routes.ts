@@ -1,4 +1,7 @@
 import { Routes } from '@angular/router';
+import { AssessmentDetail } from './assessments/assessment-detail/assessment-detail';
+import { AssessmentForm } from './assessments/assessment-form/assessment-form';
+import { AssessmentList } from './assessments/assessment-list/assessment-list';
 import { CommandCenter } from './command-center/command-center';
 import { CompanyDetail } from './companies/company-detail/company-detail';
 import { CompanyForm } from './companies/company-form/company-form';
@@ -44,7 +47,10 @@ export const routes: Routes = [
   { path: 'discoveries/new', component: DiscoveryForm },
   { path: 'discoveries/:id', component: DiscoveryDetail },
   { path: 'discoveries/:id/edit', component: DiscoveryForm },
-  { path: 'assessments', component: ComingSoon, data: { title: 'Assessments' } },
+  { path: 'assessments', component: AssessmentList },
+  { path: 'assessments/new', component: AssessmentForm },
+  { path: 'assessments/:id', component: AssessmentDetail },
+  { path: 'assessments/:id/edit', component: AssessmentForm },
   { path: 'qualifications', component: ComingSoon, data: { title: 'Qualifications' } },
   { path: 'recommendations', component: ComingSoon, data: { title: 'Recommendations' } },
   { path: 'actions', component: ComingSoon, data: { title: 'Actions' } },

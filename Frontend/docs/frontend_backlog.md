@@ -52,7 +52,7 @@ EPIC-14 notes), so there is nothing running to build a screen against.
 | `[ ]` Backlog | EPIC-F04 | Contact screens | `contact_router` | 5 |
 | `[ ]` Backlog | EPIC-F05 | Lead screens | `lead_router` | 5 |
 | `[ ]` Backlog | EPIC-F06 | Discovery screens | `discovery_router` | 5 |
-| `[ ]` Backlog | EPIC-F07 | Assessment screens + lifecycle action | `assessment_router` | 8 |
+| `[x]` Done | EPIC-F07 | Assessment screens + lifecycle action | `assessment_router` | 8 |
 | `[ ]` Backlog | EPIC-F08 | Recommendation screens (read-mostly) | `recommendation_router` | 3 |
 | `[ ]` Backlog | EPIC-F09 | Qualification screens | `qualification_router` | 5 |
 | `[ ]` Backlog | EPIC-F10 | Cross-entity drill-down | company/contact/lead/discovery/assessment/recommendation | 5 |
@@ -402,16 +402,74 @@ confirming the honest-partial-completeness design holds against real
 data), search, delete. Both test records (Discovery and the fresh Lead)
 cleaned up. 51 tests total now across 14 files.
 
-### EPIC-F07 — Assessment screens + lifecycle action (8 pts)
+### EPIC-F07 — Assessment screens + lifecycle action (8 pts) · `[x]` Done
 
-Backend: `POST/GET/GET {id}/PUT/DELETE /assessments`, plus
-`POST /assessments/{id}/start` — a lifecycle action, not plain CRUD, so
-this epic costs more than a same-shaped CRUD-only module.
+Shipped 2026-08-16. `src/app/assessments/` — same list/form/detail pattern,
+plus a real lifecycle action (`POST /assessments/{id}/start`), the first
+non-CRUD backend action any frontend module has driven.
 
-| Story | Acceptance Criteria |
-|---|---|
-| List + create + detail + edit + delete | Same pattern as EPIC-F03 |
-| "Start" action on the detail view | Calls `POST /assessments/{id}/start`, reflects the resulting status without a full page reload |
+| Story | Acceptance Criteria | Status |
+|---|---|---|
+| List + create + detail + edit + delete | Same pattern as EPIC-F03 | `[x]` Done |
+| "Start" action on the detail view | Calls `POST /assessments/{id}/start`, reflects the resulting status without a full page reload | `[x]` Done |
+
+Real findings from checking the schema/live backend directly:
+
+- **The backend emits four structurally-identical response DTOs**
+  (`Create/Get/List/UpdateAssessmentResponseDTO`) instead of one shared
+  shape. Verified field-for-field identical in the generated schema, so the
+  frontend uses one canonical `AssessmentResponseDTO` alias (onto
+  `GetAssessmentResponseDTO`) everywhere rather than juggling four names
+  for the same data.
+- **No `/assessments/search` endpoint exists at all** (unlike every prior
+  module) — `list()` only supports `page`/`page_size`/`discovery_id`, so
+  there's no search bar on this list screen; the subtitle says so honestly
+  instead of implying search exists.
+- **`CreateAssessmentRequestDTO` has exactly one field, `discovery_id`** —
+  create mode is intentionally minimal (a discovery picker, nothing else);
+  every other field is set later via edit or produced by the domain layer.
+- **No reachable status transition exists through the REST API except
+  `Created → In Progress` via `/start`.** `UpdateAssessmentRequestDTO` has
+  no `status` field at all, and no other endpoint moves an assessment to
+  `Under Review`/`Completed`/`Cancelled`. The edit form doesn't pretend
+  otherwise — no status field is shown there, only a code comment
+  explaining why; the detail view's "Start Assessment" button is
+  conditionally shown only when `status === 'Created'`, since that's the
+  only transition this API surface actually supports today.
+- **`AssessmentStatus`/`MaturityLevel` aren't OpenAPI enums**, same
+  situation as `DiscoveryStatus` — transcribed by hand from
+  `Backend/app/domain/assessment/enums/{assessment_status,maturity_level}.py`,
+  flagged in a comment to keep in sync manually.
+
+Cross-link added: Discovery detail gained "+ Add Assessment".
+
+**Shared-style duplication fixed, same day.** Building this module brought
+the count of components `@use`-ing the shared `entity-screens.scss`
+partial (EPIC-F04) to 15, which tripped Angular's per-component 4KB style
+budget on 6 of them. Root cause: Sass `@use` of a partial containing real
+CSS rules (not just variables/mixins) compiles those rules into *every*
+consuming component's own view-encapsulated stylesheet — the shared CSS
+was being duplicated 15 times, not shared once, and would only keep
+getting worse as more modules ship. Fixed by moving the shared rules out
+of the per-component-`@use`d partial and into the global `src/styles.scss`
+(not view-encapsulated, applies app-wide without duplication), deleting
+`entity-screens.scss`, and removing the now-unnecessary `@use` line from
+all 15 consuming component `.scss` files. `ng build` confirmed clean (no
+budget warnings) afterward, and all pre-existing tests stayed green — a
+pure internal restructuring, no visual or behavioral change.
+
+Live-verified full lifecycle against the real backend: found an existing
+Discovery with no Assessment yet (`aa00d632-...`), created an Assessment
+against it (`status: "Created"`), called `/start` and confirmed the
+transition to `"In Progress"`, updated `summary`/`maturity_level`/
+`readiness_score`/strengths-weaknesses-opportunities-risks (confirmed
+`status` stayed unaffected by the update, as expected since it's not on
+`UpdateAssessmentRequestDTO`), then deleted the test record and confirmed
+the resulting `404`. 63 tests total now across 17 files, including
+`assessment.models.spec.ts` (badge-mapping), `assessment.service.spec.ts`
+(all five HTTP calls, including `/start`'s empty-body POST), and
+`assessment-list.spec.ts` (real rendered-DOM assertion for the resolved
+discovery label, maturity, readiness score, and status badge).
 
 ### EPIC-F08 — Recommendation screens (3 pts)
 

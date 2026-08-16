@@ -1,0 +1,82 @@
+<div class="page">
+  <a class="back" routerLink="/assessments">&larr; Assessments</a>
+
+  @if (errorMessage()) {
+    <p class="error">{{ errorMessage() }}</p>
+  }
+
+  @if (loading()) {
+    <p class="loading">Loading…</p>
+  } @else if (assessment(); as a) {
+    <header>
+      <h1>
+        @if (discoveryLabel()) {
+          <a [routerLink]="['/discoveries', a.discovery_id]">{{ discoveryLabel() }}</a>
+        } @else {
+          Assessment
+        }
+      </h1>
+      <span class="badge {{ assessmentStatusBadgeClass(a.status) }}">{{ a.status }}</span>
+      <span class="badge badge-neutral">{{ a.maturity_level }}</span>
+    </header>
+
+    <section class="details">
+      <div class="detail-row">
+        <span class="detail-label">Readiness score</span>
+        <span class="score">{{ a.readiness_score }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Summary</span>
+        @if (a.summary) {
+          <span>{{ a.summary }}</span>
+        } @else {
+          <span class="not-captured">Not yet captured</span>
+        }
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Strengths</span>
+        @if (a.strengths) {
+          <span>{{ a.strengths }}</span>
+        } @else {
+          <span class="not-captured">Not yet captured</span>
+        }
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Weaknesses</span>
+        @if (a.weaknesses) {
+          <span>{{ a.weaknesses }}</span>
+        } @else {
+          <span class="not-captured">Not yet captured</span>
+        }
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Opportunities</span>
+        @if (a.opportunities) {
+          <span>{{ a.opportunities }}</span>
+        } @else {
+          <span class="not-captured">Not yet captured</span>
+        }
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Risks</span>
+        @if (a.risks) {
+          <span>{{ a.risks }}</span>
+        } @else {
+          <span class="not-captured">Not yet captured</span>
+        }
+      </div>
+    </section>
+
+    <div class="actions">
+      @if (a.status === 'Created') {
+        <button type="button" class="primary" [disabled]="starting()" (click)="start()">
+          {{ starting() ? 'Starting…' : 'Start Assessment' }}
+        </button>
+      }
+      <a class="button" [routerLink]="[a.assessment_id, 'edit']">Edit</a>
+      <button type="button" class="danger" [disabled]="deleting()" (click)="delete()">
+        {{ deleting() ? 'Deleting…' : 'Delete' }}
+      </button>
+    </div>
+  }
+</div>

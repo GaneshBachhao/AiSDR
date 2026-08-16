@@ -32,3 +32,335 @@ body {
   color: var(--color-ink);
   font-family: var(--font-family);
 }
+
+/**
+ * Shared list/form/detail styling for CRUD entity screens (Companies,
+ * Contacts, and onward). Lives here (global, not view-encapsulated) rather
+ * than as a per-component `@use`d partial -- `@use`ing a partial that
+ * contains real CSS rules (not just variables/mixins) duplicates those
+ * rules into every consuming component's own compiled stylesheet, which
+ * started tripping Angular's per-component style budget once enough
+ * modules existed (found 2026-08-16, EPIC-F07). Add module-specific rules
+ * in each component's own .scss alongside these, don't copy these blocks
+ * again.
+ */
+
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 24px 80px;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.page-header h1,
+header h1 {
+  margin: 0 0 4px;
+  font-size: 22px;
+}
+
+.subtitle {
+  color: var(--color-ink-soft);
+  font-size: 13px;
+}
+
+.back {
+  display: inline-block;
+  margin-bottom: 16px;
+  color: var(--color-ink-soft);
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.back:hover {
+  color: var(--color-ink);
+}
+
+a.button,
+button.primary {
+  display: inline-block;
+  padding: 9px 16px;
+  background: var(--color-accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+button.primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+a.button.secondary {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  border: 1px solid var(--color-border);
+}
+
+button.danger {
+  padding: 9px 16px;
+  background: var(--color-surface);
+  color: var(--color-danger);
+  border: 1px solid var(--color-danger);
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button.danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.search-bar {
+  display: flex;
+  gap: 8px;
+  margin: 20px 0;
+}
+
+.search-bar input {
+  flex: 1;
+  max-width: 360px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: var(--font-family);
+}
+
+.search-bar button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  background: var(--color-accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.search-bar button.secondary {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  border: 1px solid var(--color-border);
+}
+
+.error {
+  background: var(--color-danger-soft);
+  border: 1px solid #f3b4b4;
+  color: #8a1f1f;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+}
+
+.loading,
+.empty {
+  color: var(--color-ink-soft);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 13.5px;
+}
+
+th {
+  background: var(--color-bg);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-ink-soft);
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.row-link {
+  cursor: pointer;
+}
+
+.row-link:hover {
+  background: var(--color-bg);
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  /* A visible edge regardless of how close a variant's background is to
+     the surface it sits on -- badge-neutral's background is otherwise
+     nearly indistinguishable from the white table/card background it's
+     shown against (found 2026-08-16: it looked like plain text). */
+  border: 1px solid transparent;
+}
+
+.badge-ok {
+  background: var(--color-success-soft);
+  color: #2f7a45;
+}
+
+.badge-fail {
+  background: var(--color-danger-soft);
+  color: #8a1f1f;
+}
+
+.badge-warn {
+  background: var(--color-warning-soft);
+  color: #8a5a10;
+}
+
+/** A real gray fill, not the page background -- the first attempt used
+ * --color-bg (near-white) on a near-white table surface, which read as
+ * plain text rather than a badge even with a border added (found
+ * 2026-08-16, second report: "showing New with borders only"). For
+ * genuinely inert/terminal states (e.g. Lead "Closed") where no color
+ * signal is warranted. */
+.badge-neutral {
+  background: var(--color-border);
+  color: var(--color-ink-soft);
+}
+
+/** Blue "in progress / awaiting action" tone -- for states that are
+ * neither positive nor negative but do warrant a real color, not a gray
+ * so faint it reads as plain text (e.g. Lead "New", the very first status
+ * most people will ever see). */
+.badge-info {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+/** The one AI-sourced-content marker, per design_system.md §5 -- a single
+ * `✦` glyph + the accent-teal `--color-ai` token, used consistently
+ * wherever content originated from an AI step rather than manual entry
+ * (e.g. a research-originated Lead, an AI-generated Recommendation). */
+.badge-ai {
+  background: color-mix(in srgb, var(--color-ai) 14%, transparent);
+  color: var(--color-ai);
+}
+
+.score {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+/* Form */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.field-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.form label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-ink);
+}
+
+.form input,
+.form select {
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: var(--font-family);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.cancel {
+  color: var(--color-ink-soft);
+  text-decoration: none;
+  font-size: 13.5px;
+}
+
+.cancel:hover {
+  color: var(--color-ink);
+}
+
+.hint {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--color-warning);
+}
+
+/* Detail */
+
+.details {
+  margin-top: 20px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 13.5px;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  color: var(--color-ink-soft);
+}
+
+/** A field that's genuinely optional and simply hasn't been filled in
+ * yet -- distinct from an empty string, which would look like a rendering
+ * bug. Used by any entity with honestly-optional fields (Discovery's
+ * needs fields, Assessment's findings). */
+.not-captured {
+  color: var(--color-ink-soft);
+  font-style: italic;
+}
