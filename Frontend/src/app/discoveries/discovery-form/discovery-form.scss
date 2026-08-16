@@ -1,0 +1,12 @@
+@use '../../shared/styles/entity-screens';
+
+.page {
+  max-width: 700px;
+}
+
+.static-value {
+  margin: 0;
+  padding: 8px 0;
+  color: var(--color-ink);
+  font-size: 14px;
+}

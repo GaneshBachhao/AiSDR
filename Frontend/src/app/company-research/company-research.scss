@@ -2,24 +2,17 @@
   max-width: 1100px;
   margin: 0 auto;
   padding: 32px 20px 80px;
-  font-family:
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Helvetica,
-    Arial,
-    sans-serif;
-  color: #1a1f27;
+  color: var(--color-ink);
 }
 
 header h1 {
   margin: 0 0 4px;
-  font-size: 26px;
+  font-size: 22px;
 }
 
 .subtitle {
-  color: #5a6472;
-  font-size: 14px;
+  color: var(--color-ink-soft);
+  font-size: 13.5px;
   max-width: 70ch;
 }
 
@@ -27,9 +20,9 @@ header h1 {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  background: #f7f8fa;
-  border: 1px solid #e2e5ea;
-  border-radius: 10px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
   padding: 20px;
   margin: 20px 0 32px;
 }
@@ -60,26 +53,27 @@ header h1 {
 
 label {
   font-size: 13px;
-  font-weight: 600;
-  color: #33404f;
+  font-weight: 500;
+  color: var(--color-ink);
 }
 
 input[type='text'],
 input[type='number'] {
   padding: 8px 10px;
-  border: 1px solid #cbd2db;
-  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
   font-size: 14px;
+  font-family: var(--font-family);
 }
 
 button {
   align-self: flex-start;
-  padding: 10px 20px;
-  background: #cf6a26;
+  padding: 9px 18px;
+  background: var(--color-accent);
   color: #fff;
   border: none;
-  border-radius: 6px;
-  font-size: 14px;
+  border-radius: 8px;
+  font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
 }
@@ -90,23 +84,23 @@ button:disabled {
 }
 
 .error {
-  background: #fde8e8;
+  background: var(--color-danger-soft);
   border: 1px solid #f3b4b4;
   color: #8a1f1f;
   padding: 10px 14px;
-  border-radius: 6px;
+  border-radius: var(--radius);
 }
 
 .empty {
-  color: #8791a0;
+  color: var(--color-ink-soft);
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  background: #fff;
-  border: 1px solid #e2e5ea;
-  border-radius: 8px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
   overflow: hidden;
 }
 
@@ -114,17 +108,17 @@ th,
 td {
   text-align: left;
   padding: 10px 12px;
-  border-bottom: 1px solid #eef0f3;
+  border-bottom: 1px solid var(--color-border);
   font-size: 13.5px;
   vertical-align: top;
 }
 
 th {
-  background: #f2f4f7;
-  font-size: 11.5px;
+  background: var(--color-bg);
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #5a6472;
+  color: var(--color-ink-soft);
 }
 
 .company-name {
@@ -133,7 +127,7 @@ th {
 
 .score {
   font-variant-numeric: tabular-nums;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .contacts {
@@ -142,34 +136,34 @@ th {
 }
 
 .role {
-  color: #8791a0;
+  color: var(--color-ink-soft);
 }
 
 .muted {
-  color: #8791a0;
+  color: var(--color-ink-soft);
 }
 
 .badge {
   display: inline-block;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: 6px;
   font-size: 11px;
   font-weight: 600;
   margin-right: 4px;
 }
 
 .badge-ok {
-  background: #e3f3e8;
+  background: var(--color-success-soft);
   color: #2f7a45;
 }
 
 .badge-warn {
-  background: #fdf1de;
+  background: var(--color-warning-soft);
   color: #8a5a10;
 }
 
 .badge-fail {
-  background: #fde8e8;
+  background: var(--color-danger-soft);
   color: #8a1f1f;
 }
 
@@ -185,6 +179,6 @@ th {
 
 .results h2,
 .failures h2 {
-  font-size: 16px;
+  font-size: 15px;
   margin-bottom: 4px;
 }

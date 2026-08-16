@@ -1,0 +1,122 @@
+<div class="page">
+  <header>
+    <h1>{{ isEditMode() ? 'Edit Contact' : 'New Contact' }}</h1>
+  </header>
+
+  @if (errorMessage()) {
+    <p class="error">{{ errorMessage() }}</p>
+  }
+
+  @if (loading()) {
+    <p class="loading">Loading…</p>
+  } @else {
+    <form class="form" (ngSubmit)="save()">
+      @if (isEditMode()) {
+        <div class="field">
+          <label>Company</label>
+          <p class="static-value">{{ companyName() ?? '—' }}</p>
+        </div>
+      } @else {
+        <div class="field">
+          <label for="company">Company *</label>
+          <select
+            id="company"
+            name="company"
+            required
+            [ngModel]="form().company_id"
+            (ngModelChange)="update('company_id', $event)"
+          >
+            <option value="" disabled>Select a company…</option>
+            @for (company of companies(); track company.id) {
+              <option [value]="company.id">{{ company.name }}</option>
+            }
+          </select>
+        </div>
+      }
+
+      <div class="field-row">
+        <div class="field">
+          <label for="firstName">First name *</label>
+          <input
+            id="firstName"
+            name="firstName"
+            type="text"
+            required
+            [ngModel]="form().first_name"
+            (ngModelChange)="update('first_name', $event)"
+          />
+        </div>
+
+        <div class="field">
+          <label for="lastName">Last name *</label>
+          <input
+            id="lastName"
+            name="lastName"
+            type="text"
+            required
+            [ngModel]="form().last_name"
+            (ngModelChange)="update('last_name', $event)"
+          />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="email">Email *</label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          required
+          [ngModel]="form().email"
+          (ngModelChange)="update('email', $event)"
+        />
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="phone">Phone</label>
+          <input
+            id="phone"
+            name="phone"
+            type="text"
+            [ngModel]="form().phone"
+            (ngModelChange)="update('phone', $event)"
+          />
+        </div>
+
+        <div class="field">
+          <label for="jobTitle">Job title</label>
+          <input
+            id="jobTitle"
+            name="jobTitle"
+            type="text"
+            [ngModel]="form().job_title"
+            (ngModelChange)="update('job_title', $event)"
+          />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="linkedin">LinkedIn URL</label>
+        <input
+          id="linkedin"
+          name="linkedin"
+          type="text"
+          [ngModel]="form().linkedin_url"
+          (ngModelChange)="update('linkedin_url', $event)"
+        />
+      </div>
+
+      <div class="actions">
+        <button
+          type="submit"
+          class="primary"
+          [disabled]="saving() || !form().first_name || !form().last_name || !form().email || !form().company_id"
+        >
+          {{ saving() ? 'Saving…' : 'Save' }}
+        </button>
+        <a class="cancel" routerLink="/contacts">Cancel</a>
+      </div>
+    </form>
+  }
+</div>

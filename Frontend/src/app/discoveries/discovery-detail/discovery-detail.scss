@@ -1,0 +1,14 @@
+@use '../../shared/styles/entity-screens';
+
+.page {
+  max-width: 700px;
+}
+
+header .badge {
+  margin: 4px 0;
+}
+
+.not-captured {
+  color: var(--color-ink-soft);
+  font-style: italic;
+}

@@ -1,0 +1,64 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h1>Contacts</h1>
+      <p class="subtitle">{{ contacts().length }} shown (up to 500).</p>
+    </div>
+    <a class="button" routerLink="new">+ New Contact</a>
+  </header>
+
+  <form class="search-bar" (ngSubmit)="search()">
+    <input
+      type="text"
+      placeholder="Search by first name, last name, or email (one at a time)…"
+      [ngModel]="searchQuery()"
+      (ngModelChange)="searchQuery.set($event)"
+      name="q"
+    />
+    <button type="submit">Search</button>
+    @if (searchQuery()) {
+      <button type="button" class="secondary" (click)="clearSearch()">Clear</button>
+    }
+  </form>
+
+  @if (errorMessage()) {
+    <p class="error">{{ errorMessage() }}</p>
+  }
+
+  @if (loading()) {
+    <p class="loading">Loading…</p>
+  } @else if (contacts().length === 0) {
+    <p class="empty">No contacts found.</p>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Company</th>
+          <th>Title</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (contact of contacts(); track contact.id) {
+          <tr [routerLink]="[contact.id]" class="row-link">
+            <td class="contact-name">{{ contact.first_name }} {{ contact.last_name }}</td>
+            <td>{{ companyNameById().get(contact.company_id) ?? '—' }}</td>
+            <td>{{ contact.job_title ?? '—' }}</td>
+            <td>{{ contact.email }}</td>
+            <td>{{ contact.phone ?? '—' }}</td>
+            <td>
+              @if (contact.is_active) {
+                <span class="badge badge-ok">Active</span>
+              } @else {
+                <span class="badge badge-fail">Inactive</span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

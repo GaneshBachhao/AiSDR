@@ -29,6 +29,11 @@ yarn-error.log
 !.vscode/mcp.json
 .history/*
 
+# Generated API client -- raw fetched schema is a build artifact
+# (regenerate with `npm run generate:api`); the derived src/app/api/schema.d.ts
+# is tracked since code imports it directly.
+/openapi.json
+
 # Miscellaneous
 /.angular/cache
 .sass-cache/

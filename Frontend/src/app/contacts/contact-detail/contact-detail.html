@@ -1,0 +1,62 @@
+<div class="page">
+  <a class="back" routerLink="/contacts">&larr; Contacts</a>
+
+  @if (errorMessage()) {
+    <p class="error">{{ errorMessage() }}</p>
+  }
+
+  @if (loading()) {
+    <p class="loading">Loading…</p>
+  } @else if (contact(); as c) {
+    <header>
+      <h1>{{ c.first_name }} {{ c.last_name }}</h1>
+      <p class="subtitle">
+        {{ c.job_title ?? 'Title unknown' }}
+        @if (companyName()) {
+          &middot;
+          <a [routerLink]="['/companies', companyId()]">{{ companyName() }}</a>
+        }
+      </p>
+      @if (c.is_active) {
+        <span class="badge badge-ok">Active</span>
+      } @else {
+        <span class="badge badge-fail">Inactive</span>
+      }
+    </header>
+
+    <section class="details">
+      <div class="detail-row">
+        <span class="detail-label">Email</span>
+        <span><a [href]="'mailto:' + c.email">{{ c.email }}</a></span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Phone</span>
+        <span>{{ c.phone ?? '—' }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">LinkedIn</span>
+        <span>
+          @if (c.linkedin_url) {
+            <a [href]="c.linkedin_url" target="_blank" rel="noopener">{{ c.linkedin_url }}</a>
+          } @else {
+            &mdash;
+          }
+        </span>
+      </div>
+    </section>
+
+    <div class="actions">
+      <a class="button" [routerLink]="[c.id, 'edit']">Edit</a>
+      <a
+        class="button secondary"
+        routerLink="/leads/new"
+        [queryParams]="{ company_id: c.company_id, contact_id: c.id }"
+      >
+        + Add Lead
+      </a>
+      <button type="button" class="danger" [disabled]="deleting()" (click)="delete()">
+        {{ deleting() ? 'Deleting…' : 'Delete' }}
+      </button>
+    </div>
+  }
+</div>

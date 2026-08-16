@@ -1,1 +1,39 @@
-<router-outlet />
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-name">AiSDR</div>
+      <div class="brand-tagline">AI Sales Intelligence</div>
+    </div>
+
+    <nav class="nav">
+      <a class="nav-link nav-link-home" routerLink="command-center" routerLinkActive="active">
+        Command Center
+      </a>
+
+      @for (group of navGroups; track group.heading) {
+        <div class="nav-group">
+          <div class="nav-heading">{{ group.heading }}</div>
+          @for (item of group.items; track item.path) {
+            <a class="nav-link" [routerLink]="item.path" routerLinkActive="active">{{ item.label }}</a>
+          }
+        </div>
+      }
+    </nav>
+
+    <div class="nav-footer">
+      <a class="nav-link" routerLink="admin" routerLinkActive="active">Admin</a>
+    </div>
+  </aside>
+
+  <div class="main">
+    <!--
+      Global search (Frontend/docs/design_system.md's command-palette idea)
+      is deliberately not here yet -- a search box that doesn't search
+      anything is worse than no search box. Add it once there's a real
+      endpoint or client-side index behind it.
+    -->
+    <main class="workspace">
+      <router-outlet />
+    </main>
+  </div>
+</div>

@@ -60,8 +60,8 @@ export class CompanyResearch {
 
     this.service.search(req).subscribe({
       next: (batch) => {
-        this.results.set(batch.results);
-        this.failures.set(batch.failures);
+        this.results.set(batch.results ?? []);
+        this.failures.set(batch.failures ?? []);
         this.loading.set(false);
       },
       error: (err) => {

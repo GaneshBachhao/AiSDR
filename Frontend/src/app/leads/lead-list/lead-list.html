@@ -1,0 +1,62 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h1>Leads</h1>
+      <p class="subtitle">{{ leads().length }} shown (up to 500).</p>
+    </div>
+    <a class="button" routerLink="new">+ New Lead</a>
+  </header>
+
+  <form class="search-bar" (ngSubmit)="search()">
+    <input
+      type="text"
+      placeholder="Search leads by keyword…"
+      [ngModel]="searchQuery()"
+      (ngModelChange)="searchQuery.set($event)"
+      name="q"
+    />
+    <button type="submit">Search</button>
+    @if (searchQuery()) {
+      <button type="button" class="secondary" (click)="clearSearch()">Clear</button>
+    }
+  </form>
+
+  @if (errorMessage()) {
+    <p class="error">{{ errorMessage() }}</p>
+  }
+
+  @if (loading()) {
+    <p class="loading">Loading…</p>
+  } @else if (leads().length === 0) {
+    <p class="empty">No leads found.</p>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th>Company</th>
+          <th>Contact</th>
+          <th>Source</th>
+          <th>Status</th>
+          <th>Score</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (lead of leads(); track lead.id) {
+          <tr [routerLink]="[lead.id]" class="row-link">
+            <td class="lead-company">{{ companyNameFor(lead) }}</td>
+            <td>{{ contactNameFor(lead) }}</td>
+            <td>
+              @if (lead.source === 'AI Research') {
+                <span class="badge badge-ai">✦ AI Research</span>
+              } @else {
+                <span class="badge badge-neutral">{{ lead.source }}</span>
+              }
+            </td>
+            <td><span class="badge {{ leadStatusBadgeClass(lead.status) }}">{{ lead.status }}</span></td>
+            <td class="score">{{ lead.score }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

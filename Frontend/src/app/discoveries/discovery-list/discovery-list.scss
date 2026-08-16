@@ -1,0 +1,12 @@
+@use '../../shared/styles/entity-screens';
+
+.discovery-lead {
+  font-weight: 600;
+}
+
+.problem-statement {
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

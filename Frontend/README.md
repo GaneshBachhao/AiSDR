@@ -39,14 +39,24 @@ permissive CORS (`allow_origins=["*"]` in
 `app/presentation/configuration/cors.py`) so no backend change was needed
 for local dev — tighten this before any real deployment.
 
-## Deliberate simplifications (first-slice tradeoffs, not final decisions)
+## API types
 
-- **Hand-written TypeScript interfaces** (`company-research.models.ts`)
-  instead of OpenAPI-generated types. Verified field-for-field against the
-  backend's live `/openapi.json` schema (all 7 relevant DTOs matched
-  exactly as of 2026-08-15), but hand-written types will drift silently the
-  next time the backend DTOs change. Tracked as `docs/frontend_backlog.md`
-  EPIC-F02, sequenced right before the next module's screens start.
+`src/app/api/schema.d.ts` is generated from the backend's live
+`/openapi.json` via `openapi-typescript` (see `docs/frontend_backlog.md`
+EPIC-F02 for why that tool over a full Angular service generator).
+Regenerate after any backend DTO/route change:
+
+```bash
+npm run generate:api   # requires the backend running on 127.0.0.1:8000
+```
+
+Module DTOs (`company-research.models.ts` and future modules) are type
+aliases onto `components['schemas'][...]` from that generated file, not
+hand-written interfaces — drift is caught by TypeScript at build time, not
+missed silently.
+
+## Deliberate simplifications (not final decisions)
+
 - **Template-driven forms** (`FormsModule` + `ngModel`), not reactive forms
   — fine for one form with a handful of fields; revisit if forms grow
   complex validation needs.

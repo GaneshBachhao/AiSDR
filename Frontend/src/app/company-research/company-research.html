@@ -137,7 +137,7 @@
               <td>{{ result.evidence_classification }}</td>
               <td>{{ result.decision_maker_name || result.decision_maker_role || '—' }}</td>
               <td>
-                @if (result.discovered_contacts.length > 0) {
+                @if ((result.discovered_contacts ?? []).length > 0) {
                   <ul class="contacts">
                     @for (contact of result.discovered_contacts; track contact.name) {
                       <li>

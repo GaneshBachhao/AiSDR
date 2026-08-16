@@ -1,0 +1,61 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h1>Discoveries</h1>
+      <p class="subtitle">{{ discoveries().length }} shown (up to 500).</p>
+    </div>
+    <a class="button" routerLink="new">+ New Discovery</a>
+  </header>
+
+  <form class="search-bar" (ngSubmit)="search()">
+    <input
+      type="text"
+      placeholder="Search discoveries…"
+      [ngModel]="searchQuery()"
+      (ngModelChange)="searchQuery.set($event)"
+      name="q"
+    />
+    <button type="submit">Search</button>
+    @if (searchQuery()) {
+      <button type="button" class="secondary" (click)="clearSearch()">Clear</button>
+    }
+  </form>
+
+  @if (errorMessage()) {
+    <p class="error">{{ errorMessage() }}</p>
+  }
+
+  @if (loading()) {
+    <p class="loading">Loading…</p>
+  } @else if (discoveries().length === 0) {
+    <p class="empty">No discoveries found.</p>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th>Lead</th>
+          <th>Problem statement</th>
+          <th>Needs captured</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (discovery of discoveries(); track discovery.id) {
+          <tr [routerLink]="[discovery.id]" class="row-link">
+            <td class="discovery-lead">{{ leadLabelFor(discovery) }}</td>
+            <td class="problem-statement">{{ discovery.problem_statement ?? '—' }}</td>
+            <td>
+              @let completeness = discoveryCompleteness(discovery);
+              {{ completeness.filled }} / {{ completeness.total }}
+            </td>
+            <td>
+              <span class="badge {{ discoveryStatusBadgeClass(discovery.status) }}">{{
+                discovery.status
+              }}</span>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

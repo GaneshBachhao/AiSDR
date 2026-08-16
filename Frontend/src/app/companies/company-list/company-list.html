@@ -1,0 +1,64 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h1>Companies</h1>
+      <p class="subtitle">{{ companies().length }} shown (up to 500).</p>
+    </div>
+    <a class="button" routerLink="new">+ New Company</a>
+  </header>
+
+  <form class="search-bar" (ngSubmit)="search()">
+    <input
+      type="text"
+      placeholder="Search companies by name…"
+      [ngModel]="searchQuery()"
+      (ngModelChange)="searchQuery.set($event)"
+      name="q"
+    />
+    <button type="submit">Search</button>
+    @if (searchQuery()) {
+      <button type="button" class="secondary" (click)="clearSearch()">Clear</button>
+    }
+  </form>
+
+  @if (errorMessage()) {
+    <p class="error">{{ errorMessage() }}</p>
+  }
+
+  @if (loading()) {
+    <p class="loading">Loading…</p>
+  } @else if (companies().length === 0) {
+    <p class="empty">No companies found.</p>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Industry</th>
+          <th>Size</th>
+          <th>Employees</th>
+          <th>Country</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (company of companies(); track company.id) {
+          <tr [routerLink]="[company.id]" class="row-link">
+            <td class="company-name">{{ company.name }}</td>
+            <td>{{ company.industry ?? '—' }}</td>
+            <td>{{ company.company_size ?? '—' }}</td>
+            <td>{{ company.employee_count ?? '—' }}</td>
+            <td>{{ company.country ?? '—' }}</td>
+            <td>
+              @if (company.is_active) {
+                <span class="badge badge-ok">Active</span>
+              } @else {
+                <span class="badge badge-fail">Inactive</span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>
