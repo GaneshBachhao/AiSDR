@@ -1,0 +1,52 @@
+<div class="page">
+  <a class="back" routerLink="/qualifications">&larr; Qualifications</a>
+
+  @if (errorMessage()) {
+    <p class="error">{{ errorMessage() }}</p>
+  }
+
+  @if (loading()) {
+    <p class="loading">Loading…</p>
+  } @else if (qualification(); as q) {
+    <header>
+      <h1>
+        @if (leadLabel()) {
+          <a [routerLink]="['/leads', q.lead_id]">{{ leadLabel() }}</a>
+        } @else {
+          Qualification
+        }
+      </h1>
+      <span class="badge {{ qualificationStatusBadgeClass(q.status) }}">{{ q.status }}</span>
+      <p class="subtitle">
+        Assessment:
+        @if (assessmentLabel()) {
+          <a [routerLink]="['/assessments', q.assessment_id]">{{ assessmentLabel() }}</a>
+        } @else {
+          —
+        }
+      </p>
+    </header>
+
+    <section class="details">
+      <div class="detail-row">
+        <span class="detail-label">Score</span>
+        <span class="score">{{ q.score }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Recommendation</span>
+        @if (q.recommendation) {
+          <span>{{ q.recommendation }}</span>
+        } @else {
+          <span class="not-captured">Not yet captured</span>
+        }
+      </div>
+    </section>
+
+    <div class="actions">
+      <a class="button" [routerLink]="[q.qualification_id, 'edit']">Edit</a>
+      <button type="button" class="danger" [disabled]="deleting()" (click)="delete()">
+        {{ deleting() ? 'Deleting…' : 'Delete' }}
+      </button>
+    </div>
+  }
+</div>

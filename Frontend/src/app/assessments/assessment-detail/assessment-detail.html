@@ -74,6 +74,13 @@
         </button>
       }
       <a class="button" [routerLink]="[a.assessment_id, 'edit']">Edit</a>
+      <a
+        class="button secondary"
+        routerLink="/qualifications/new"
+        [queryParams]="{ assessment_id: a.assessment_id }"
+      >
+        + Add Qualification
+      </a>
       <button type="button" class="danger" [disabled]="deleting()" (click)="delete()">
         {{ deleting() ? 'Deleting…' : 'Delete' }}
       </button>

@@ -1,0 +1,115 @@
+<div class="page">
+  <header>
+    <h1>{{ isEditMode() ? 'Edit Qualification' : 'New Qualification' }}</h1>
+  </header>
+
+  @if (errorMessage()) {
+    <p class="error">{{ errorMessage() }}</p>
+  }
+
+  @if (loading()) {
+    <p class="loading">Loading…</p>
+  } @else {
+    <form class="form" (ngSubmit)="save()">
+      @if (isEditMode()) {
+        <div class="field-row">
+          <div class="field">
+            <label>Lead</label>
+            <p class="static-value">{{ leadLabel() ?? '—' }}</p>
+          </div>
+          <div class="field">
+            <label>Assessment</label>
+            <p class="static-value">{{ assessmentLabel() ?? '—' }}</p>
+          </div>
+        </div>
+      } @else {
+        <div class="field-row">
+          <div class="field">
+            <label for="lead">Lead *</label>
+            <select
+              id="lead"
+              name="lead"
+              required
+              [ngModel]="form().lead_id"
+              (ngModelChange)="updateForm('lead_id', $event)"
+            >
+              <option value="" disabled>Select a lead…</option>
+              @for (entry of leadOptions(); track entry[0]) {
+                <option [value]="entry[0]">{{ entry[1].companyName }} — {{ entry[1].contactName }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label for="assessment">Assessment *</label>
+            <select
+              id="assessment"
+              name="assessment"
+              required
+              [ngModel]="form().assessment_id"
+              (ngModelChange)="updateForm('assessment_id', $event)"
+            >
+              <option value="" disabled>Select an assessment…</option>
+              @for (entry of assessmentOptions(); track entry[0]) {
+                <option [value]="entry[0]">{{ entry[1].discoveryLabel }}</option>
+              }
+            </select>
+            <p class="hint">
+              Not filtered by the selected lead — the backend doesn't require them to belong to the
+              same pipeline, so double-check the pairing before saving.
+            </p>
+          </div>
+        </div>
+      }
+
+      <div class="field-row">
+        <div class="field">
+          <label for="status">Status</label>
+          <select
+            id="status"
+            name="status"
+            [ngModel]="form().status"
+            (ngModelChange)="updateForm('status', $event)"
+          >
+            @for (s of statuses; track s) {
+              <option [value]="s">{{ s }}</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label for="score">Score</label>
+          <input
+            id="score"
+            name="score"
+            type="number"
+            min="0"
+            max="100"
+            [ngModel]="form().score"
+            (ngModelChange)="updateForm('score', $event)"
+          />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="recommendation">Recommendation</label>
+        <input
+          id="recommendation"
+          name="recommendation"
+          type="text"
+          [ngModel]="form().recommendation"
+          (ngModelChange)="updateForm('recommendation', $event)"
+        />
+      </div>
+
+      <div class="actions">
+        <button
+          type="submit"
+          class="primary"
+          [disabled]="saving() || (!isEditMode() && (!form().lead_id || !form().assessment_id))"
+        >
+          {{ saving() ? 'Saving…' : 'Save' }}
+        </button>
+        <a class="cancel" routerLink="/qualifications">Cancel</a>
+      </div>
+    </form>
+  }
+</div>

@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { DiscoveryService } from '../../discoveries/discovery.service';
+import { AssessmentDisplayService } from '../assessment-display.service';
 import { AssessmentService } from '../assessment.service';
 import { AssessmentResponseDTO, assessmentStatusBadgeClass } from '../assessment.models';
 
@@ -15,7 +15,7 @@ export class AssessmentDetail implements OnInit {
   protected readonly assessmentStatusBadgeClass = assessmentStatusBadgeClass;
 
   private readonly service = inject(AssessmentService);
-  private readonly discoveryService = inject(DiscoveryService);
+  private readonly displayService = inject(AssessmentDisplayService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -35,14 +35,11 @@ export class AssessmentDetail implements OnInit {
   }
 
   private load(): void {
-    this.service.get(this.id).subscribe({
-      next: (assessment) => {
+    this.displayService.resolve(this.id).subscribe({
+      next: ({ assessment, discoveryLabel }) => {
         this.assessment.set(assessment);
+        this.discoveryLabel.set(discoveryLabel);
         this.loading.set(false);
-        this.discoveryService.get(assessment.discovery_id).subscribe({
-          next: (discovery) =>
-            this.discoveryLabel.set(discovery.problem_statement ?? 'Discovery (untitled)'),
-        });
       },
       error: () => {
         this.errorMessage.set('Could not load this assessment. Check that the API is running.');

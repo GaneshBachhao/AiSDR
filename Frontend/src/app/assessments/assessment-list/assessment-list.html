@@ -26,14 +26,14 @@
         </tr>
       </thead>
       <tbody>
-        @for (assessment of assessments(); track assessment.assessment_id) {
-          <tr [routerLink]="[assessment.assessment_id]" class="row-link">
-            <td class="discovery-label">{{ discoveryLabelFor(assessment) }}</td>
-            <td>{{ assessment.maturity_level }}</td>
-            <td class="score">{{ assessment.readiness_score }}</td>
+        @for (display of assessments(); track display.assessment.assessment_id) {
+          <tr [routerLink]="[display.assessment.assessment_id]" class="row-link">
+            <td class="discovery-label">{{ display.discoveryLabel }}</td>
+            <td>{{ display.assessment.maturity_level }}</td>
+            <td class="score">{{ display.assessment.readiness_score }}</td>
             <td>
-              <span class="badge {{ assessmentStatusBadgeClass(assessment.status) }}">{{
-                assessment.status
+              <span class="badge {{ assessmentStatusBadgeClass(display.assessment.status) }}">{{
+                display.assessment.status
               }}</span>
             </td>
           </tr>

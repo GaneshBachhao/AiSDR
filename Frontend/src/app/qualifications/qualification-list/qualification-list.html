@@ -1,0 +1,46 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h1>Qualifications</h1>
+      <p class="subtitle">
+        {{ rows().length }} shown (up to 200 — no search endpoint exists for this module).
+      </p>
+    </div>
+    <a class="button" routerLink="new">+ New Qualification</a>
+  </header>
+
+  @if (errorMessage()) {
+    <p class="error">{{ errorMessage() }}</p>
+  }
+
+  @if (loading()) {
+    <p class="loading">Loading…</p>
+  } @else if (rows().length === 0) {
+    <p class="empty">No qualifications found.</p>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th>Lead</th>
+          <th>Assessment</th>
+          <th>Score</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of rows(); track row.qualification.qualification_id) {
+          <tr [routerLink]="[row.qualification.qualification_id]" class="row-link">
+            <td>{{ row.leadLabel }}</td>
+            <td class="discovery-label">{{ row.assessmentLabel }}</td>
+            <td class="score">{{ row.qualification.score }}</td>
+            <td>
+              <span class="badge {{ qualificationStatusBadgeClass(row.qualification.status) }}">{{
+                row.qualification.status
+              }}</span>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

@@ -16,6 +16,9 @@ import { DiscoveryList } from './discoveries/discovery-list/discovery-list';
 import { LeadDetail } from './leads/lead-detail/lead-detail';
 import { LeadForm } from './leads/lead-form/lead-form';
 import { LeadList } from './leads/lead-list/lead-list';
+import { QualificationDetail } from './qualifications/qualification-detail/qualification-detail';
+import { QualificationForm } from './qualifications/qualification-form/qualification-form';
+import { QualificationList } from './qualifications/qualification-list/qualification-list';
 import { ComingSoon } from './shared/coming-soon/coming-soon';
 
 /**
@@ -51,7 +54,10 @@ export const routes: Routes = [
   { path: 'assessments/new', component: AssessmentForm },
   { path: 'assessments/:id', component: AssessmentDetail },
   { path: 'assessments/:id/edit', component: AssessmentForm },
-  { path: 'qualifications', component: ComingSoon, data: { title: 'Qualifications' } },
+  { path: 'qualifications', component: QualificationList },
+  { path: 'qualifications/new', component: QualificationForm },
+  { path: 'qualifications/:id', component: QualificationDetail },
+  { path: 'qualifications/:id/edit', component: QualificationForm },
   { path: 'recommendations', component: ComingSoon, data: { title: 'Recommendations' } },
   { path: 'actions', component: ComingSoon, data: { title: 'Actions' } },
 

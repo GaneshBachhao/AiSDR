@@ -54,7 +54,7 @@ EPIC-14 notes), so there is nothing running to build a screen against.
 | `[ ]` Backlog | EPIC-F06 | Discovery screens | `discovery_router` | 5 |
 | `[x]` Done | EPIC-F07 | Assessment screens + lifecycle action | `assessment_router` | 8 |
 | `[ ]` Backlog | EPIC-F08 | Recommendation screens (read-mostly) | `recommendation_router` | 3 |
-| `[ ]` Backlog | EPIC-F09 | Qualification screens | `qualification_router` | 5 |
+| `[x]` Done | EPIC-F09 | Qualification screens | `qualification_router` | 5 |
 | `[ ]` Backlog | EPIC-F10 | Cross-entity drill-down | company/contact/lead/discovery/assessment/recommendation | 5 |
 | `[ ]` Backlog | EPIC-F11 | Admin diagnostics view | `admin_router` | 2 |
 | `[ ]` Parked | PARK-F-AUTH | Authentication | — | — |
@@ -482,22 +482,94 @@ distinctly (existing Pamacore offering vs. AI-proposed generic idea) — the
 backend went to real effort (Sprint 7) to keep that distinction meaningful;
 don't flatten it away in the UI.
 
-### EPIC-F09 — Qualification screens (5 pts)
+### EPIC-F09 — Qualification screens (5 pts) · `[x]` Done
 
-Same CRUD shape against `/qualifications`
-(`POST/GET {id}/GET/PUT/DELETE`), no search endpoint. Field set now
-confirmed by reading the real domain code (2026-08-16, during the design
-review): `QualificationResponseDTO` is `{ qualification_id, lead_id,
-assessment_id, status (Qualified/Partially Qualified/Needs Nurturing/
-Disqualified), score (single 0-100 float), recommendation (free text) }`
-— no multi-dimension breakdown (no separate Fit/Intent/Timing/Business
-Relevance/Tech Alignment fields exist anywhere in the backend). **Build
-this screen against the real, simpler shape** — a richer scored breakdown
-is a possible future *backend* feature request, not something to fake in
-the UI. Also requires `Assessment` to exist first (`assessment_id` is
-mandatory on create) — this screen makes the most sense reached via
-EPIC-F10's drill-down from an Assessment, not as a cold-start standalone
-list.
+Shipped 2026-08-16. `src/app/qualifications/` — same list/form/detail
+pattern. Field set confirmed by reading the real domain code (2026-08-16,
+during the earlier design review): `QualificationResponseDTO` is
+`{ qualification_id, lead_id, assessment_id, status (Qualified/Partially
+Qualified/Needs Nurturing/Disqualified), score (single 0-100 float),
+recommendation (free text) }` — no multi-dimension breakdown (no separate
+Fit/Intent/Timing/Business Relevance/Tech Alignment fields exist anywhere
+in the backend). Built against this real, simpler shape rather than faking
+a richer scored breakdown.
+
+Real findings from checking the router/domain code directly rather than
+assuming this module works like its siblings:
+
+- **`qualification_router.py` has no `response_model=` on any route** —
+  confirmed by reading the router source, not just the generated schema.
+  `openapi-typescript` correctly emits `unknown` for every response body
+  as a result, so there's no generated DTO to alias onto — the first
+  module where that's true. `qualification.models.ts` hand-writes
+  `QualificationResponseDTO` from the real application-layer DTO
+  (`Backend/app/application/qualification/dto/qualification_response.py`)
+  instead, flagged to keep in sync manually, the same discipline already
+  used for `DiscoveryStatus`/`AssessmentStatus`. (A real fix exists —
+  adding `response_model=` server-side — but that's a backend change, out
+  of scope for this frontend sprint; first flagged as a gap back in
+  EPIC-F02.)
+- **`ListQualificationResponseDTO` genuinely omits `recommendation`** —
+  not a doc error, confirmed by reading `qualification_mapper.py`'s
+  `to_list_response` and live-verified: creating a Qualification with a
+  `recommendation` set, then listing it back, showed the field absent from
+  the list row entirely (not `null` — absent). The list screen doesn't
+  render recommendation text anyway, so this cost nothing, but it's a real
+  reason `QualificationResponseDTO` isn't reused uniformly across list vs.
+  get/create/update the way Assessment's four DTOs were.
+- **A new Qualification always starts `"Partially Qualified"` / score `0`
+  regardless of what's requested, unless the create request explicitly
+  sets `status`/`score`** — `Qualification.__init__` hardcodes those
+  defaults; the create handler only calls `update_status()`/`update_score()`
+  afterward if the request included a value. Live-verified: a bare
+  `{lead_id, assessment_id}` create returned `"Partially Qualified"`/`0`
+  exactly as the domain constructor sets them. `emptyQualificationForm()`
+  matches this default rather than defaulting to something arbitrary.
+- **The backend does not enforce that `assessment_id`'s discovery belongs
+  to the given `lead_id`** — unlike Lead's company/contact 404, Qualification
+  accepts any valid-UUID pair of an existing Lead and Assessment with no
+  cross-check (confirmed by reading `QualificationValidator.validate_create`,
+  which only checks UUID shape). The create form's Lead and Assessment
+  pickers are therefore independent, not filtered against each other like
+  Lead's contact picker was — a real, honestly-disclosed UX gap (a hint
+  under the Assessment picker says so) rather than client-side validation
+  the backend doesn't actually require.
+- **Extracted `AssessmentDisplayService`** (`app/assessments/
+  assessment-display.service.ts`), mirroring `LeadDisplayService`
+  (EPIC-F06): the second place needing "Assessment → its Discovery's
+  problem statement" (`AssessmentList` already did this inline) was
+  `QualificationList`/`QualificationForm`/`QualificationDetail`, all
+  needing the same join to show a human-readable assessment label instead
+  of a raw UUID. Refactored `AssessmentList`/`AssessmentDetail` onto the
+  shared service too, rather than adding a third inline copy — behavior-
+  preserving, all 63 pre-existing tests stayed green unchanged.
+
+Cross-link added: Assessment detail gained "+ Add Qualification"
+(preselects `assessment_id` only — deriving the correct Lead would need a
+third hop through the Assessment's Discovery, judged not worth the added
+complexity given the backend doesn't require the pairing to be consistent
+anyway).
+
+**Shared-style budget note:** unlike every CRUD module since EPIC-F04,
+Qualification's own component `.scss` files were written directly against
+the global `styles.scss` tokens from the start (no `@use` of a per-
+component partial) — the EPIC-F07 fix (global styles instead of a
+duplicated `@use`d partial) landed before this module existed, so there
+was nothing to migrate.
+
+Live-verified full CRUD against the real backend: created a fresh
+Assessment against an existing Discovery to get a valid `assessment_id`,
+created a Qualification with only `lead_id`/`assessment_id` and confirmed
+the domain default (`"Partially Qualified"`, score `0`), updated `status`
+to `"Qualified"`/`score` to `88`/added a `recommendation`, confirmed via
+`GET`, confirmed the list row's `recommendation` field is genuinely
+absent (not `null`), deleted both the Qualification and the test
+Assessment, and confirmed the resulting `404`s. 79 tests total now across
+21 files, including `qualification.models.spec.ts`, `qualification.
+service.spec.ts`, `qualification-list.spec.ts` (real rendered-DOM
+assertion for the resolved lead/assessment labels, score, and status
+badge), and a new `assessment-display.service.spec.ts` for the extracted
+service.
 
 ### EPIC-F10 — Cross-entity drill-down (5 pts)
 
