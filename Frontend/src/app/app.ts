@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { AuthService } from './auth/auth.service';
 
 interface NavItem {
   label: string;
@@ -24,6 +25,8 @@ interface NavGroup {
   styleUrl: './app.scss',
 })
 export class App {
+  protected readonly authService = inject(AuthService);
+
   protected readonly navGroups: NavGroup[] = [
     {
       heading: 'Discover',

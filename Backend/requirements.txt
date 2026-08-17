@@ -8,6 +8,10 @@ pydantic==2.13.4
 pydantic-settings==2.14.1
 typing_extensions>=4.0,<5
 
+# Auth
+bcrypt>=4.0,<5
+PyJWT>=2.8,<3
+
 # Optional live company-research provider
 # The application remains importable and testable without Tavily.
 tavily-python>=0.5,<1

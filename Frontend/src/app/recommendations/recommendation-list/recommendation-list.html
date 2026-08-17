@@ -1,0 +1,44 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h1>Recommendations</h1>
+      <p class="subtitle">
+        {{ rows().length }} shown (up to 200) — AI-generated, read-mostly: no edit or delete.
+      </p>
+    </div>
+    <a class="button" routerLink="new">+ Generate Recommendation</a>
+  </header>
+
+  @if (errorMessage()) {
+    <p class="error">{{ errorMessage() }}</p>
+  }
+
+  @if (loading()) {
+    <p class="loading">Loading…</p>
+  } @else if (rows().length === 0) {
+    <p class="empty">No recommendations found.</p>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th>Assessment</th>
+          <th>Solutions</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of rows(); track row.recommendation.id) {
+          <tr [routerLink]="[row.recommendation.id]" class="row-link">
+            <td class="discovery-label">{{ row.assessmentLabel }}</td>
+            <td>{{ (row.recommendation.solutions ?? []).length }}</td>
+            <td>
+              <span class="badge {{ recommendationStatusBadgeClass(row.recommendation.status) }}">{{
+                row.recommendation.status
+              }}</span>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

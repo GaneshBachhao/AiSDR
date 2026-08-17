@@ -44,6 +44,9 @@ from app.application.contracts.repositories.qualification_repository import (
 from app.application.contracts.repositories.recommendation_repository import (
     RecommendationRepository,
 )
+from app.application.contracts.repositories.user_repository import (
+    UserRepository,
+)
 
 from app.infrastructure.persistence.repositories.assessment.sqlalchemy_assessment_repository import (
     SqlAlchemyAssessmentRepository,
@@ -65,6 +68,9 @@ from app.infrastructure.persistence.repositories.qualification.sqlalchemy_qualif
 )
 from app.infrastructure.persistence.repositories.recommendation.sqlalchemy_recommendation_repository import (
     SqlAlchemyRecommendationRepository,
+)
+from app.infrastructure.persistence.repositories.user.sqlalchemy_user_repository import (
+    SqlAlchemyUserRepository,
 )
 
 
@@ -120,6 +126,9 @@ class SqlAlchemyUnitOfWork(UnitOfWork):
         self._recommendation_repository = SqlAlchemyRecommendationRepository(
             session=session,
         )
+        self._user_repository = SqlAlchemyUserRepository(
+            session=session,
+        )
 
     # ==========================================================
     # Canonical repository properties
@@ -166,6 +175,12 @@ class SqlAlchemyUnitOfWork(UnitOfWork):
         self,
     ) -> RecommendationRepository:
         return self._recommendation_repository
+
+    @property
+    def user_repository(
+        self,
+    ) -> UserRepository:
+        return self._user_repository
 
     # ==========================================================
     # Backward-compatible aliases

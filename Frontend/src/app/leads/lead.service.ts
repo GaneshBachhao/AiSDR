@@ -18,6 +18,15 @@ export class LeadService {
     });
   }
 
+  /** Unlike Contact/Discovery, Lead's list endpoint does support a
+   * company_id filter server-side (verified in
+   * Backend/app/presentation/api/routers/lead_router.py). */
+  listByCompany(companyId: string): Observable<LeadResponseDTO[]> {
+    return this.http.get<LeadResponseDTO[]>(this.base, {
+      params: new HttpParams().set('company_id', companyId).set('limit', 500),
+    });
+  }
+
   search(keyword: string): Observable<LeadResponseDTO[]> {
     return this.http.get<LeadResponseDTO[]>(`${this.base}/search`, {
       params: new HttpParams().set('keyword', keyword).set('limit', 500),

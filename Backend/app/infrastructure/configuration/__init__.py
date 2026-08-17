@@ -12,6 +12,7 @@ from .openai_settings import OpenAISettings
 from .azure_openai_settings import AzureOpenAISettings
 from .tavily_settings import TavilySettings
 from .company_research_settings import CompanyResearchSettings
+from .jwt_settings import JWTSettings
 
 __all__ = [
     "ProviderSettings",
@@ -24,4 +25,5 @@ __all__ = [
     "AzureOpenAISettings",
     "TavilySettings",
     "CompanyResearchSettings",
+    "JWTSettings",
 ]

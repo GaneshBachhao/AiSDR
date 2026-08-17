@@ -1,4 +1,7 @@
 import { Routes } from '@angular/router';
+import { Admin } from './admin/admin';
+import { authGuard } from './auth/auth.guard';
+import { Login } from './auth/login/login';
 import { AssessmentDetail } from './assessments/assessment-detail/assessment-detail';
 import { AssessmentForm } from './assessments/assessment-form/assessment-form';
 import { AssessmentList } from './assessments/assessment-list/assessment-list';
@@ -19,6 +22,9 @@ import { LeadList } from './leads/lead-list/lead-list';
 import { QualificationDetail } from './qualifications/qualification-detail/qualification-detail';
 import { QualificationForm } from './qualifications/qualification-form/qualification-form';
 import { QualificationList } from './qualifications/qualification-list/qualification-list';
+import { RecommendationDetail } from './recommendations/recommendation-detail/recommendation-detail';
+import { RecommendationForm } from './recommendations/recommendation-form/recommendation-form';
+import { RecommendationList } from './recommendations/recommendation-list/recommendation-list';
 import { ComingSoon } from './shared/coming-soon/coming-soon';
 
 /**
@@ -29,37 +35,47 @@ import { ComingSoon } from './shared/coming-soon/coming-soon';
  * ships. Command Center (not Company Research) is now the landing page.
  */
 export const routes: Routes = [
-  { path: '', redirectTo: 'command-center', pathMatch: 'full' },
-  { path: 'command-center', component: CommandCenter },
+  { path: 'login', component: Login },
 
-  { path: 'company-research', component: CompanyResearch, data: { title: 'Company Research' } },
-  { path: 'companies', component: CompanyList },
-  { path: 'companies/new', component: CompanyForm },
-  { path: 'companies/:id', component: CompanyDetail },
-  { path: 'companies/:id/edit', component: CompanyForm },
-  { path: 'contacts', component: ContactList },
-  { path: 'contacts/new', component: ContactForm },
-  { path: 'contacts/:id', component: ContactDetail },
-  { path: 'contacts/:id/edit', component: ContactForm },
-  { path: 'leads', component: LeadList },
-  { path: 'leads/new', component: LeadForm },
-  { path: 'leads/:id', component: LeadDetail },
-  { path: 'leads/:id/edit', component: LeadForm },
+  {
+    path: '',
+    canActivate: [authGuard],
+    children: [
+      { path: '', redirectTo: 'command-center', pathMatch: 'full' },
+      { path: 'command-center', component: CommandCenter },
 
-  { path: 'discoveries', component: DiscoveryList },
-  { path: 'discoveries/new', component: DiscoveryForm },
-  { path: 'discoveries/:id', component: DiscoveryDetail },
-  { path: 'discoveries/:id/edit', component: DiscoveryForm },
-  { path: 'assessments', component: AssessmentList },
-  { path: 'assessments/new', component: AssessmentForm },
-  { path: 'assessments/:id', component: AssessmentDetail },
-  { path: 'assessments/:id/edit', component: AssessmentForm },
-  { path: 'qualifications', component: QualificationList },
-  { path: 'qualifications/new', component: QualificationForm },
-  { path: 'qualifications/:id', component: QualificationDetail },
-  { path: 'qualifications/:id/edit', component: QualificationForm },
-  { path: 'recommendations', component: ComingSoon, data: { title: 'Recommendations' } },
-  { path: 'actions', component: ComingSoon, data: { title: 'Actions' } },
+      { path: 'company-research', component: CompanyResearch, data: { title: 'Company Research' } },
+      { path: 'companies', component: CompanyList },
+      { path: 'companies/new', component: CompanyForm },
+      { path: 'companies/:id', component: CompanyDetail },
+      { path: 'companies/:id/edit', component: CompanyForm },
+      { path: 'contacts', component: ContactList },
+      { path: 'contacts/new', component: ContactForm },
+      { path: 'contacts/:id', component: ContactDetail },
+      { path: 'contacts/:id/edit', component: ContactForm },
+      { path: 'leads', component: LeadList },
+      { path: 'leads/new', component: LeadForm },
+      { path: 'leads/:id', component: LeadDetail },
+      { path: 'leads/:id/edit', component: LeadForm },
 
-  { path: 'admin', component: ComingSoon, data: { title: 'Admin' } },
+      { path: 'discoveries', component: DiscoveryList },
+      { path: 'discoveries/new', component: DiscoveryForm },
+      { path: 'discoveries/:id', component: DiscoveryDetail },
+      { path: 'discoveries/:id/edit', component: DiscoveryForm },
+      { path: 'assessments', component: AssessmentList },
+      { path: 'assessments/new', component: AssessmentForm },
+      { path: 'assessments/:id', component: AssessmentDetail },
+      { path: 'assessments/:id/edit', component: AssessmentForm },
+      { path: 'qualifications', component: QualificationList },
+      { path: 'qualifications/new', component: QualificationForm },
+      { path: 'qualifications/:id', component: QualificationDetail },
+      { path: 'qualifications/:id/edit', component: QualificationForm },
+      { path: 'recommendations', component: RecommendationList },
+      { path: 'recommendations/new', component: RecommendationForm },
+      { path: 'recommendations/:id', component: RecommendationDetail },
+      { path: 'actions', component: ComingSoon, data: { title: 'Actions' } },
+
+      { path: 'admin', component: Admin },
+    ],
+  },
 ];

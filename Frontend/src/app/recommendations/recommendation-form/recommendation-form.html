@@ -1,0 +1,38 @@
+<div class="page">
+  <header>
+    <h1>Generate Recommendation</h1>
+    <p class="subtitle">
+      Runs a real AI call against the selected Assessment's findings. Re-generating for an
+      Assessment that already has one just returns it, not a duplicate.
+    </p>
+  </header>
+
+  @if (errorMessage()) {
+    <p class="error">{{ errorMessage() }}</p>
+  }
+
+  <form class="form" (ngSubmit)="generate()">
+    <div class="field">
+      <label for="assessment">Assessment *</label>
+      <select
+        id="assessment"
+        name="assessment"
+        required
+        [ngModel]="assessmentId()"
+        (ngModelChange)="assessmentId.set($event)"
+      >
+        <option value="" disabled>Select an assessment…</option>
+        @for (entry of assessmentOptions(); track entry[0]) {
+          <option [value]="entry[0]">{{ entry[1].discoveryLabel }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="primary" [disabled]="generating() || !assessmentId()">
+        {{ generating() ? 'Generating…' : 'Generate' }}
+      </button>
+      <a class="cancel" routerLink="/recommendations">Cancel</a>
+    </div>
+  </form>
+</div>

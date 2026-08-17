@@ -1,0 +1,67 @@
+<div class="page">
+  <a class="back" routerLink="/recommendations">&larr; Recommendations</a>
+
+  @if (errorMessage()) {
+    <p class="error">{{ errorMessage() }}</p>
+  }
+
+  @if (loading()) {
+    <p class="loading">Loading…</p>
+  } @else if (recommendation(); as r) {
+    <header>
+      <h1>
+        @if (assessmentLabel()) {
+          <a [routerLink]="['/assessments', r.assessment_id]">{{ assessmentLabel() }}</a>
+        } @else {
+          Recommendation
+        }
+      </h1>
+      <span class="badge {{ recommendationStatusBadgeClass(r.status) }}">{{ r.status }}</span>
+    </header>
+
+    <section class="details">
+      <div class="detail-row">
+        <span class="detail-label">Executive summary</span>
+        @if (r.executive_summary) {
+          <span>{{ r.executive_summary }}</span>
+        } @else {
+          <span class="not-captured">Not yet captured</span>
+        }
+      </div>
+    </section>
+
+    <h2 class="solutions-heading">Solutions</h2>
+    @if ((r.solutions ?? []).length === 0) {
+      <p class="empty">No solutions on this recommendation.</p>
+    } @else {
+      <div class="solutions">
+        @for (solution of r.solutions; track solution.solution_id) {
+          <article class="solution-card">
+            <div class="solution-header">
+              <h3>{{ solution.title }}</h3>
+              @if (solution.is_existing_offering) {
+                <span class="badge badge-ai">✦ Existing Pamacore offering</span>
+              } @else {
+                <span class="badge badge-neutral">AI-proposed idea</span>
+              }
+            </div>
+            <p>{{ solution.description }}</p>
+            <div class="solution-meta">
+              <span>{{ solution.solution_type }}</span>
+              <span>{{ solution.priority }} priority</span>
+            </div>
+          </article>
+        }
+      </div>
+    }
+
+    @if ((r.roadmap_phases ?? []).length > 0) {
+      <h2 class="solutions-heading">Roadmap</h2>
+      <ol class="roadmap">
+        @for (phase of r.roadmap_phases; track phase) {
+          <li>{{ phase }}</li>
+        }
+      </ol>
+    }
+  }
+</div>

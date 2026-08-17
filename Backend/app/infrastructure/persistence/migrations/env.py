@@ -41,6 +41,9 @@ from app.infrastructure.persistence.models.qualification_model import (
 from app.infrastructure.persistence.models.recommendation_model import (
     RecommendationModel,
 )
+from app.infrastructure.persistence.models.user_model import (
+    UserModel,
+)
 
 # ---------------------------------------------------------------------
 

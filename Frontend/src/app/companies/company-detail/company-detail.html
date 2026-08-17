@@ -60,5 +60,95 @@
         {{ deleting() ? 'Deleting…' : 'Delete' }}
       </button>
     </div>
+
+    <section class="related">
+      <h2>Contacts</h2>
+      @if (relatedLoading()) {
+        <p class="loading">Loading…</p>
+      } @else if (contacts().length === 0) {
+        <p class="empty">No contacts yet.</p>
+      } @else {
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Title</th>
+              <th>Email</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (contact of contacts(); track contact.id) {
+              <tr [routerLink]="['/contacts', contact.id]" class="row-link">
+                <td>{{ contact.first_name }} {{ contact.last_name }}</td>
+                <td>{{ contact.job_title ?? '—' }}</td>
+                <td>{{ contact.email }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
+
+    <section class="related">
+      <h2>Leads</h2>
+      @if (relatedLoading()) {
+        <p class="loading">Loading…</p>
+      } @else if (leads().length === 0) {
+        <p class="empty">No leads yet.</p>
+      } @else {
+        <table>
+          <thead>
+            <tr>
+              <th>Contact</th>
+              <th>Source</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (lead of leads(); track lead.id) {
+              <tr [routerLink]="['/leads', lead.id]" class="row-link">
+                <td>{{ contactNameFor(lead.contact_id) }}</td>
+                <td>{{ lead.source }}</td>
+                <td>
+                  <span class="badge {{ leadStatusBadgeClass(lead.status) }}">{{ lead.status }}</span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
+
+    <section class="related">
+      <h2>Discoveries</h2>
+      @if (relatedLoading()) {
+        <p class="loading">Loading…</p>
+      } @else if (discoveries().length === 0) {
+        <p class="empty">No discoveries yet.</p>
+      } @else {
+        <table>
+          <thead>
+            <tr>
+              <th>Problem statement</th>
+              <th>Lead contact</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (discovery of discoveries(); track discovery.id) {
+              <tr [routerLink]="['/discoveries', discovery.id]" class="row-link">
+                <td>{{ discovery.problem_statement ?? 'Not yet captured' }}</td>
+                <td>{{ discoveryLeadContact(discovery) }}</td>
+                <td>
+                  <span class="badge {{ discoveryStatusBadgeClass(discovery.status) }}">{{
+                    discovery.status
+                  }}</span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
   }
 </div>

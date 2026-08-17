@@ -1,0 +1,42 @@
+<div class="login-page">
+  <form class="login-card form" (ngSubmit)="submit()">
+    <h1>AiSDR</h1>
+    <p class="subtitle">Sign in to continue.</p>
+
+    @if (errorMessage()) {
+      <p class="error">{{ errorMessage() }}</p>
+    }
+
+    <div class="field">
+      <label for="email">Email</label>
+      <input
+        id="email"
+        name="email"
+        type="email"
+        required
+        autocomplete="username"
+        [ngModel]="email()"
+        (ngModelChange)="email.set($event)"
+      />
+    </div>
+
+    <div class="field">
+      <label for="password">Password</label>
+      <input
+        id="password"
+        name="password"
+        type="password"
+        required
+        autocomplete="current-password"
+        [ngModel]="password()"
+        (ngModelChange)="password.set($event)"
+      />
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="primary" [disabled]="submitting() || !email() || !password()">
+        {{ submitting() ? 'Signing in…' : 'Sign in' }}
+      </button>
+    </div>
+  </form>
+</div>

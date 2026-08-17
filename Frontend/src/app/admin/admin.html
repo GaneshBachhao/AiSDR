@@ -1,0 +1,59 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h1>Admin Diagnostics</h1>
+      <p class="subtitle">
+        Effective, resolved AI provider configuration — read-only, never shows full API keys.
+      </p>
+    </div>
+  </header>
+
+  @if (errorMessage()) {
+    <p class="error">{{ errorMessage() }}</p>
+  }
+
+  @if (loading()) {
+    <p class="loading">Loading…</p>
+  } @else if (config(); as c) {
+    <section class="details">
+      <div class="detail-row">
+        <span class="detail-label">Default provider</span>
+        <span>{{ c.default_provider }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Fallback order</span>
+        <span>{{ c.fallback_order.length > 0 ? c.fallback_order.join(' → ') : 'None configured' }}</span>
+      </div>
+    </section>
+
+    <h2 class="providers-heading">Providers</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Provider</th>
+          <th>Configured</th>
+          <th>Model</th>
+          <th>Key fingerprint</th>
+          <th>Key source</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (provider of c.providers; track provider.provider) {
+          <tr>
+            <td>{{ provider.provider }}</td>
+            <td>
+              @if (provider.configured) {
+                <span class="badge badge-ok">Configured</span>
+              } @else {
+                <span class="badge badge-neutral">Not configured</span>
+              }
+            </td>
+            <td>{{ provider.model }}</td>
+            <td>{{ provider.key_fingerprint ?? '—' }}</td>
+            <td>{{ provider.key_source }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

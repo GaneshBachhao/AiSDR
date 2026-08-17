@@ -4,23 +4,32 @@
  */
 
 export interface paths {
-    "/admin/ai-config": {
+    "/auth/login": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /**
-         * Effective AI provider configuration
-         * @description Report the effective, resolved AI provider configuration.
-         *
-         *     Never returns full API keys -- only a last-4-character fingerprint --
-         *     and reports whether each key came from a real environment variable or
-         *     only from ``.env``, so a shadowing environment variable is visible in
-         *     one call instead of a manual investigation.
-         */
-        get: operations["get_ai_config_diagnostics_admin_ai_config_get"];
+        get?: never;
+        put?: never;
+        /** Login */
+        post: operations["login_auth_login_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Me */
+        get: operations["get_me_auth_me_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -41,6 +50,31 @@ export interface paths {
          * @description Application health check.
          */
         get: operations["health_check_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/ai-config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Effective AI provider configuration
+         * @description Report the effective, resolved AI provider configuration.
+         *
+         *     Never returns full API keys -- only a last-4-character fingerprint --
+         *     and reports whether each key came from a real environment variable or
+         *     only from ``.env``, so a shadowing environment variable is visible in
+         *     one call instead of a manual investigation.
+         */
+        get: operations["get_ai_config_diagnostics_admin_ai_config_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -903,6 +937,18 @@ export interface components {
             recommendation?: string | null;
         };
         /**
+         * CurrentUserResponseDTO
+         * @description Response DTO for the authenticated user's own profile.
+         */
+        CurrentUserResponseDTO: {
+            /** Id */
+            id: string;
+            /** Email */
+            email: string;
+            /** Is Active */
+            is_active: boolean;
+        };
+        /**
          * DiscoveredContact
          * @description A public-web-discovered person at a researched company.
          *
@@ -1126,6 +1172,32 @@ export interface components {
             opportunities?: string | null;
             /** Risks */
             risks?: string | null;
+        };
+        /**
+         * LoginRequestDTO
+         * @description Request DTO to log in.
+         */
+        LoginRequestDTO: {
+            /** Email */
+            email: string;
+            /** Password */
+            password: string;
+        };
+        /**
+         * LoginResponseDTO
+         * @description Response DTO returned after a successful login.
+         */
+        LoginResponseDTO: {
+            /** Access Token */
+            access_token: string;
+            /**
+             * Token Type
+             * @default bearer
+             */
+            token_type: string;
+            /** Expires In */
+            expires_in: number;
+            user: components["schemas"]["CurrentUserResponseDTO"];
         };
         /**
          * ProviderDiagnosticsSchema
@@ -1365,7 +1437,40 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    get_ai_config_diagnostics_admin_ai_config_get: {
+    login_auth_login_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequestDTO"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginResponseDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_me_auth_me_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -1380,7 +1485,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AIConfigDiagnosticsResponse"];
+                    "application/json": components["schemas"]["CurrentUserResponseDTO"];
                 };
             };
         };
@@ -1403,6 +1508,26 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
+                };
+            };
+        };
+    };
+    get_ai_config_diagnostics_admin_ai_config_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AIConfigDiagnosticsResponse"];
                 };
             };
         };

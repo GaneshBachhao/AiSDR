@@ -22,6 +22,18 @@ export class AssessmentService {
     });
   }
 
+  /** A Discovery has at most one Assessment -- enforced by a unique
+   * constraint on discovery_id at the persistence layer (verified in
+   * Backend/app/infrastructure/persistence/models/assessment_model.py),
+   * though unlike Discovery's own one-per-Lead rule it isn't mapped to a
+   * clean 409; a duplicate create surfaces as a raw 500 instead (a
+   * backend gap, not fixed here -- see frontend_backlog.md EPIC-F10). */
+  listByDiscovery(discoveryId: string): Observable<AssessmentResponseDTO[]> {
+    return this.http.get<AssessmentResponseDTO[]>(this.base, {
+      params: new HttpParams().set('page', 1).set('page_size', 1).set('discovery_id', discoveryId),
+    });
+  }
+
   get(id: string): Observable<AssessmentResponseDTO> {
     return this.http.get<AssessmentResponseDTO>(`${this.base}/${id}`);
   }

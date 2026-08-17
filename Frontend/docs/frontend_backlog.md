@@ -47,16 +47,16 @@ EPIC-14 notes), so there is nothing running to build a screen against.
 | `[x]` Done | EPIC-F00 | Company Research search + retry | `company_research_router` | 8 |
 | `[x]` Done | EPIC-F01 | App shell & navigation (v2: sidebar, corrected pipeline order) | — | 5 |
 | `[x]` Done | EPIC-F01b | Command Center (real KPI/pipeline counts) | company/contact/lead/discovery/assessment/qualification/recommendation (list endpoints only) | 5 |
-| `[ ]` Backlog | EPIC-F02 | Generated API client (replace hand-written types) | all | 5 |
-| `[ ]` Backlog | EPIC-F03 | Company screens | `company_router` | 8 |
-| `[ ]` Backlog | EPIC-F04 | Contact screens | `contact_router` | 5 |
-| `[ ]` Backlog | EPIC-F05 | Lead screens | `lead_router` | 5 |
-| `[ ]` Backlog | EPIC-F06 | Discovery screens | `discovery_router` | 5 |
+| `[x]` Done | EPIC-F02 | Generated API client (replace hand-written types) | all | 5 |
+| `[x]` Done | EPIC-F03 | Company screens | `company_router` | 8 |
+| `[x]` Done | EPIC-F04 | Contact screens | `contact_router` | 5 |
+| `[x]` Done | EPIC-F05 | Lead screens | `lead_router` | 5 |
+| `[x]` Done | EPIC-F06 | Discovery screens | `discovery_router` | 5 |
 | `[x]` Done | EPIC-F07 | Assessment screens + lifecycle action | `assessment_router` | 8 |
-| `[ ]` Backlog | EPIC-F08 | Recommendation screens (read-mostly) | `recommendation_router` | 3 |
+| `[x]` Done | EPIC-F08 | Recommendation screens (read-mostly) | `recommendation_router` | 3 |
 | `[x]` Done | EPIC-F09 | Qualification screens | `qualification_router` | 5 |
-| `[ ]` Backlog | EPIC-F10 | Cross-entity drill-down | company/contact/lead/discovery/assessment/recommendation | 5 |
-| `[ ]` Backlog | EPIC-F11 | Admin diagnostics view | `admin_router` | 2 |
+| `[x]` Done | EPIC-F10 | Cross-entity drill-down | company/contact/lead/discovery/assessment/recommendation | 5 |
+| `[x]` Done | EPIC-F11 | Admin diagnostics view | `admin_router` | 2 |
 | `[ ]` Parked | PARK-F-AUTH | Authentication | — | — |
 | `[ ]` Parked | PARK-F-ACT | Actions (persisted) | — (no backend router exists) | — |
 | `[ ]` Parked | PARK-F-SEARCH | Global search / command palette | — (no search endpoint or index exists) | — |
@@ -471,16 +471,86 @@ the resulting `404`. 63 tests total now across 17 files, including
 `assessment-list.spec.ts` (real rendered-DOM assertion for the resolved
 discovery label, maturity, readiness score, and status badge).
 
-### EPIC-F08 — Recommendation screens (3 pts)
+### EPIC-F08 — Recommendation screens (3 pts) · `[x]` Done
 
-Backend: `POST/GET/GET {id} /recommendations` only — **no update or
-delete** (AI-generated content, read-mostly by design, matches backend
-Sprint 7's `CreateRecommendationHandler`). Lower points than other modules
-because there's no edit/delete form to build. Detail view should render
-`SolutionSummaryDTO` entries with the `is_existing_offering` flag shown
-distinctly (existing Pamacore offering vs. AI-proposed generic idea) — the
-backend went to real effort (Sprint 7) to keep that distinction meaningful;
-don't flatten it away in the UI.
+Shipped 2026-08-17. `src/app/recommendations/` — list + detail, plus a
+"generate" form instead of a real create form (`GenerateRecommendationRequest`
+has exactly one field, `assessment_id`). Confirmed by reading
+`recommendation_router.py` directly: only `POST/GET/GET {id}` are wired —
+**no update or delete**, matching the plan's read-mostly-by-design
+expectation. Detail view renders `SolutionSummaryDTO` entries with
+`is_existing_offering` shown as a distinct badge (`✦ Existing Pamacore
+offering` vs. a plain "AI-proposed idea") rather than flattened away, per
+the plan's explicit instruction — the backend went to real effort to keep
+that distinction meaningful.
+
+Real findings from reading the router/handler source directly, not just
+the generated schema:
+
+- **`POST /recommendations` is really "generate", and it's idempotent per
+  `assessment_id`** — confirmed by reading `CreateRecommendationHandler`:
+  re-running it for an Assessment that already has a Recommendation
+  returns the existing one instead of creating a duplicate (its own
+  docstring says so explicitly). Live-verified: `POST`ing against an
+  Assessment with an existing Recommendation returned `201` with the
+  *same* `id`, not a new one. The form's button is labeled "Generate", not
+  "Create", and its subtitle says so honestly.
+- **Submit/Approve exist in the application layer but were never wired
+  into any router endpoint** — `submit_recommendation_handler.py`/
+  `approve_recommendation_handler.py` and their commands/validators are
+  real, tested code, but `recommendation_router.py` only registers
+  create/list/get. Confirmed by reading the router source line-by-line,
+  not assumed from the handler files existing. This frontend can't drive
+  a status transition beyond `Draft` for the same reason it couldn't drive
+  Qualification cross-validation the backend doesn't enforce — the
+  capability just isn't reachable through the API today. Noted in
+  `recommendation.models.ts`'s own comment rather than silently building
+  UI for endpoints that don't exist (the same orphaned-capability pattern
+  already flagged for `ai_router.py` in `Backend/docs/product_backlog.md`).
+- **`RecommendationStatus` isn't an OpenAPI enum**, same situation as
+  `DiscoveryStatus`/`AssessmentStatus`/`QualificationStatus` — transcribed
+  by hand from
+  `Backend/app/domain/recommendation/enums/recommendation_status.py`.
+- **Generation genuinely requires a working AI provider, and today's
+  backend doesn't have one** — confirmed live: with a real Assessment that
+  has no existing Recommendation, `POST /recommendations` throws all the
+  way up to a raw, unhandled `500 Internal Server Error` (not the app's
+  usual `{success, message, error_code, details}` shape). The server log
+  traced it precisely to `GeminiProvider.execute()` raising
+  `AIProviderException("Gemini provider execution failed")` — the same
+  `GEMINI_MODEL` 404 already tracked as a known, standing blocker (see the
+  `project_gemini_model_deprecated` session memory, dated 2026-08-15,
+  which is a *backend* configuration issue, not something this frontend
+  sprint can fix). A **second, separate gap** surfaced alongside it:
+  `AIProviderException` has no exception handler mapped in the FastAPI
+  app, unlike `ValidationException`/`NotFoundException`, so it leaks as an
+  opaque 500 instead of a clean error body — worth a backend-side fix
+  later, not fixed here. The frontend's generic `describeError()` fallback
+  message already covers this gracefully (no `error.message`/`error.detail`
+  to read from a raw 500, so it falls through to "Generation failed. Check
+  that the API is running and the AI provider is configured." — accurate
+  as written, no special-casing added).
+- **Extracted `AssessmentDisplayService`, reused a third time** (see
+  EPIC-F09) — Recommendation's list and detail both resolve
+  `assessment_id` to its Discovery's problem statement through the same
+  service Qualification's screens use, no new join code needed.
+
+Cross-link added: Assessment detail gained "+ Generate Recommendation"
+alongside "+ Add Qualification".
+
+Live-verified against the real backend (which required restarting the dev
+`uvicorn` server — it had stopped between sessions): confirmed `GET
+/recommendations` and `GET /recommendations/{id}` against a real
+AI-generated Recommendation created in an earlier sprint (before the
+Gemini blocker), matching this module's typed shape exactly; confirmed the
+idempotent-create path returns the same existing record rather than
+duplicating it; created a fresh Assessment with real `summary` content and
+confirmed generation fails with the traced `AIProviderException` above
+(the expected, already-known failure mode, not a surprise); cleaned up the
+test Assessment afterward. 88 tests total now across 24 files, including
+`recommendation.models.spec.ts`, `recommendation.service.spec.ts`, and
+`recommendation-list.spec.ts` (real rendered-DOM assertion for the
+resolved assessment label, solution count, and status badge).
 
 ### EPIC-F09 — Qualification screens (5 pts) · `[x]` Done
 
@@ -571,40 +641,224 @@ assertion for the resolved lead/assessment labels, score, and status
 badge), and a new `assessment-display.service.spec.ts` for the extracted
 service.
 
-### EPIC-F10 — Cross-entity drill-down (5 pts)
+### EPIC-F10 — Cross-entity drill-down (5 pts) · `[x]` Done
 
-None of the screens above link to each other yet. A Company detail page
-should surface its Contacts/Leads/Discoveries; a Lead should link to its
-Contact and Company; a Discovery should link to its Assessment and
-Recommendation. Do this once enough of EPIC-F03–F09 exist to have
-somewhere to link *to* — namely after at least Company, Contact, and Lead
-are done.
+Shipped 2026-08-17. "A Lead should link to its Contact and Company" was
+already true going into this epic — `LeadDetail` has linked both since
+EPIC-F05/F06 via `LeadDisplayService`. The real remaining scope was the
+other two asks:
 
-### EPIC-F11 — Admin diagnostics view (2 pts)
+- **Company detail surfaces its Contacts/Leads/Discoveries.** Three new
+  sections added below the existing actions, each row linking to the real
+  detail page. Checked each list endpoint's actual filter support instead
+  of assuming symmetry: **Lead's list endpoint does support a `company_id`
+  filter server-side** (`LeadService.listByCompany()`, new) — confirmed by
+  reading `lead_router.py`, not assumed from Company's convention. Contact
+  and Discovery have **no** such filter (Contact confirmed already in
+  EPIC-F04; Discovery confirmed here by reading `discovery_router.py`,
+  which only takes `skip`/`limit`), so Contacts are fetched in full
+  (`limit=500`) and filtered client-side by `company_id`, and Discoveries
+  are fetched in full and filtered by cross-referencing the company's own
+  Lead ids (a Company → Leads → Discoveries two-hop, done inline in
+  `CompanyDetail` rather than a new shared service, since this is the only
+  screen that needs it).
+- **Discovery detail links to its Assessment and Recommendation.** Before
+  this epic, Discovery detail always showed a "+ Add Assessment" link
+  regardless of whether one already existed. That was worse than
+  cosmetically incomplete: reading `assessment_model.py` while wiring this
+  up surfaced a **real, previously-undocumented backend gap** — `discovery_id`
+  has a `unique=True` constraint at the persistence layer, so a second
+  `POST /assessments` for a Discovery that already has one throws an
+  unhandled `IntegrityError` that leaks as a raw `500`, not the clean `409`
+  Discovery's own one-per-Lead rule gets. (A third instance of the same
+  shape of gap as EPIC-F08's `AIProviderException` finding — a real
+  constraint exists, but isn't mapped to a clean HTTP error. Not fixed
+  here, consistent with this frontend track's standing decision to leave
+  backend fixes to a backend sprint.) The practical fix on this side:
+  `AssessmentService.listByDiscovery()` (new, server-side `discovery_id`
+  filter — confirmed working via `assessment_router.py`) checks for an
+  existing Assessment first, and the detail view now shows "View
+  Assessment (status)" instead of the create link whenever one exists,
+  which also incidentally prevents users from ever hitting that 500 by
+  clicking a stale create link. Once an Assessment is found, its
+  Recommendation (if any) is resolved the same way `AssessmentDisplayService`
+  resolves Discovery labels for Assessments — fetch the (capped, page_size
+  200) full recommendation list and filter client-side by `assessment_id`,
+  since `GET /recommendations` has no `assessment_id` filter — and shown
+  as "View Recommendation (status)".
 
-Surface `GET /admin/ai-config` (provider, model, key fingerprint, source)
-in a simple read-only panel — mirrors what Sprint 1 built server-side.
-Low points: one endpoint, no forms, no CRUD.
+Live-verified the full real chain end-to-end against the real backend
+(not just mocked tests): Company `Sprint7 Test Co ef30983a` → its one real
+Contact (Jane Doe) and Lead (both correctly filtered) → that Lead's
+Discovery (`776fe911-...`, correctly cross-referenced) → that Discovery's
+real Assessment (`eb3d0f50-...`, found via the new `discovery_id` filter)
+→ that Assessment's real Recommendation (`78de26ee-...`, found via
+client-side filtering) — every hop matched exactly what the frontend's new
+code would request and render. 91 tests total now across 26 files,
+including new `company-detail.spec.ts` (real rendered-DOM assertions for
+all three related-records sections, plus a negative assertion that an
+unrelated company's contact/discovery don't leak in) and
+`discovery-detail.spec.ts` (asserts the create-link-vs-existing-link
+branching in both directions).
+
+### EPIC-F11 — Admin diagnostics view (2 pts) · `[x]` Done
+
+Shipped 2026-08-17. `src/app/admin/` — a single read-only panel, not the
+list/form/detail triad every other module uses, matching this epic's
+actual shape (one `GET`, no forms, no CRUD). Shows `default_provider`,
+`fallback_order` (rendered as an arrow-joined chain, "None configured"
+when empty), and a `providers` table (provider name, a real
+Configured/Not configured badge, model, masked key fingerprint, key
+source) — a direct alias onto the generated `AIConfigDiagnosticsResponse`/
+`ProviderDiagnosticsSchema` schema types, no hand-transcription needed
+since this router (unlike Qualification's) does have `response_model=`.
+
+Real finding from the live response, not assumed from the DTO shape
+alone: `key_fingerprint` is genuinely `null` (not an empty string) for an
+unconfigured provider — confirmed against the real backend's
+`azure_openai` entry — rendered as `—` rather than blank, consistent with
+every other module's `.not-captured`-style null handling.
+
+Live-verified against the real backend: `GET /admin/ai-config` returned
+three real providers (`gemini`/`openai` configured via `.env`,
+`azure_openai` not configured), matching the frontend's typed shape and
+rendering exactly. 93 tests total now across 28 files, including
+`admin.service.spec.ts` and `admin.spec.ts` (real rendered-DOM assertion
+for the fallback-order chain, the masked fingerprint, and both the
+configured and not-configured badge variants).
+
+This closes out the full 12-sprint sequenced frontend backlog
+(EPIC-F00–F11, 61 points) — every module from Company through Admin now
+has a real, live-verified screen.
 
 ---
 
 ## Parking Lot
 
-- **PARK-F-AUTH — Authentication.** The backend has no login endpoint, no
-  session/JWT handling, nothing to build a login screen against yet (see
-  `project_frontend_direction.md` session memory). Pull this in only once
-  the backend actually adds auth — building a frontend login screen first
-  would mean guessing at a contract that doesn't exist.
+All three previously-parked epics required backend capability that didn't
+exist yet. PARK-F-AUTH is now built (below); PARK-F-ACT and PARK-F-SEARCH
+remain parked for the same original reason.
 
-## Open decisions
+- **PARK-F-ACT — Actions (persisted).** No backend router exists for the
+  pipeline's "Act" stage. Pull this in once one does.
+- **PARK-F-SEARCH — Global search / command palette.** No cross-entity
+  search endpoint or index exists. Pull this in once one does.
 
-- **Styling approach.** EPIC-F00 used hand-rolled SCSS with no design
-  system. Worth deciding whether to adopt a component library (Angular
-  Material, PrimeNG, or similar) before EPIC-F03 multiplies the same
-  decision across six more modules — cheaper to decide once, early, than
-  to retrofit six screens later.
-- **State management.** EPIC-F00 uses local component signals only — fine
-  for one screen. Once EPIC-F10 needs data to flow between screens
-  (e.g. a Company detail page showing live Lead data), decide whether
-  plain signals + services are still enough or whether a shared store is
-  warranted. Don't introduce one speculatively before EPIC-F10 needs it.
+### PARK-F-AUTH — Authentication · `[x]` Done (2026-08-17)
+
+Built full-stack, in both `Backend/` and `Frontend/` -- the first (and so
+far only) piece of this frontend track's work that required a real
+backend change, not just a screen against an existing endpoint. JWT
+bearer-token auth, no self-service registration (users are provisioned by
+a human operator via `Backend/scripts/create_user.py`), no refresh-token
+flow (8h access token; expiry just logs the user out).
+
+**Backend** (`app/domain/user/`, `app/application/user/`,
+`app/infrastructure/security/`, new `users` table via Alembic
+migration): a `User` aggregate (email + bcrypt password hash, own bounded
+context, same shape as `Company`); `POST /auth/login` (issues a JWT) and
+`GET /auth/me`; every other existing router (`company`, `contact`,
+`lead`, `discovery`, `assessment`, `qualification`, `recommendation`,
+`admin`, `company_research`) now gated behind `Depends(get_current_user)`
+applied once at the composition root
+(`app/presentation/api/routers/__init__.py`), not per-router-file --
+`/health` and `/auth/login` stay public. Every login/token failure path
+(unknown email, wrong password, malformed email, inactive user, expired
+token, missing header) raises the byte-identical `UnauthorizedException`
+message, verified with a dedicated test asserting the strings match --
+an attacker probing the login form or a stolen token can't distinguish
+"no such account" from "wrong password" one guess at a time.
+
+Two real, previously-undocumented findings surfaced while building this
+(both already existed, just never exercised by anything before now):
+`app/presentation/api/middleware/exception.py`'s catch-and-format block
+is commented out (dead code) -- unrelated `ApplicationException`
+subclasses like the new `UnauthorizedException` are actually formatted by
+a *different*, already-registered handler
+(`application_exception_handler`), which is why 401s came out clean
+without needing to fix that middleware; and `/admin/ai-config` (AI
+provider config, including key fingerprints) was completely unauthenticated
+before this change -- now gated like everything else.
+
+**Frontend** (`src/app/auth/`): `AuthService` (signal-based, localStorage-
+backed so a page refresh doesn't force a re-login), the first
+`HttpInterceptorFn` in this codebase (attaches the bearer token, logs out
+on a 401), the first route guard (`authGuard`, wraps every existing route
+in one guarded parent instead of repeating `canActivate` per route), and
+a `Login` screen. The sidebar shell (`app.html`) now only renders once
+authenticated; logged out, only the `<router-outlet>` (i.e. the login
+page) shows.
+
+**Verified two ways, not just unit tests:** a full backend curl sequence
+against the real running server (login success/failure with
+byte-identical error bodies, `/auth/me` and a real protected route both
+authed/unauthed, `/health` still public, `/admin/ai-config` now correctly
+401ing where it used to leak); and a real headless-Chromium Playwright
+session driving the actual dev server end-to-end -- logged-out redirect
+to `/login`, wrong-credentials error banner, successful login landing on
+Command Center with the real user's email in the sidebar, a real data
+page (`/companies`, 8 real rows) loading through the interceptor, logout
+clearing storage and redirecting, a direct post-logout URL visit
+re-redirecting, an injected expired/garbage token correctly triggering
+the interceptor's 401 handling, and a page refresh while logged in
+preserving the session -- with screenshots taken at each step, not just
+DOM-text assertions.
+
+**Known minor gap, not fixed:** the sidebar's `.nav-footer` (now showing
+email + "Log out" below "Admin") can sit right at or past the fold on a
+short viewport (confirmed via the ~720px-tall Playwright default,
+narrower than most real monitors) -- the element is still fully
+functional (Playwright clicked it without needing to scroll), but a
+`.sidebar { overflow-y: auto }` would make it robustly reachable on any
+viewport height. A pre-existing sidebar-layout gap this change made
+slightly more visible, not introduced by it; left for a future UI pass
+rather than folded into this feature.
+
+Backend test count: 532 passing (up from 519), including the first
+full-`api_router`-mounted presentation test in this codebase (every prior
+router test mounts an isolated single router, which never exercises
+blanket `include_router(..., dependencies=[...])` gating). Frontend test
+count: 105 passing (up from 93).
+
+## Decisions
+
+Both items below were tracked as open since EPIC-F00 and formally decided
+2026-08-17, after EPIC-F00–F11 gave enough real evidence (12 modules, one
+shared design system, two cross-entity join services) to decide from
+rather than guess ahead of.
+
+- **Styling approach: stay hand-rolled, no component library adopted.**
+  Every screen shipped so far is plain `<table>`/`<select>`/`<input>`
+  against the tokens in `design_system.md` (Navy/Blue/Cyan, Inter, the
+  badge vocabulary) — nothing built has needed a date picker, autocomplete,
+  drag-drop, or any interaction Angular Material/PrimeNG earn their keep
+  on. Adopting either now would mean fighting their theming to match
+  tokens already shipped consistently across 12 modules, or abandoning
+  that work to accept their default look — real cost against a
+  speculative benefit. **Revisit trigger:** a specific screen that
+  genuinely needs rich interaction behavior HTML forms can't do well (a
+  searchable combobox over 500+ companies, a Kanban-style pipeline view).
+  If that happens: prefer **PrimeNG's unstyled/token preset** over
+  Material — its CSS-custom-property theming cooperates with the tokens
+  already in `styles.scss`, where Material's Sass-mixin theming fights
+  overrides hard. For pure interaction primitives (focus trap, listbox
+  keyboard nav, overlay positioning) without visual opinion, add
+  **Angular CDK alone** (no `@angular/material` components) rather than a
+  full library.
+- **State management: no shared store adopted; keep evolving the signal +
+  injectable-service pattern already in place.** Every screen is
+  self-contained CRUD (load on `ngOnInit`, mutate, navigate away) — the
+  only real friction found is `LeadDisplayService`/`AssessmentDisplayService`
+  re-fetching and re-joining the same records on every screen visit, which
+  is a caching gap, not a state-orchestration problem classic NgRx's
+  actions/reducers/effects would actually solve. **Revisit trigger:**
+  repeated fetches start costing something real (data volume grows, or a
+  screen like Command Center wants live counts without a full reload).
+  When that happens, the natural next step is giving the existing
+  "Display service" pattern a signal-backed cache (`signal<Map<id,
+  Entity>>`, invalidated after mutations) — not a new dependency, just
+  evolving what `LeadDisplayService`/`AssessmentDisplayService` already
+  are. If that ever needs more structure than a hand-rolled cache
+  provides, **`@ngrx/signals` (SignalStore)** is the fallback, since it
+  composes naturally with the signals every component already uses;
+  classic NgRx remains a disproportionate leap for this app's shape.

@@ -37,6 +37,9 @@ from app.application.contracts.repositories.qualification_repository import (
 from app.application.contracts.repositories.recommendation_repository import (
     RecommendationRepository,
 )
+from app.application.contracts.repositories.user_repository import (
+    UserRepository,
+)
 
 
 class UnitOfWork(ABC):
@@ -154,6 +157,11 @@ class UnitOfWork(ABC):
     def recommendations(self) -> RecommendationRepository:
         """Backward-compatible alias for recommendation_repository."""
         return self.recommendation_repository
+
+    @property
+    def user_repository(self) -> UserRepository:
+        """User repository; optional for legacy UoW implementations."""
+        raise NotImplementedError
 
     # ==========================================================
     # Transaction boundary

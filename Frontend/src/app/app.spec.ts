@@ -7,10 +7,25 @@ import { routes } from './app.routes';
 
 describe('App', () => {
   beforeEach(async () => {
+    // The sidebar only renders once AuthService.isAuthenticated() is true
+    // (it's hidden behind the auth guard otherwise) -- AuthService reads
+    // its initial state from localStorage at construction time, so
+    // seeding it here is the real path a logged-in page refresh takes,
+    // not a mocked shortcut.
+    localStorage.setItem('aisdr_access_token', 'fake-token');
+    localStorage.setItem(
+      'aisdr_current_user',
+      JSON.stringify({ id: 'u1', email: 'jane@example.com', is_active: true }),
+    );
+
     await TestBed.configureTestingModule({
       imports: [App],
       providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter(routes)],
     }).compileComponents();
+  });
+
+  afterEach(() => {
+    localStorage.clear();
   });
 
   it('should create the app', () => {

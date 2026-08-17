@@ -15,6 +15,11 @@ from pydantic import validator
 from app.application.ai.services.ai_execution_service import AIExecutionService
 from app.infrastructure.ai.composition import build_ai_execution_service, default_ai_provider
 
+from app.application.user.handlers.login_handler import LoginHandler
+from app.infrastructure.configuration.jwt_settings import JWTSettings
+from app.infrastructure.security.jwt_service import JWTService
+from app.infrastructure.security.password_hasher import PasswordHasher
+
 from app.application.company.company_mapper import (
     CompanyMapper,
 )
@@ -890,4 +895,31 @@ GetRecommendationHandlerDependency = Annotated[
 ListRecommendationHandlerDependency = Annotated[
     ListRecommendationHandler,
     Depends(get_list_recommendation_handler),
+]
+
+
+def get_password_hasher() -> PasswordHasher:
+    return PasswordHasher()
+
+
+def get_jwt_service() -> JWTService:
+    return JWTService(JWTSettings())
+
+
+def get_login_handler(
+    uow: UnitOfWork = Depends(get_unit_of_work),
+    password_hasher: PasswordHasher = Depends(get_password_hasher),
+    jwt_service: JWTService = Depends(get_jwt_service),
+) -> LoginHandler:
+
+    return LoginHandler(
+        unit_of_work=uow,
+        password_hasher=password_hasher,
+        jwt_service=jwt_service,
+    )
+
+
+LoginHandlerDependency = Annotated[
+    LoginHandler,
+    Depends(get_login_handler),
 ]

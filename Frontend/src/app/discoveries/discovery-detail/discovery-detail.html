@@ -58,9 +58,20 @@
 
     <div class="actions">
       <a class="button" [routerLink]="[d.id, 'edit']">Edit</a>
-      <a class="button secondary" routerLink="/assessments/new" [queryParams]="{ discovery_id: d.id }">
-        + Add Assessment
-      </a>
+      @if (assessment(); as a) {
+        <a class="button secondary" [routerLink]="['/assessments', a.assessment_id]">
+          View Assessment ({{ a.status }})
+        </a>
+      } @else {
+        <a class="button secondary" routerLink="/assessments/new" [queryParams]="{ discovery_id: d.id }">
+          + Add Assessment
+        </a>
+      }
+      @if (recommendation(); as r) {
+        <a class="button secondary" [routerLink]="['/recommendations', r.id]">
+          View Recommendation ({{ r.status }})
+        </a>
+      }
       <button type="button" class="danger" [disabled]="deleting()" (click)="delete()">
         {{ deleting() ? 'Deleting…' : 'Delete' }}
       </button>
