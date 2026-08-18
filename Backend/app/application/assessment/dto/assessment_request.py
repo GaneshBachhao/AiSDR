@@ -4,6 +4,7 @@ Assessment request DTOs.
 Architecture Freeze v5.0
 Application-facing request contracts for the Assessment aggregate.
 """
+
 from __future__ import annotations
 
 from pydantic import BaseModel, Field

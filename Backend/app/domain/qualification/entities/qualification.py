@@ -4,9 +4,14 @@ Qualification aggregate.
 
 from __future__ import annotations
 
-from datetime import UTC
-from datetime import datetime
+from datetime import UTC, datetime
 
+from app.domain.assessment.identifiers.assessment_id import (
+    AssessmentId,
+)
+from app.domain.lead.identifiers.lead_id import (
+    LeadId,
+)
 from app.domain.qualification.enums.qualification_status import (
     QualificationStatus,
 )
@@ -19,18 +24,10 @@ from app.domain.qualification.value_objects.qualification_score import (
 from app.domain.shared.base.aggregate_root import (
     AggregateRoot,
 )
-from app.domain.lead.identifiers.lead_id import (
-    LeadId,
-)
-from app.domain.assessment.identifiers.assessment_id import (
-    AssessmentId,
-)
 
 
 class Qualification(
-    AggregateRoot[
-        QualificationId,
-    ],
+    AggregateRoot[QualificationId,],
 ):
     """
     Qualification aggregate.
@@ -48,9 +45,7 @@ class Qualification(
 
         self._assessment_id = assessment_id
 
-        self._status = (
-            QualificationStatus.PARTIALLY_QUALIFIED
-        )
+        self._status = QualificationStatus.PARTIALLY_QUALIFIED
 
         self._score = QualificationScore(
             0,

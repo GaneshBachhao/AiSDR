@@ -17,18 +17,14 @@ class Timestamp:
         Validate timestamp timezone.
         """
         if self.value.tzinfo is None:
-            raise ValueError(
-                "Timestamp must contain timezone information."
-            )
+            raise ValueError("Timestamp must contain timezone information.")
 
     @classmethod
-    def now(cls) -> "Timestamp":
+    def now(cls) -> Timestamp:
         """
         Create current UTC timestamp.
         """
-        return cls(
-            datetime.now(UTC)
-        )
+        return cls(datetime.now(UTC))
 
     def __str__(self) -> str:
         return self.value.isoformat()

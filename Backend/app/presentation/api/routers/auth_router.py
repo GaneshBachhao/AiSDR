@@ -4,6 +4,7 @@ Auth API router.
 There is no self-service registration endpoint -- accounts are created
 by a human operator (see Backend/scripts/create_user.py).
 """
+
 from __future__ import annotations
 
 from fastapi import APIRouter

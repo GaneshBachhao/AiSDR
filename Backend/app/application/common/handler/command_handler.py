@@ -7,10 +7,8 @@ Provides the common execution pipeline for all command handlers
 
 from __future__ import annotations
 
-from abc import ABC
-from abc import abstractmethod
-from typing import Generic
-from typing import TypeVar
+from abc import ABC, abstractmethod
+from typing import Generic, TypeVar
 
 from app.application.common.commands.command import (
     Command,
@@ -56,7 +54,6 @@ class CommandHandler(
         """
 
         try:
-
             await self.before_validate(
                 command,
             )
@@ -82,7 +79,6 @@ class CommandHandler(
             return response
 
         except Exception:
-
             await self._unit_of_work.rollback()
 
             raise

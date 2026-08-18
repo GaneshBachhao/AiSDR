@@ -5,9 +5,15 @@ import re
 from app.domain.company_research.value_objects.domain_profile import DomainProfile
 
 _DEFAULT_ENTERPRISE_MARKERS = (
-    "fortune 500", "fortune global 500", "global 2000", "forbes global 2000",
-    "multinational corporation", "multinational company", "large conglomerate",
-    "global conglomerate", "conglomerate",
+    "fortune 500",
+    "fortune global 500",
+    "global 2000",
+    "forbes global 2000",
+    "multinational corporation",
+    "multinational company",
+    "large conglomerate",
+    "global conglomerate",
+    "conglomerate",
 )
 
 

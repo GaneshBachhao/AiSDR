@@ -2,9 +2,8 @@
   <header>
     <h1>Company Research</h1>
     <p class="subtitle">
-      Discover and research public-web company opportunities. Research-only
-      by default &mdash; no CRM records are created unless "Persist as
-      Companies" is checked.
+      Discover and research public-web company opportunities. Research-only by default &mdash; no
+      CRM records are created unless "Persist as Companies" is checked.
     </p>
   </header>
 
@@ -175,9 +174,9 @@
     <section class="failures">
       <h2>Failures ({{ failures().length }})</h2>
       <p class="subtitle">
-        These candidates crashed mid-pipeline (a network/provider error) --
-        distinct from a candidate that was checked and simply didn't
-        qualify, which never appears here or in Results.
+        These candidates crashed mid-pipeline (a network/provider error) -- distinct from a
+        candidate that was checked and simply didn't qualify, which never appears here or in
+        Results.
       </p>
       <table>
         <thead>
@@ -192,7 +191,9 @@
           @for (failure of failures(); track failure.company_name) {
             <tr>
               <td>{{ failure.company_name }}</td>
-              <td><span class="badge badge-fail">{{ failure.failed_step }}</span></td>
+              <td>
+                <span class="badge badge-fail">{{ failure.failed_step }}</span>
+              </td>
               <td class="error-message">{{ failure.error_message }}</td>
               <td>
                 <button

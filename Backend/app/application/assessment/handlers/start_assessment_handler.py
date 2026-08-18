@@ -44,14 +44,10 @@ class StartAssessmentHandler:
         """
 
         async with self._unit_of_work:
-            assessment = await (
-                self._unit_of_work
-                .assessment_repository
-                .get_by_id(
-                    AssessmentId(
-                        command.assessment_id,
-                    ),
-                )
+            assessment = await self._unit_of_work.assessment_repository.get_by_id(
+                AssessmentId(
+                    command.assessment_id,
+                ),
             )
 
             if assessment is None:
@@ -64,12 +60,8 @@ class StartAssessmentHandler:
 
             assessment.start()
 
-            await (
-                self._unit_of_work
-                .assessment_repository
-                .update(
-                    assessment,
-                )
+            await self._unit_of_work.assessment_repository.update(
+                assessment,
             )
             await self._unit_of_work.commit()
 

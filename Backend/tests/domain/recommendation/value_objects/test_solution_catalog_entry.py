@@ -1,3 +1,5 @@
+import pytest
+
 from app.domain.recommendation.enums.solution_type import SolutionType
 from app.domain.recommendation.value_objects.solution_catalog_entry import (
     SolutionCatalogEntry,
@@ -35,8 +37,5 @@ def test_signals_default_to_empty_tuple():
 
 def test_is_frozen():
     entry = _entry()
-    try:
+    with pytest.raises(AttributeError):
         entry.title = "changed"
-        assert False, "expected an error assigning to a frozen dataclass"
-    except AttributeError:
-        pass

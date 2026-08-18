@@ -35,24 +35,16 @@ class RoadmapPhase:
         Validate business invariants.
         """
         if not self.phase_name.strip():
-            raise ValueError(
-                "Phase name cannot be empty."
-            )
+            raise ValueError("Phase name cannot be empty.")
 
         if not self.description.strip():
-            raise ValueError(
-                "Description cannot be empty."
-            )
+            raise ValueError("Description cannot be empty.")
 
         if not self.estimated_duration.strip():
-            raise ValueError(
-                "Estimated duration cannot be empty."
-            )
+            raise ValueError("Estimated duration cannot be empty.")
 
         if self.sequence < 1:
-            raise ValueError(
-                "Roadmap phase sequence must be greater than zero."
-            )
+            raise ValueError("Roadmap phase sequence must be greater than zero.")
 
     def add_deliverable(
         self,
@@ -64,9 +56,7 @@ class RoadmapPhase:
         deliverable = deliverable.strip()
 
         if not deliverable:
-            raise ValueError(
-                "Deliverable cannot be empty."
-            )
+            raise ValueError("Deliverable cannot be empty.")
 
         if deliverable not in self.deliverables:
             self.deliverables.append(deliverable)

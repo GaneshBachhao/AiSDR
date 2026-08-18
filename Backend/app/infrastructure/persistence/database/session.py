@@ -73,7 +73,6 @@ def get_session_manager(
     global _session_manager
 
     if _session_manager is None:
-
         _session_manager = DatabaseSessionManager(
             settings,
         )

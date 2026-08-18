@@ -6,7 +6,14 @@ from app.domain.company_research.services.qualification_scorer import (
 
 def _inputs(**overrides):
     defaults = dict(
-        signals={"hiring": False, "growth": False, "technology": False, "ai": False, "process": False, "funding": False},
+        signals={
+            "hiring": False,
+            "growth": False,
+            "technology": False,
+            "ai": False,
+            "process": False,
+            "funding": False,
+        },
         evidence_count=0,
         website_verified=False,
         services_matched=False,

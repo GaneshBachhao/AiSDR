@@ -39,9 +39,7 @@ class AIUsageTracker(AIUsageRecorder):
         self,
         session_manager: DatabaseSessionManager | None = None,
     ) -> None:
-        self._session_manager = session_manager or get_session_manager(
-            DatabaseSettings()
-        )
+        self._session_manager = session_manager or get_session_manager(DatabaseSettings())
 
     async def log(self, request: AIRequest) -> None:
         """Persist one usage row for a completed or failed request.
@@ -80,9 +78,7 @@ class AIUsageTracker(AIUsageRecorder):
     async def count_requests_today(self, provider: str) -> int:
         """Count usage rows for ``provider`` since midnight UTC."""
 
-        start_of_day = datetime.now(UTC).replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
+        start_of_day = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
 
         session = self._session_manager.create_session()
         try:

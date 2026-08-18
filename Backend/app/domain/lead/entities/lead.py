@@ -97,8 +97,14 @@ class Lead(AggregateRoot[LeadId]):
         self,
         notes: str | None,
     ) -> None:
-        """Replace Lead notes."""
-        self.notes = notes.strip() if notes else None
+        """Replace Lead notes.
+
+        Matches __post_init__'s normalization: a whitespace-only string
+        must clear to None, not survive as "". The previous
+        `notes.strip() if notes else None` only checked truthiness before
+        stripping, so "   " (truthy) stripped to "" instead of None.
+        """
+        self.notes = (notes.strip() or None) if notes else None
         self.touch()
 
     # ---------------------------------------------------------

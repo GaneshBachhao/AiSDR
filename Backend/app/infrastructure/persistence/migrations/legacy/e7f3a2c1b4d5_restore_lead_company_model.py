@@ -6,9 +6,8 @@ Revises: d4a7b1f9c2e3
 
 from __future__ import annotations
 
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "e7f3a2c1b4d5"
 down_revision = "d4a7b1f9c2e3"
@@ -23,10 +22,7 @@ def upgrade() -> None:
     if "leads" not in inspector.get_table_names():
         return
 
-    columns = {
-        column["name"]
-        for column in inspector.get_columns("leads")
-    }
+    columns = {column["name"] for column in inspector.get_columns("leads")}
 
     # Restore contact_name as application/domain data.
     if "contact_name" not in columns:
@@ -39,10 +35,7 @@ def upgrade() -> None:
                 )
             )
 
-    columns = {
-        column["name"]
-        for column in sa.inspect(bind).get_columns("leads")
-    }
+    columns = {column["name"] for column in sa.inspect(bind).get_columns("leads")}
 
     # If the previous schema has contact_id, use the related Contact name
     # as the Lead's stored contact snapshot before removing the relationship.
@@ -73,10 +66,7 @@ def upgrade() -> None:
     # Existing rows that cannot be mapped from a Contact must be resolved
     # explicitly rather than silently inventing a business identity.
     missing = bind.execute(
-        sa.text(
-            "SELECT COUNT(*) FROM leads "
-            "WHERE contact_name IS NULL OR TRIM(contact_name) = ''"
-        )
+        sa.text("SELECT COUNT(*) FROM leads WHERE contact_name IS NULL OR TRIM(contact_name) = ''")
     ).scalar_one()
 
     if missing:
@@ -142,10 +132,7 @@ def downgrade() -> None:
     if "leads" not in inspector.get_table_names():
         return
 
-    columns = {
-        column["name"]
-        for column in inspector.get_columns("leads")
-    }
+    columns = {column["name"] for column in inspector.get_columns("leads")}
 
     with op.batch_alter_table("leads") as batch_op:
         if "website" not in columns:

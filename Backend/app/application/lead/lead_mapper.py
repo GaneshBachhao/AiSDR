@@ -53,16 +53,8 @@ class LeadMapper:
         return UpdateLeadCommand(
             lead_id=lead_id,
             contact_id=request.contact_id,
-            source=(
-                request.source.value
-                if request.source is not None
-                else None
-            ),
-            status=(
-                request.status.value
-                if request.status is not None
-                else None
-            ),
+            source=(request.source.value if request.source is not None else None),
+            status=(request.status.value if request.status is not None else None),
             score=request.score,
             notes=request.notes,
         )

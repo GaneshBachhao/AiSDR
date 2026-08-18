@@ -38,14 +38,10 @@ class ListAssessmentHandler:
         """
 
         async with self._unit_of_work:
-            assessments = await (
-                self._unit_of_work
-                .assessment_repository
-                .list(
-                    page=query.page,
-                    page_size=query.page_size,
-                    discovery_id=query.discovery_id,
-                )
+            assessments = await self._unit_of_work.assessment_repository.list(
+                page=query.page,
+                page_size=query.page_size,
+                discovery_id=query.discovery_id,
             )
 
         return [

@@ -89,11 +89,9 @@ async def database_context(
     session = manager.create_session()
 
     try:
-
         yield DatabaseContext(
             session,
         )
 
     finally:
-
         await session.close()

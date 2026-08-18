@@ -1,11 +1,11 @@
 from app.application.recommendation.commands.add_solution import (
     AddSolutionCommand,
 )
-
 from app.application.recommendation.mappers.recommendation_mapper import (
     RecommendationMapper,
 )
 from app.domain.recommendation.entities.solution import Solution
+
 
 class AddSolutionHandler:
     """
@@ -22,29 +22,20 @@ class AddSolutionHandler:
         self._validator = validator
         self._mapper = mapper
 
-
     async def handle(
         self,
         command: AddSolutionCommand,
     ):
 
-        validation = self._validator.validate(
-            command
-        )
+        validation = self._validator.validate(command)
 
         if not validation.success:
-            raise ValueError(
-                validation.errors
-            )
+            raise ValueError(validation.errors)
 
-        recommendation = await self._repository.get_by_id(
-            command.recommendation_id
-        )
+        recommendation = await self._repository.get_by_id(command.recommendation_id)
 
         if recommendation is None:
-            raise ValueError(
-                "Recommendation not found."
-            )
+            raise ValueError("Recommendation not found.")
 
         solution = Solution(
             title=command.title,
@@ -53,14 +44,8 @@ class AddSolutionHandler:
             priority=command.priority,
         )
 
-        recommendation.add_solution(
-            solution
-        )
+        recommendation.add_solution(solution)
 
-        await self._repository.update(
-            recommendation
-        )
+        await self._repository.update(recommendation)
 
-        return self._mapper.domain_to_dto(
-            recommendation
-        )
+        return self._mapper.domain_to_dto(recommendation)

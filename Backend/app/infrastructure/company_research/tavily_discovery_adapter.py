@@ -31,15 +31,36 @@ from app.infrastructure.configuration.company_research_settings import (
 from app.integrations.tavily.tavily_client import AgneticTavilyClient
 
 _GENERIC_TITLE_MARKERS = (
-    "top ", "best ", "list of", "companies in", "companies using",
-    "companies that", "directory", "market report", "industry report",
-    "press release", "news", "blog", "case study", "guide", "how to",
-    "jobs", "job openings", "hiring", "events",
+    "top ",
+    "best ",
+    "list of",
+    "companies in",
+    "companies using",
+    "companies that",
+    "directory",
+    "market report",
+    "industry report",
+    "press release",
+    "news",
+    "blog",
+    "case study",
+    "guide",
+    "how to",
+    "jobs",
+    "job openings",
+    "hiring",
+    "events",
 )
 
 _DISCOVERY_TITLE_MARKERS = (
-    "companies in", "companies —", "companies -", "records", "business directory",
-    "company directory", "company database", "manufacturing database",
+    "companies in",
+    "companies —",
+    "companies -",
+    "records",
+    "business directory",
+    "company directory",
+    "company database",
+    "manufacturing database",
 )
 
 
@@ -83,7 +104,10 @@ class TavilyDiscoveryAdapter(CompanyDiscoveryPort):
         seen_domains: set[str] = set()
         seen_names: set[str] = set()
         target_pool = min(
-            max(request.number_of_companies * self._settings.candidate_pool_multiplier, self._settings.candidate_pool_min),
+            max(
+                request.number_of_companies * self._settings.candidate_pool_multiplier,
+                self._settings.candidate_pool_min,
+            ),
             self._settings.candidate_pool_max,
         )
 
@@ -215,7 +239,7 @@ class TavilyDiscoveryAdapter(CompanyDiscoveryPort):
             if not cls._looks_like_company_name(name):
                 continue
             location_parts: list[str] = []
-            for following in lines[index + 1:index + 5]:
+            for following in lines[index + 1 : index + 5]:
                 if following.lower() in {"sales revenue ($m)", "sales revenue", "revenue"}:
                     break
                 if following.lower() == "country":
@@ -245,10 +269,18 @@ class TavilyDiscoveryAdapter(CompanyDiscoveryPort):
         lowered = value.lower()
         if lowered in {"country", "sales revenue ($m)", "sales revenue", "company", "companies"}:
             return False
-        if any(marker in lowered for marker in (
-            "find manufacturing", "manufacturing companies", "company database",
-            "company directory", "records", "search results", "page ",
-        )):
+        if any(
+            marker in lowered
+            for marker in (
+                "find manufacturing",
+                "manufacturing companies",
+                "company database",
+                "company directory",
+                "records",
+                "search results",
+                "page ",
+            )
+        ):
             return False
         return sum(char.isalpha() for char in value) >= 3
 
@@ -270,7 +302,9 @@ class TavilyDiscoveryAdapter(CompanyDiscoveryPort):
         normalized = " ".join(title.lower().split())
         if any(normalized.startswith(marker) for marker in _GENERIC_TITLE_MARKERS):
             return True
-        if len(normalized) > 110 and any(token in normalized for token in ("companies", "manufacturing", "digital transformation")):
+        if len(normalized) > 110 and any(
+            token in normalized for token in ("companies", "manufacturing", "digital transformation")
+        ):
             return True
         return False
 
@@ -283,10 +317,20 @@ class TavilyDiscoveryAdapter(CompanyDiscoveryPort):
         if " - " in cleaned:
             cleaned = cleaned.split(" - ", 1)[0].strip()
         lowered = f" {cleaned.lower()} "
-        action_title = any(marker in lowered for marker in (
-            " collaborates ", " announces ", " partners with ", " selects ",
-            " launches ", " unveils ", " acquires ", " joins ", " to deliver ",
-        ))
+        action_title = any(
+            marker in lowered
+            for marker in (
+                " collaborates ",
+                " announces ",
+                " partners with ",
+                " selects ",
+                " launches ",
+                " unveils ",
+                " acquires ",
+                " joins ",
+                " to deliver ",
+            )
+        )
         if not cleaned or len(cleaned.split()) > 8 or action_title or cls._looks_like_article_title(cleaned):
             cleaned = host.title()
         return cleaned

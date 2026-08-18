@@ -13,9 +13,7 @@ from .base_mapper import BaseMapper
 from .converter_registry import converter_registry
 
 
-class AIRequestMapper(
-    BaseMapper[AIRequest, AIRequestModel]
-):
+class AIRequestMapper(BaseMapper[AIRequest, AIRequestModel]):
     """
     Maps AIRequest domain entity to AIRequestModel and back.
     """

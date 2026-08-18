@@ -38,7 +38,9 @@ async def test_send_request_returns_mapped_raw_response(monkeypatch):
     _install_fake_sdk(monkeypatch, response=_fake_response())
     client = OpenAIClient(ProviderSettings(provider_name="openai", api_key="secret"))
 
-    result = await client.send_request({"model": "gpt-4.1", "contents": "hi", "temperature": 0.1, "max_tokens": 100})
+    result = await client.send_request(
+        {"model": "gpt-4.1", "contents": "hi", "temperature": 0.1, "max_tokens": 100}
+    )
 
     assert result == {
         "content": "Hello.",

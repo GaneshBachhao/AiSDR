@@ -42,16 +42,10 @@ class PromoteCandidateToCompanyHandler:
     async def handle(self, result: CompanySearchResult) -> str:
         """Return the id of the matched or newly-created Company."""
 
-        website = (
-            CandidateNormalizer.normalize_root_url(str(result.website))
-            if result.website
-            else None
-        )
+        website = CandidateNormalizer.normalize_root_url(str(result.website)) if result.website else None
 
         if website:
-            existing = await self._unit_of_work.company_repository.find_by_website(
-                website
-            )
+            existing = await self._unit_of_work.company_repository.find_by_website(website)
             if existing is not None:
                 return str(existing.id.value)
 
@@ -70,9 +64,7 @@ class PromoteCandidateToCompanyHandler:
             # Name-based duplicate, caught by CreateCompanyHandler's own
             # check -- not a new-name-with-matching-website case, since
             # that was already ruled out above. Resolve to the existing row.
-            existing = await self._unit_of_work.company_repository.find_by_name(
-                result.company_name
-            )
+            existing = await self._unit_of_work.company_repository.find_by_name(result.company_name)
             if existing is not None:
                 return str(existing.id.value)
             raise

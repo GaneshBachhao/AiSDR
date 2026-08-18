@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from .base_ai_client import BaseAIClient
 from ..configuration import ProviderSettings
 from ..exceptions.ai_client_exception import AIClientException
+from .base_ai_client import BaseAIClient
 
 try:
     from google import genai
@@ -26,9 +26,7 @@ class GeminiClient(BaseAIClient):
         self._settings = settings
         self._sdk_installed = genai is not None
         self._client = (
-            genai.Client(api_key=settings.api_key)
-            if self._sdk_installed and settings.api_key
-            else None
+            genai.Client(api_key=settings.api_key) if self._sdk_installed and settings.api_key else None
         )
 
     async def send_request(
@@ -43,14 +41,10 @@ class GeminiClient(BaseAIClient):
         """
 
         if not self._sdk_installed:
-            raise AIClientException(
-                "Gemini request failed: the 'google-genai' package is not installed."
-            )
+            raise AIClientException("Gemini request failed: the 'google-genai' package is not installed.")
 
         if self._client is None:
-            raise AIClientException(
-                "Gemini request failed: no API key is configured."
-            )
+            raise AIClientException("Gemini request failed: no API key is configured.")
 
         try:
             config = genai_types.GenerateContentConfig(
@@ -84,9 +78,7 @@ class GeminiClient(BaseAIClient):
         except AIClientException:
             raise
         except Exception as exc:
-            raise AIClientException(
-                "Gemini request failed"
-            ) from exc
+            raise AIClientException("Gemini request failed") from exc
 
     async def health_check(self) -> bool:
         """

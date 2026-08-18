@@ -20,9 +20,7 @@ class DatabaseSettings(BaseSettings):
         extra="ignore",
     )
 
-    database_url: str = (
-        "sqlite+aiosqlite:///./aisdr.db"
-    )
+    database_url: str = "sqlite+aiosqlite:///./aisdr.db"
 
     driver: str = "sqlite+aiosqlite"
 

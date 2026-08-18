@@ -1,4 +1,5 @@
 from uuid import UUID, uuid4
+
 import pytest
 
 from app.domain.company.identifiers.company_id import CompanyId

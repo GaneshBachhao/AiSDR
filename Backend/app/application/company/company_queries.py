@@ -4,6 +4,7 @@ Company Queries.
 Architecture Freeze v5.0
 Queries contain request/filter data only. Query handlers execute repository operations.
 """
+
 from __future__ import annotations
 
 from app.application.common.queries.query import Query

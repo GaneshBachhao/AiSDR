@@ -4,6 +4,7 @@ Company Response DTOs.
 Architecture Freeze v5.0
 Contains outgoing application response contracts for the Company aggregate.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass

@@ -1,6 +1,7 @@
 """
 Update Assessment handler.
 """
+
 from __future__ import annotations
 
 from app.application.assessment.assessment_commands import UpdateAssessmentCommand

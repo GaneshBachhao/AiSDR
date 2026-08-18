@@ -39,9 +39,7 @@ def handler():
 @pytest.fixture
 def client(app, handler):
 
-    app.dependency_overrides[
-        get_search_company_handler
-    ] = lambda: handler
+    app.dependency_overrides[get_search_company_handler] = lambda: handler
 
     yield TestClient(app)
 
@@ -50,9 +48,7 @@ def client(app, handler):
 
 def test_search_companies(client, handler):
 
-    response = client.get(
-        "/companies/search?query=openai"
-    )
+    response = client.get("/companies/search?query=openai")
 
     assert response.status_code == 200
 

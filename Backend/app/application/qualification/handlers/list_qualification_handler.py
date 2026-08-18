@@ -44,7 +44,4 @@ class ListQualificationHandler:
                 assessment_id=assessment_id,
             )
 
-        return [
-            QualificationMapper.to_list_response(qualification)
-            for qualification in qualifications
-        ]
+        return [QualificationMapper.to_list_response(qualification) for qualification in qualifications]

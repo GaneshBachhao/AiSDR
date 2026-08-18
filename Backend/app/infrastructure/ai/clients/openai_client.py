@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from .base_ai_client import BaseAIClient
 from ..configuration import ProviderSettings
 from ..exceptions.ai_client_exception import AIClientException
+from .base_ai_client import BaseAIClient
 
 try:
     from openai import AsyncOpenAI
@@ -24,9 +24,7 @@ class OpenAIClient(BaseAIClient):
         self._settings = settings
         self._sdk_installed = AsyncOpenAI is not None
         self._client = (
-            AsyncOpenAI(api_key=settings.api_key)
-            if self._sdk_installed and settings.api_key
-            else None
+            AsyncOpenAI(api_key=settings.api_key) if self._sdk_installed and settings.api_key else None
         )
 
     async def send_request(
@@ -41,14 +39,10 @@ class OpenAIClient(BaseAIClient):
         """
 
         if not self._sdk_installed:
-            raise AIClientException(
-                "OpenAI request failed: the 'openai' package is not installed."
-            )
+            raise AIClientException("OpenAI request failed: the 'openai' package is not installed.")
 
         if self._client is None:
-            raise AIClientException(
-                "OpenAI request failed: no API key is configured."
-            )
+            raise AIClientException("OpenAI request failed: no API key is configured.")
 
         try:
             response = await self._client.chat.completions.create(
@@ -71,9 +65,7 @@ class OpenAIClient(BaseAIClient):
         except AIClientException:
             raise
         except Exception as exc:
-            raise AIClientException(
-                "OpenAI request failed"
-            ) from exc
+            raise AIClientException("OpenAI request failed") from exc
 
     async def health_check(self) -> bool:
         """

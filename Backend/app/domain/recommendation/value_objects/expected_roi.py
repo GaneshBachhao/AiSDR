@@ -18,19 +18,10 @@ class ROI:
         Validate business invariants.
         """
         if self.percentage < 0:
-            raise ValueError(
-                "ROI percentage cannot be negative."
-            )
+            raise ValueError("ROI percentage cannot be negative.")
 
         if not self.payback_period.strip():
-            raise ValueError(
-                "Payback period cannot be empty."
-            )
+            raise ValueError("Payback period cannot be empty.")
 
-        if (
-            self.remarks is not None
-            and not self.remarks.strip()
-        ):
-            raise ValueError(
-                "Remarks cannot be empty."
-            )
+        if self.remarks is not None and not self.remarks.strip():
+            raise ValueError("Remarks cannot be empty.")

@@ -50,7 +50,12 @@ describe('AuthService', () => {
     service.login({ email: 'jane@example.com', password: 'wrong' }).subscribe({ error: () => {} });
     const req = httpMock.expectOne(`${base}/login`);
     req.flush(
-      { success: false, message: 'Invalid email or password.', error_code: 'UNAUTHORIZED', details: {} },
+      {
+        success: false,
+        message: 'Invalid email or password.',
+        error_code: 'UNAUTHORIZED',
+        details: {},
+      },
       { status: 401, statusText: 'Unauthorized' },
     );
 
@@ -73,7 +78,6 @@ describe('AuthService', () => {
     expect(service.getToken()).toBeNull();
     expect(navigateSpy).toHaveBeenCalledWith('/login');
   });
-
 });
 
 describe('AuthService rehydration from a pre-existing session', () => {

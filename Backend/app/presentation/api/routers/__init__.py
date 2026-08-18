@@ -3,17 +3,16 @@ from fastapi import APIRouter, Depends
 from app.presentation.api.dependencies.auth import get_current_user
 
 from .admin_router import router as admin_router
+from .assessment_router import router as assessment_router
 from .auth_router import router as auth_router
-from .company_router import router as company_router
 from .company_research_router import router as company_research_router
+from .company_router import router as company_router
+from .contact_router import router as contact_router
 from .discovery_router import router as discovery_router
 from .health_router import router as health_router
 from .lead_router import router as lead_router
-from .contact_router import router as contact_router
-from .assessment_router import router as assessment_router
 from .qualification_router import router as qualification_router
 from .recommendation_router import router as recommendation_router
-
 
 api_router = APIRouter()
 

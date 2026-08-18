@@ -36,6 +36,4 @@ class AIResponse:
         self.content = self.content.strip()
 
         if not self.content:
-            raise ValueError(
-                "AI response cannot be empty."
-            )
+            raise ValueError("AI response cannot be empty.")

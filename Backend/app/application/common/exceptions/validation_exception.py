@@ -13,7 +13,6 @@ from typing import Any
 from app.application.common.exceptions.application_exception import (
     ApplicationException,
 )
-
 from app.application.common.exceptions.error_code import (
     ErrorCode,
 )

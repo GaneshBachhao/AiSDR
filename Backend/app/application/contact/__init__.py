@@ -35,39 +35,25 @@ class ContactValidator:
         """
 
         if not command.company_id.strip():
-            raise ValueError(
-                "Company id is required."
-            )
+            raise ValueError("Company id is required.")
 
         if not command.first_name.strip():
-            raise ValueError(
-                "First name is required."
-            )
+            raise ValueError("First name is required.")
 
         if len(command.first_name.strip()) < 2:
-            raise ValueError(
-                "First name must contain at least 2 characters."
-            )
+            raise ValueError("First name must contain at least 2 characters.")
 
         if not command.last_name.strip():
-            raise ValueError(
-                "Last name is required."
-            )
+            raise ValueError("Last name is required.")
 
         if len(command.last_name.strip()) < 2:
-            raise ValueError(
-                "Last name must contain at least 2 characters."
-            )
+            raise ValueError("Last name must contain at least 2 characters.")
 
         if not command.email.strip():
-            raise ValueError(
-                "Email is required."
-            )
+            raise ValueError("Email is required.")
 
         if "@" not in command.email:
-            raise ValueError(
-                "Email address is invalid."
-            )
+            raise ValueError("Email address is invalid.")
 
     @staticmethod
     def validate_update(
@@ -78,22 +64,13 @@ class ContactValidator:
         """
 
         if command.first_name is not None:
-
             if len(command.first_name.strip()) < 2:
-                raise ValueError(
-                    "First name must contain at least 2 characters."
-                )
+                raise ValueError("First name must contain at least 2 characters.")
 
         if command.last_name is not None:
-
             if len(command.last_name.strip()) < 2:
-                raise ValueError(
-                    "Last name must contain at least 2 characters."
-                )
+                raise ValueError("Last name must contain at least 2 characters.")
 
         if command.email is not None:
-
             if "@" not in command.email:
-                raise ValueError(
-                    "Email address is invalid."
-                )
+                raise ValueError("Email address is invalid.")

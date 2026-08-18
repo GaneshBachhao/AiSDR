@@ -6,7 +6,6 @@ from pydantic import BaseModel, ConfigDict
 
 
 class AIRequestDTO(BaseModel):
-
     model_config = ConfigDict(
         frozen=True,
         extra="forbid",

@@ -61,9 +61,7 @@ async def test_generated_solutions_survive_a_real_save_and_reload(async_session)
     )
 
     handler = CreateRecommendationHandler(uow, ai_service)
-    created = await handler.handle(
-        CreateRecommendationCommand(assessment_id=assessment.id.value)
-    )
+    created = await handler.handle(CreateRecommendationCommand(assessment_id=assessment.id.value))
     assert len(created.solutions) == 1
 
     # Fresh repository read (simulates a completely separate GET request) --
@@ -94,8 +92,15 @@ async def test_calling_create_twice_for_the_same_assessment_is_idempotent(async_
     ai_service = AsyncMock()
     ai_service.execute.return_value = AIResponse(
         content=json.dumps(
-            [{"title": "AI Consulting", "description": "x", "solution_type": "AI Agent",
-              "priority": "Medium", "is_existing_offering": True}]
+            [
+                {
+                    "title": "AI Consulting",
+                    "description": "x",
+                    "solution_type": "AI Agent",
+                    "priority": "Medium",
+                    "is_existing_offering": True,
+                }
+            ]
         ),
         finish_reason=FinishReason.STOP,
     )

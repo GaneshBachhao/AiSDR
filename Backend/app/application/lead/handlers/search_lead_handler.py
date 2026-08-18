@@ -23,16 +23,8 @@ class SearchLeadHandler:
 
     async def handle(self, query: SearchLeadQuery) -> list[LeadResponseDTO]:
         try:
-            company_id = (
-                CompanyId(query.company_id)
-                if query.company_id
-                else None
-            )
-            contact_id = (
-                ContactId(query.contact_id)
-                if query.contact_id
-                else None
-            )
+            company_id = CompanyId(query.company_id) if query.company_id else None
+            contact_id = ContactId(query.contact_id) if query.contact_id else None
         except (TypeError, ValueError) as exc:
             raise ValidationException(
                 message="Lead filter validation failed.",

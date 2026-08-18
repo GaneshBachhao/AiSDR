@@ -11,8 +11,6 @@ class CreateRecommendationCommand(BaseModel):
     from an assessment.
     """
 
-    model_config = ConfigDict(
-        frozen=True
-    )
+    model_config = ConfigDict(frozen=True)
 
     assessment_id: UUID

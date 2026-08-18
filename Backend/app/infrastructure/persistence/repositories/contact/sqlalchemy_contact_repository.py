@@ -4,8 +4,7 @@ SQLAlchemy implementation of ContactRepository.
 
 from __future__ import annotations
 
-from sqlalchemy import or_
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.application.contracts.repositories.contact_repository import ContactRepository
@@ -71,10 +70,7 @@ class SqlAlchemyContactRepository(
             .offset(skip)
             .limit(limit)
         )
-        return [
-            self.mapper.to_domain(model)
-            for model in result.scalars().all()
-        ]
+        return [self.mapper.to_domain(model) for model in result.scalars().all()]
 
     async def search(
         self,
@@ -113,7 +109,4 @@ class SqlAlchemyContactRepository(
             .limit(limit)
         )
 
-        return [
-            self.mapper.to_domain(model)
-            for model in result.scalars().all()
-        ]
+        return [self.mapper.to_domain(model) for model in result.scalars().all()]

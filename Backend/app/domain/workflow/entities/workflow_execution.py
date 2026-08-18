@@ -1,10 +1,9 @@
 from datetime import datetime
-from typing import Optional
 from uuid import uuid4
 
-from ..value_objects.execution_id import ExecutionId
 from ..enums.execution_status import ExecutionStatus
 from ..exceptions.workflow_exception import WorkflowException
+from ..value_objects.execution_id import ExecutionId
 
 
 class WorkflowExecution:
@@ -16,17 +15,16 @@ class WorkflowExecution:
 
     def __init__(
         self,
-        execution_id: Optional[ExecutionId] = None,
+        execution_id: ExecutionId | None = None,
     ):
         self._id = execution_id or ExecutionId(uuid4())
 
         self._status = ExecutionStatus.CREATED
 
-        self._started_at: Optional[datetime] = None
-        self._completed_at: Optional[datetime] = None
+        self._started_at: datetime | None = None
+        self._completed_at: datetime | None = None
 
-        self._failure_reason: Optional[str] = None
-
+        self._failure_reason: str | None = None
 
     # ----------------------------
     # Properties
@@ -36,27 +34,21 @@ class WorkflowExecution:
     def id(self) -> ExecutionId:
         return self._id
 
-
     @property
     def status(self) -> ExecutionStatus:
         return self._status
 
-
     @property
-    def started_at(self) -> Optional[datetime]:
+    def started_at(self) -> datetime | None:
         return self._started_at
 
-
     @property
-    def completed_at(self) -> Optional[datetime]:
+    def completed_at(self) -> datetime | None:
         return self._completed_at
 
-
     @property
-    def failure_reason(self) -> Optional[str]:
+    def failure_reason(self) -> str | None:
         return self._failure_reason
-
-
 
     # ----------------------------
     # Lifecycle
@@ -68,14 +60,10 @@ class WorkflowExecution:
         """
 
         if self._status != ExecutionStatus.CREATED:
-            raise WorkflowException(
-                "Only created executions can start"
-            )
+            raise WorkflowException("Only created executions can start")
 
         self._status = ExecutionStatus.RUNNING
         self._started_at = datetime.utcnow()
-
-
 
     def complete(self) -> None:
         """
@@ -83,37 +71,24 @@ class WorkflowExecution:
         """
 
         if self._status != ExecutionStatus.RUNNING:
-            raise WorkflowException(
-                "Only running executions can complete"
-            )
+            raise WorkflowException("Only running executions can complete")
 
         self._status = ExecutionStatus.COMPLETED
         self._completed_at = datetime.utcnow()
 
-
-
-    def fail(
-        self,
-        reason: str
-    ) -> None:
+    def fail(self, reason: str) -> None:
         """
         Fail execution.
         """
 
         if self._status != ExecutionStatus.RUNNING:
-            raise WorkflowException(
-                "Only running executions can fail"
-            )
+            raise WorkflowException("Only running executions can fail")
 
         if not reason:
-            raise WorkflowException(
-                "Failure reason is required"
-            )
+            raise WorkflowException("Failure reason is required")
 
         self._status = ExecutionStatus.FAILED
         self._failure_reason = reason
-
-
 
     def cancel(self) -> None:
         """
@@ -121,8 +96,6 @@ class WorkflowExecution:
         """
 
         if self._status == ExecutionStatus.COMPLETED:
-            raise WorkflowException(
-                "Completed execution cannot be cancelled"
-            )
+            raise WorkflowException("Completed execution cannot be cancelled")
 
         self._status = ExecutionStatus.CANCELLED

@@ -20,30 +20,13 @@ class TechnologyStack:
         Validate business invariants.
         """
         if not self.name.strip():
-            raise ValueError(
-                "Technology name cannot be empty."
-            )
+            raise ValueError("Technology name cannot be empty.")
 
-        if (
-            self.version is not None
-            and not self.version.strip()
-        ):
-            raise ValueError(
-                "Version cannot be empty."
-            )
+        if self.version is not None and not self.version.strip():
+            raise ValueError("Version cannot be empty.")
 
-        if (
-            self.vendor is not None
-            and not self.vendor.strip()
-        ):
-            raise ValueError(
-                "Vendor cannot be empty."
-            )
+        if self.vendor is not None and not self.vendor.strip():
+            raise ValueError("Vendor cannot be empty.")
 
-        if (
-            self.remarks is not None
-            and not self.remarks.strip()
-        ):
-            raise ValueError(
-                "Remarks cannot be empty."
-            )
+        if self.remarks is not None and not self.remarks.strip():
+            raise ValueError("Remarks cannot be empty.")

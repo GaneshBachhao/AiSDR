@@ -4,6 +4,7 @@ User persistence mapper.
 Domain <-> ORM conversion always unwraps strongly typed IDs to UUIDs
 when constructing ORM models.
 """
+
 from __future__ import annotations
 
 from app.domain.user.entities.user import User

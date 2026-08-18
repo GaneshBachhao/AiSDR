@@ -1,19 +1,17 @@
 import type { components } from '../api/schema';
 
 export type RecommendationResponseDTO = components['schemas']['RecommendationDTO'];
-export type GenerateRecommendationRequestDTO = components['schemas']['GenerateRecommendationRequest'];
+export type GenerateRecommendationRequestDTO =
+  components['schemas']['GenerateRecommendationRequest'];
 export type SolutionSummaryDTO = components['schemas']['SolutionSummaryDTO'];
 
 /** Like DiscoveryStatus/AssessmentStatus, RecommendationStatus isn't
  * exposed as an OpenAPI enum -- transcribed from
  * Backend/app/domain/recommendation/enums/recommendation_status.py by
- * hand. Note the gap this reflects: Submit/Approve application handlers
- * exist server-side but, like the old company_research funnel, were never
- * wired into recommendation_router.py -- only Draft is actually reachable
- * through the API today (verified by reading the router directly, not
- * just the generated schema). The other four values are listed for
- * completeness/future-proofing, not because this frontend can drive a
- * transition to them. */
+ * hand. Draft -> Under Review -> Approved are reachable from this
+ * frontend via RecommendationService.submit()/approve() (IS-4/IS-8);
+ * Rejected/Archived have no application handler wired to any endpoint
+ * yet, so no UI drives a transition to them. */
 export const RECOMMENDATION_STATUSES = [
   'Draft',
   'Under Review',

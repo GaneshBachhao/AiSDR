@@ -46,7 +46,6 @@ class AIExecutionService:
         request.start()
 
         try:
-
             response = await self._provider.execute(
                 request,
             )
@@ -58,7 +57,6 @@ class AIExecutionService:
             return response
 
         except Exception as ex:
-
             request.fail(
                 str(ex),
             )
@@ -66,7 +64,6 @@ class AIExecutionService:
             raise
 
         finally:
-
             if self._usage_recorder is not None:
                 await self._usage_recorder.log(request)
 

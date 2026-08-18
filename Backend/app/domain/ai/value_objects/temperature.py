@@ -17,6 +17,4 @@ class Temperature:
     def __post_init__(self) -> None:
 
         if not self.MIN <= self.value <= self.MAX:
-            raise ValueError(
-                "Temperature must be between 0.0 and 2.0."
-            )
+            raise ValueError("Temperature must be between 0.0 and 2.0.")

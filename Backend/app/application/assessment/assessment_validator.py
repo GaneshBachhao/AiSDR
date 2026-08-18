@@ -1,6 +1,7 @@
 """
 Assessment validator.
 """
+
 from __future__ import annotations
 
 from app.application.assessment.assessment_commands import (
@@ -27,10 +28,7 @@ class AssessmentValidator:
         if not command.assessment_id.strip():
             result.add_error("assessment_id", "Assessment identifier is required.")
 
-        if (
-            command.readiness_score is not None
-            and not 0 <= command.readiness_score <= 100
-        ):
+        if command.readiness_score is not None and not 0 <= command.readiness_score <= 100:
             result.add_error(
                 "readiness_score",
                 "Readiness score must be between 0 and 100.",

@@ -44,10 +44,17 @@ describe('QualificationService', () => {
   });
 
   it('creates a qualification from a lead and assessment id', () => {
-    service.create({ lead_id: 'l1', assessment_id: 'a1', status: 'Qualified', score: 88 }).subscribe();
+    service
+      .create({ lead_id: 'l1', assessment_id: 'a1', status: 'Qualified', score: 88 })
+      .subscribe();
     const req = httpMock.expectOne(base);
     expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual({ lead_id: 'l1', assessment_id: 'a1', status: 'Qualified', score: 88 });
+    expect(req.request.body).toEqual({
+      lead_id: 'l1',
+      assessment_id: 'a1',
+      status: 'Qualified',
+      score: 88,
+    });
     req.flush(sample);
   });
 

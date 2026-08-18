@@ -3,6 +3,7 @@ Assessment application mapper.
 
 Maps request DTOs -> commands and domain entities -> response DTOs.
 """
+
 from __future__ import annotations
 
 from app.application.assessment.assessment_commands import (

@@ -16,11 +16,7 @@ class RetryPolicy:
     def __post_init__(self) -> None:
 
         if self.max_attempts <= 0:
-            raise ValueError(
-                "max_attempts must be greater than zero."
-            )
+            raise ValueError("max_attempts must be greater than zero.")
 
         if self.backoff_seconds <= 0:
-            raise ValueError(
-                "backoff_seconds must be greater than zero."
-            )
+            raise ValueError("backoff_seconds must be greater than zero.")

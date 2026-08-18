@@ -4,9 +4,7 @@ Tests for GetAssessmentHandler.
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock
-from unittest.mock import Mock
-from unittest.mock import patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -53,9 +51,7 @@ async def test_get_assessment_success(
 
     assessment = Mock()
 
-    unit_of_work.assessment_repository.get_by_id.return_value = (
-        assessment
-    )
+    unit_of_work.assessment_repository.get_by_id.return_value = assessment
 
     query = GetAssessmentQuery(
         assessment_id="00000000-0000-0000-0000-000000000002",
@@ -64,7 +60,6 @@ async def test_get_assessment_success(
     with patch(
         "app.application.assessment.handlers.get_assessment_handler.AssessmentMapper.to_get_response"
     ) as mapper:
-
         mapper.return_value = "response"
 
         result = await handler.handle(query)
@@ -94,5 +89,4 @@ async def test_get_assessment_not_found(
     )
 
     with pytest.raises(NotFoundException):
-
         await handler.handle(query)

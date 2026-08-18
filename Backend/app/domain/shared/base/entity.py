@@ -4,7 +4,6 @@ from abc import ABC
 from dataclasses import dataclass, field
 from typing import Generic, TypeVar
 
-
 TId = TypeVar("TId")
 
 
@@ -27,10 +26,7 @@ class Entity(
         self,
         other: object,
     ) -> bool:
-        return (
-            isinstance(other, self.__class__)
-            and self.id == other.id
-        )
+        return isinstance(other, self.__class__) and self.id == other.id
 
     def __hash__(
         self,
@@ -40,7 +36,4 @@ class Entity(
     def __repr__(
         self,
     ) -> str:
-        return (
-            f"{self.__class__.__name__}"
-            f"(id={self.id})"
-        )
+        return f"{self.__class__.__name__}(id={self.id})"

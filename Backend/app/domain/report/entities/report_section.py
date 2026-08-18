@@ -1,5 +1,4 @@
 from datetime import UTC, datetime
-from typing import Optional
 from uuid import uuid4
 
 from app.domain.shared.base import Entity
@@ -19,12 +18,10 @@ class ReportSection(Entity[SectionId]):
         self,
         title: ReportName,
         display_order: int,
-        section_id: Optional[SectionId] = None,
+        section_id: SectionId | None = None,
     ):
         if display_order < 1:
-            raise ReportSectionException(
-                "Display order must be greater than zero."
-            )
+            raise ReportSectionException("Display order must be greater than zero.")
 
         section_id = section_id or SectionId(uuid4())
 
@@ -86,9 +83,7 @@ class ReportSection(Entity[SectionId]):
     ) -> None:
 
         if self._status == SectionStatus.LOCKED:
-            raise ReportSectionException(
-                "Locked sections cannot be modified."
-            )
+            raise ReportSectionException("Locked sections cannot be modified.")
 
         self._content = content.strip()
         self._touch()
@@ -96,9 +91,7 @@ class ReportSection(Entity[SectionId]):
     def complete(self) -> None:
 
         if not self._content:
-            raise ReportSectionException(
-                "Section content cannot be empty."
-            )
+            raise ReportSectionException("Section content cannot be empty.")
 
         self._status = SectionStatus.COMPLETED
         self._touch()
@@ -106,9 +99,7 @@ class ReportSection(Entity[SectionId]):
     def lock(self) -> None:
 
         if self._status != SectionStatus.COMPLETED:
-            raise ReportSectionException(
-                "Only completed sections can be locked."
-            )
+            raise ReportSectionException("Only completed sections can be locked.")
 
         self._status = SectionStatus.LOCKED
         self._touch()

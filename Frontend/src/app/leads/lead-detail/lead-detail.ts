@@ -53,7 +53,10 @@ export class LeadDetail implements OnInit {
     }
     this.deleting.set(true);
     this.service.remove(lead.id).subscribe({
-      next: () => this.router.navigate(['/leads']),
+      next: () => {
+        this.displayService.invalidate();
+        this.router.navigate(['/leads']);
+      },
       error: () => {
         this.errorMessage.set('Delete failed. Check that the API is running.');
         this.deleting.set(false);

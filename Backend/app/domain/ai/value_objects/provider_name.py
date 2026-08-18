@@ -19,14 +19,10 @@ class ProviderName:
         value = self.value.strip()
 
         if len(value) < self.MIN_LENGTH:
-            raise ValueError(
-                "Provider name is too short."
-            )
+            raise ValueError("Provider name is too short.")
 
         if len(value) > self.MAX_LENGTH:
-            raise ValueError(
-                "Provider name is too long."
-            )
+            raise ValueError("Provider name is too long.")
 
         object.__setattr__(
             self,

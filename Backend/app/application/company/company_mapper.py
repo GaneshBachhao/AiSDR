@@ -33,9 +33,7 @@ class CompanyMapper:
 
     @staticmethod
     def _normalize_text(value: str) -> str:
-        return " ".join(
-            value.strip().replace("_", " ").replace("-", " ").split()
-        ).lower()
+        return " ".join(value.strip().replace("_", " ").replace("-", " ").split()).lower()
 
     @staticmethod
     def _to_industry(
@@ -90,10 +88,7 @@ class CompanyMapper:
             if normalized in aliases:
                 return aliases[normalized]
 
-            numbers = [
-                int(match)
-                for match in re.findall(r"\d+", normalized)
-            ]
+            numbers = [int(match) for match in re.findall(r"\d+", normalized)]
 
             if numbers:
                 upper_bound = numbers[-1]
@@ -167,16 +162,8 @@ class CompanyMapper:
             id=str(company.id.value),
             name=company.name,
             website=company.website,
-            industry=(
-                company.industry.value
-                if company.industry is not None
-                else None
-            ),
-            company_size=(
-                company.company_size.value
-                if company.company_size is not None
-                else None
-            ),
+            industry=(company.industry.value if company.industry is not None else None),
+            company_size=(company.company_size.value if company.company_size is not None else None),
             employee_count=company.employee_count,
             country=company.country,
             state=company.state,
@@ -188,7 +175,4 @@ class CompanyMapper:
     def to_response_list(
         companies: list[Company],
     ) -> list[CompanyResponseDTO]:
-        return [
-            CompanyMapper.to_response(company)
-            for company in companies
-        ]
+        return [CompanyMapper.to_response(company) for company in companies]

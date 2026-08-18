@@ -7,6 +7,7 @@ from app.application.recommendation.dto.recommendation_dto import Recommendation
 from app.application.recommendation.mappers.recommendation_mapper import RecommendationMapper
 from app.application.recommendation.queries.list_recommendations import ListRecommendationsQuery
 
+
 class ListRecommendationHandler:
     def __init__(self, unit_of_work: UnitOfWork) -> None:
         self._unit_of_work = unit_of_work
@@ -14,6 +15,7 @@ class ListRecommendationHandler:
     async def handle(self, query: ListRecommendationsQuery) -> list[RecommendationDTO]:
         async with self._unit_of_work:
             recommendations = await self._unit_of_work.recommendation_repository.list(
-                page=query.page, page_size=query.page_size,
+                page=query.page,
+                page_size=query.page_size,
             )
         return [RecommendationMapper.domain_to_dto(item) for item in recommendations]

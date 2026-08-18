@@ -7,4 +7,5 @@ class AIRequestId(Identifier):
     """
     Strongly typed identifier for AIRequest aggregate.
     """
+
     pass

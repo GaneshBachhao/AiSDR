@@ -49,7 +49,12 @@ async def test_execute_builds_ai_response_from_raw_dict():
 @pytest.mark.asyncio
 async def test_execute_sends_prompt_text_not_message_objects():
     client = AsyncMock()
-    client.send_request.return_value = {"content": "ok", "finish_reason": "STOP", "prompt_tokens": 1, "completion_tokens": 1}
+    client.send_request.return_value = {
+        "content": "ok",
+        "finish_reason": "STOP",
+        "prompt_tokens": 1,
+        "completion_tokens": 1,
+    }
     provider = GeminiProvider(client, ProviderSettings(provider_name="gemini", api_key="secret"))
 
     request = _request()
@@ -63,7 +68,12 @@ async def test_execute_sends_prompt_text_not_message_objects():
 @pytest.mark.asyncio
 async def test_execute_maps_max_tokens_finish_reason_to_length():
     client = AsyncMock()
-    client.send_request.return_value = {"content": "truncated", "finish_reason": "MAX_TOKENS", "prompt_tokens": 1, "completion_tokens": 1}
+    client.send_request.return_value = {
+        "content": "truncated",
+        "finish_reason": "MAX_TOKENS",
+        "prompt_tokens": 1,
+        "completion_tokens": 1,
+    }
     provider = GeminiProvider(client, ProviderSettings(provider_name="gemini", api_key="secret"))
 
     response = await provider.execute(_request())

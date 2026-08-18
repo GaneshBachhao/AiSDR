@@ -14,7 +14,6 @@ class MockProvider(BaseAIProvider):
     and local development.
     """
 
-
     async def execute(
         self,
         request: AIRequest,
@@ -24,9 +23,7 @@ class MockProvider(BaseAIProvider):
         """
 
         return AIResponse(
-            content=(
-                "Mock AI response generated successfully."
-            ),
+            content=("Mock AI response generated successfully."),
             finish_reason=FinishReason.COMPLETED,
             token_usage=TokenUsage(
                 prompt_tokens=10,
@@ -35,7 +32,6 @@ class MockProvider(BaseAIProvider):
             ),
             created_at=datetime.now(UTC),
         )
-
 
     async def health_check(self) -> bool:
         """

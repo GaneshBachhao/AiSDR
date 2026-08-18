@@ -132,7 +132,7 @@ class AiIdentityVerificationAdapter(IdentityVerificationPort):
             "not an unrelated parent/conglomerate) genuinely operates the proposed "
             "website.\n\n"
             "Rules:\n"
-            "- Do not match based on partial word overlap alone (e.g. \"Lathangi "
+            '- Do not match based on partial word overlap alone (e.g. "Lathangi '
             'Motors" is NOT "Tata Motors" even though both contain "Motors").\n'
             "- If the evidence is ambiguous, insufficient, or points to a "
             "different or larger company, set is_match to false and confidence "

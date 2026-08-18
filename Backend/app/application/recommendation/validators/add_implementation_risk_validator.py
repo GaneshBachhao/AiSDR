@@ -44,10 +44,7 @@ class AddImplementationRiskValidator:
                 message="Risk description is required.",
             )
 
-        if (
-            command.mitigation is not None
-            and not command.mitigation.strip()
-        ):
+        if command.mitigation is not None and not command.mitigation.strip():
             result.add_error(
                 field="mitigation",
                 message="Mitigation cannot be empty.",

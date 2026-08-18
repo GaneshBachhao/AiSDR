@@ -579,6 +579,11 @@ assuming this module works like its siblings:
   adding `response_model=` server-side — but that's a backend change, out
   of scope for this frontend sprint; first flagged as a gap back in
   EPIC-F02.)
+  **Fixed 2026-08-18** (see `AiSDR/docs/intermediate_sprint_no_api_quota.md`,
+  IS-3) — `qualification_router.py` now declares `response_model=` on
+  every endpoint; `qualification.models.ts` swapped from the hand-written
+  interfaces onto real `import type { components } from '../api/schema'`
+  aliases, matching every other module.
 - **`ListQualificationResponseDTO` genuinely omits `recommendation`** —
   not a doc error, confirmed by reading `qualification_mapper.py`'s
   `to_list_response` and live-verified: creating a Qualification with a

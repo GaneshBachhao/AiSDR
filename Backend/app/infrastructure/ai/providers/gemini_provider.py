@@ -6,9 +6,7 @@ from app.domain.ai.value_objects.token_usage import TokenUsage
 from ..clients.gemini_client import GeminiClient
 from ..configuration import ProviderSettings
 from ..exceptions.ai_provider_exception import AIProviderException
-
 from .base_provider import BaseAIProvider
-
 
 _FINISH_REASON_MAP = {
     "STOP": FinishReason.STOP,
@@ -25,7 +23,6 @@ class GeminiProvider(BaseAIProvider):
     Google Gemini provider implementation.
     """
 
-
     def __init__(
         self,
         client: GeminiClient,
@@ -33,7 +30,6 @@ class GeminiProvider(BaseAIProvider):
     ):
         self._client = client
         self._settings = settings
-
 
     async def execute(
         self,
@@ -44,7 +40,6 @@ class GeminiProvider(BaseAIProvider):
         """
 
         try:
-
             payload = {
                 "model": request.model.value,
                 "contents": request.prompt.value,
@@ -52,9 +47,7 @@ class GeminiProvider(BaseAIProvider):
                 "max_tokens": request.max_tokens.value,
             }
 
-            raw_response = await self._client.send_request(
-                payload
-            )
+            raw_response = await self._client.send_request(payload)
 
             return AIResponse(
                 content=raw_response["content"],
@@ -69,11 +62,7 @@ class GeminiProvider(BaseAIProvider):
             )
 
         except Exception as exc:
-
-            raise AIProviderException(
-                "Gemini provider execution failed"
-            ) from exc
-
+            raise AIProviderException("Gemini provider execution failed") from exc
 
     async def health_check(self) -> bool:
         """

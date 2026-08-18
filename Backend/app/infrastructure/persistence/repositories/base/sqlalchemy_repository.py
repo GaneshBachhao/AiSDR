@@ -6,6 +6,7 @@ The repository is persistence-generic:
 - the converter registry translates them to database values;
 - concrete repositories own aggregate-specific queries.
 """
+
 from __future__ import annotations
 
 from typing import Any, Generic, TypeVar
@@ -38,9 +39,7 @@ class SqlAlchemyRepository(
     async def get_by_id(self, entity_id: TId) -> TEntity | None:
         db_id = converter_registry.to_database(entity_id)
 
-        result = await self._session.execute(
-            select(self.model_type).where(self.model_type.id == db_id)
-        )
+        result = await self._session.execute(select(self.model_type).where(self.model_type.id == db_id))
         model = result.scalar_one_or_none()
 
         if model is None:
@@ -68,7 +67,5 @@ class SqlAlchemyRepository(
     async def exists(self, entity_id: TId) -> bool:
         db_id = converter_registry.to_database(entity_id)
 
-        result = await self._session.execute(
-            select(self.model_type.id).where(self.model_type.id == db_id)
-        )
+        result = await self._session.execute(select(self.model_type.id).where(self.model_type.id == db_id))
         return result.scalar_one_or_none() is not None

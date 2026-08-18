@@ -1,4 +1,4 @@
-from .entities import Assessment, Finding, Evidence
+from .entities import Assessment, Evidence, Finding
 from .enums import AssessmentStatus, FindingType, MaturityLevel
 from .value_objects import (
     AssessmentDimension,

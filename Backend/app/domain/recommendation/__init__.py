@@ -3,14 +3,12 @@ from .entities import (
     RoadmapPhase,
     Solution,
 )
-
 from .enums import (
     ImplementationPriority,
     RecommendationStatus,
     RecommendationType,
     SolutionType,
 )
-
 from .identifiers import RecommendationId
 
 __all__ = [

@@ -49,9 +49,16 @@ async def test_send_request_uses_deployment_name(monkeypatch):
     instance = _install_fake_sdk(monkeypatch, response=_fake_response())
     client = AzureOpenAIClient(_configured_settings())
 
-    result = await client.send_request({"deployment": "my-gpt4-deployment", "contents": "hi", "temperature": 0.1, "max_tokens": 100})
+    result = await client.send_request(
+        {"deployment": "my-gpt4-deployment", "contents": "hi", "temperature": 0.1, "max_tokens": 100}
+    )
 
-    assert result == {"content": "Hello.", "finish_reason": "stop", "prompt_tokens": 10, "completion_tokens": 5}
+    assert result == {
+        "content": "Hello.",
+        "finish_reason": "stop",
+        "prompt_tokens": 10,
+        "completion_tokens": 5,
+    }
     instance.chat.completions.create.assert_awaited_once()
     assert instance.chat.completions.create.await_args.kwargs["model"] == "my-gpt4-deployment"
 

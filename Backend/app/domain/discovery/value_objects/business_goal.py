@@ -19,16 +19,10 @@ class BusinessGoal:
     def __post_init__(self) -> None:
 
         if not self.title.strip():
-            raise ValueError(
-                "Business goal title cannot be empty."
-            )
+            raise ValueError("Business goal title cannot be empty.")
 
         if not self.description.strip():
-            raise ValueError(
-                "Business goal description cannot be empty."
-            )
+            raise ValueError("Business goal description cannot be empty.")
 
         if not 1 <= self.priority <= 5:
-            raise ValueError(
-                "Priority must be between 1 and 5."
-            )
+            raise ValueError("Priority must be between 1 and 5.")

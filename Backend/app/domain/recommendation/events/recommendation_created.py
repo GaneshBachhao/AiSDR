@@ -1,6 +1,6 @@
 from app.domain.shared.base import DomainEvent
 
-from ..value_objects.recommendation_id import RecommendationId
+from ..identifiers.recommendation_id import RecommendationId
 
 
 class RecommendationCreated(DomainEvent):

@@ -17,14 +17,7 @@ class Dependency:
         Validate business invariants.
         """
         if not self.name.strip():
-            raise ValueError(
-                "Dependency name cannot be empty."
-            )
+            raise ValueError("Dependency name cannot be empty.")
 
-        if (
-            self.description is not None
-            and not self.description.strip()
-        ):
-            raise ValueError(
-                "Description cannot be empty."
-            )
+        if self.description is not None and not self.description.strip():
+            raise ValueError("Description cannot be empty.")

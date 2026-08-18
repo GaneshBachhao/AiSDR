@@ -30,10 +30,10 @@ from app.domain.ai.value_objects.token_usage import (
     TokenUsage,
 )
 
-
 # ==========================================================
 # Helpers
 # ==========================================================
+
 
 def create_command() -> ExecuteAIRequestCommand:
     return ExecuteAIRequestCommand(
@@ -82,6 +82,7 @@ def create_handler():
 # Happy Path
 # ==========================================================
 
+
 @pytest.mark.asyncio
 async def test_handle_success():
 
@@ -117,15 +118,13 @@ async def test_handle_success():
         AIResponseDTO,
     )
 
-    assert (
-        result.message
-        == "AI request executed successfully."
-    )
+    assert result.message == "AI request executed successfully."
 
 
 # ==========================================================
 # Validation Failure
 # ==========================================================
+
 
 @pytest.mark.asyncio
 async def test_handle_validation_failure():
@@ -161,6 +160,7 @@ async def test_handle_validation_failure():
 # Validation Service
 # ==========================================================
 
+
 @pytest.mark.asyncio
 async def test_validation_service_called():
 
@@ -171,9 +171,7 @@ async def test_validation_service_called():
         validation_service,
     ) = create_handler()
 
-    execution_service.execute.return_value = (
-        create_response()
-    )
+    execution_service.execute.return_value = create_response()
 
     await handler.handle(
         create_command(),
@@ -187,6 +185,7 @@ async def test_validation_service_called():
 # Repository
 # ==========================================================
 
+
 @pytest.mark.asyncio
 async def test_repository_save_called():
 
@@ -197,9 +196,7 @@ async def test_repository_save_called():
         validation_service,
     ) = create_handler()
 
-    execution_service.execute.return_value = (
-        create_response()
-    )
+    execution_service.execute.return_value = create_response()
 
     await handler.handle(
         create_command(),
@@ -213,6 +210,7 @@ async def test_repository_save_called():
 # Execution Service
 # ==========================================================
 
+
 @pytest.mark.asyncio
 async def test_execution_service_called():
 
@@ -223,9 +221,7 @@ async def test_execution_service_called():
         validation_service,
     ) = create_handler()
 
-    execution_service.execute.return_value = (
-        create_response()
-    )
+    execution_service.execute.return_value = create_response()
 
     await handler.handle(
         create_command(),
@@ -239,6 +235,7 @@ async def test_execution_service_called():
 # Response DTO
 # ==========================================================
 
+
 @pytest.mark.asyncio
 async def test_response_dto_returned():
 
@@ -249,9 +246,7 @@ async def test_response_dto_returned():
         validation_service,
     ) = create_handler()
 
-    execution_service.execute.return_value = (
-        create_response()
-    )
+    execution_service.execute.return_value = create_response()
 
     result = await handler.handle(
         create_command(),
@@ -267,6 +262,7 @@ async def test_response_dto_returned():
 # ==========================================================
 # No Response
 # ==========================================================
+
 
 @pytest.mark.asyncio
 async def test_handle_without_response():
@@ -287,15 +283,13 @@ async def test_handle_without_response():
 
     assert not result.is_success
 
-    assert (
-        result.message
-        == "AI request completed without response."
-    )
+    assert result.message == "AI request completed without response."
 
 
 # ==========================================================
 # Execution Exception
 # ==========================================================
+
 
 @pytest.mark.asyncio
 async def test_execution_exception_propagates():
@@ -307,12 +301,9 @@ async def test_execution_exception_propagates():
         validation_service,
     ) = create_handler()
 
-    execution_service.execute.side_effect = RuntimeError(
-        "Execution failed."
-    )
+    execution_service.execute.side_effect = RuntimeError("Execution failed.")
 
     with pytest.raises(RuntimeError):
-
         await handler.handle(
             create_command(),
             HandlerContext(),
@@ -322,6 +313,7 @@ async def test_execution_exception_propagates():
 # ==========================================================
 # Success Message
 # ==========================================================
+
 
 @pytest.mark.asyncio
 async def test_success_message():
@@ -333,24 +325,20 @@ async def test_success_message():
         validation_service,
     ) = create_handler()
 
-    execution_service.execute.return_value = (
-        create_response()
-    )
+    execution_service.execute.return_value = create_response()
 
     result = await handler.handle(
         create_command(),
         HandlerContext(),
     )
 
-    assert (
-        result.message
-        == "AI request executed successfully."
-    )
+    assert result.message == "AI request executed successfully."
 
 
 # ==========================================================
 # Returned Content
 # ==========================================================
+
 
 @pytest.mark.asyncio
 async def test_returned_content():
@@ -362,16 +350,11 @@ async def test_returned_content():
         validation_service,
     ) = create_handler()
 
-    execution_service.execute.return_value = (
-        create_response()
-    )
+    execution_service.execute.return_value = create_response()
 
     result = await handler.handle(
         create_command(),
         HandlerContext(),
     )
 
-    assert (
-        result.data.content
-        == "Architecture explained."
-    )
+    assert result.data.content == "Architecture explained."

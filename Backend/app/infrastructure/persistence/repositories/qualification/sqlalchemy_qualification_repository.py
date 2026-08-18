@@ -74,13 +74,7 @@ class SQLAlchemyQualificationRepository(
             )
 
         result = await self._session.execute(
-            query
-            .order_by(QualificationModel.created_at.desc())
-            .offset(offset)
-            .limit(page_size)
+            query.order_by(QualificationModel.created_at.desc()).offset(offset).limit(page_size)
         )
 
-        return [
-            self.mapper.to_domain(model)
-            for model in result.scalars().all()
-        ]
+        return [self.mapper.to_domain(model) for model in result.scalars().all()]

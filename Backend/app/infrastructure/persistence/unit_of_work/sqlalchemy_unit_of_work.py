@@ -17,8 +17,7 @@ transaction boundary.
 
 from __future__ import annotations
 
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.application.common.interfaces.unit_of_work import (
     UnitOfWork,
@@ -47,7 +46,6 @@ from app.application.contracts.repositories.recommendation_repository import (
 from app.application.contracts.repositories.user_repository import (
     UserRepository,
 )
-
 from app.infrastructure.persistence.repositories.assessment.sqlalchemy_assessment_repository import (
     SqlAlchemyAssessmentRepository,
 )

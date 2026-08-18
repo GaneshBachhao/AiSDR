@@ -1,6 +1,7 @@
 """
 Search Companies application handler.
 """
+
 from __future__ import annotations
 
 from app.application.common.interfaces.unit_of_work import UnitOfWork

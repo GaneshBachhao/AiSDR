@@ -4,7 +4,7 @@
 
 .shell {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
 }
 
 .sidebar {
@@ -15,6 +15,12 @@
   display: flex;
   flex-direction: column;
   padding: 20px 12px;
+  /* .workspace below already scrolls independently within the bounded
+     .shell height -- .sidebar was missing the matching overflow-y so its
+     own content (nav links + the nav-user footer added alongside auth)
+     could get clipped below the fold on a short viewport instead of
+     being reachable by scrolling just the sidebar. */
+  overflow-y: auto;
 }
 
 .brand {

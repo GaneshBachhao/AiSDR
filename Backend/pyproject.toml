@@ -1,0 +1,38 @@
+[tool.ruff]
+line-length = 110
+target-version = "py313"
+exclude = [
+    "app/infrastructure/persistence/migrations/versions",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = [
+    # FastAPI's own idiom is `param: T = Depends(...)` / `= Query(...)` --
+    # a function call as a default argument is the framework's documented
+    # pattern here, not the mutable-default-argument bug this rule targets.
+    "B008",
+    # Several domain base classes (DomainEvent, ValueObject, Identifier)
+    # are deliberately abstract marker classes with no abstract methods of
+    # their own -- subclasses provide the behavior. Not a bug.
+    "B024",
+    # PEP 695 generic syntax / StrEnum rewrites are real modernizations but
+    # touch class declarations broadly (Generic[T] base classes, str+Enum
+    # mixins) rather than being simple line-local fixes -- left as a
+    # deliberate, separate future pass rather than folded into initial
+    # lint-tooling setup.
+    "UP042",
+    "UP043",
+    "UP046",
+    "UP047",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Alembic's migrations/env.py imports every model purely for the
+# side effect of registering it on Base.metadata, so autogenerate can see
+# it -- the names are never referenced directly. Removing these imports
+# would silently break `alembic revision --autogenerate`.
+"app/infrastructure/persistence/migrations/env.py" = ["F401"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]

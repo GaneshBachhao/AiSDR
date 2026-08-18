@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from .base_ai_client import BaseAIClient
 from ..configuration import ProviderSettings
 from ..exceptions.ai_client_exception import AIClientException
+from .base_ai_client import BaseAIClient
 
 try:
     from openai import AsyncAzureOpenAI
@@ -27,9 +27,7 @@ class AzureOpenAIClient(BaseAIClient):
     ):
         self._settings = settings
         self._sdk_installed = AsyncAzureOpenAI is not None
-        self._configured = bool(
-            settings.api_key and settings.endpoint and settings.api_version
-        )
+        self._configured = bool(settings.api_key and settings.endpoint and settings.api_version)
         self._client = (
             AsyncAzureOpenAI(
                 api_key=settings.api_key,
@@ -52,14 +50,11 @@ class AzureOpenAIClient(BaseAIClient):
         """
 
         if not self._sdk_installed:
-            raise AIClientException(
-                "Azure OpenAI request failed: the 'openai' package is not installed."
-            )
+            raise AIClientException("Azure OpenAI request failed: the 'openai' package is not installed.")
 
         if self._client is None:
             raise AIClientException(
-                "Azure OpenAI request failed: endpoint, API key, and API version must "
-                "all be configured."
+                "Azure OpenAI request failed: endpoint, API key, and API version must all be configured."
             )
 
         try:
@@ -84,9 +79,7 @@ class AzureOpenAIClient(BaseAIClient):
         except AIClientException:
             raise
         except Exception as exc:
-            raise AIClientException(
-                "Azure OpenAI request failed"
-            ) from exc
+            raise AIClientException("Azure OpenAI request failed") from exc
 
     async def health_check(self) -> bool:
         """

@@ -8,27 +8,22 @@ for FastAPI presentation layer.
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator
-from typing import Annotated
+
 from fastapi import Depends
-
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.infrastructure.configuration.database_settings import (
-    DatabaseSettings,
-)
-
-from app.infrastructure.persistence.database.session import (
-    get_session_manager,
-)
-
-from app.infrastructure.persistence.unit_of_work.sqlalchemy_unit_of_work import (
-    SqlAlchemyUnitOfWork,
-)
 
 from app.application.common.interfaces.unit_of_work import (
     UnitOfWork,
 )
-
+from app.infrastructure.configuration.database_settings import (
+    DatabaseSettings,
+)
+from app.infrastructure.persistence.database.session import (
+    get_session_manager,
+)
+from app.infrastructure.persistence.unit_of_work.sqlalchemy_unit_of_work import (
+    SqlAlchemyUnitOfWork,
+)
 
 
 def get_database_settings() -> DatabaseSettings:
@@ -37,7 +32,6 @@ def get_database_settings() -> DatabaseSettings:
     """
 
     return DatabaseSettings()
-
 
 
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
@@ -58,7 +52,6 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
         await session.close()
 
 
-
 async def get_unit_of_work(
     session: AsyncSession = Depends(get_db_session),
 ) -> UnitOfWork:
@@ -69,4 +62,3 @@ async def get_unit_of_work(
     return SqlAlchemyUnitOfWork(
         session=session,
     )
-

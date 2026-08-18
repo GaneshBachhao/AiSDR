@@ -6,8 +6,7 @@ Represents a person/contact associated with a company relationship.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from dataclasses import field
+from dataclasses import dataclass, field
 
 from app.domain.company.identifiers.company_id import (
     CompanyId,
@@ -56,7 +55,6 @@ class Contact(AggregateRoot[ContactId]):
 
     is_active: bool = True
 
-
     def __post_init__(self) -> None:
         """
         Validate and normalize contact data.
@@ -76,7 +74,6 @@ class Contact(AggregateRoot[ContactId]):
         if self.linkedin_url:
             self.linkedin_url = self.linkedin_url.strip()
 
-
     # ---------------------------------------------------------
     # Validation
     # ---------------------------------------------------------
@@ -87,15 +84,10 @@ class Contact(AggregateRoot[ContactId]):
         """
 
         if not self.first_name:
-            raise ValueError(
-                "Contact first name cannot be empty."
-            )
+            raise ValueError("Contact first name cannot be empty.")
 
         if not self.last_name:
-            raise ValueError(
-                "Contact last name cannot be empty."
-            )
-
+            raise ValueError("Contact last name cannot be empty.")
 
     # ---------------------------------------------------------
     # Update Operations
@@ -115,20 +107,15 @@ class Contact(AggregateRoot[ContactId]):
         last_name = last_name.strip()
 
         if not first_name:
-            raise ValueError(
-                "Contact first name cannot be empty."
-            )
+            raise ValueError("Contact first name cannot be empty.")
 
         if not last_name:
-            raise ValueError(
-                "Contact last name cannot be empty."
-            )
+            raise ValueError("Contact last name cannot be empty.")
 
         self.first_name = first_name
         self.last_name = last_name
 
         self.touch()
-
 
     def update_email(
         self,
@@ -142,7 +129,6 @@ class Contact(AggregateRoot[ContactId]):
 
         self.touch()
 
-
     def update_phone(
         self,
         phone: str | None,
@@ -151,14 +137,9 @@ class Contact(AggregateRoot[ContactId]):
         Update contact phone.
         """
 
-        self.phone = (
-            phone.strip()
-            if phone
-            else None
-        )
+        self.phone = phone.strip() if phone else None
 
         self.touch()
-
 
     def update_job_title(
         self,
@@ -168,14 +149,9 @@ class Contact(AggregateRoot[ContactId]):
         Update contact designation.
         """
 
-        self.job_title = (
-            job_title.strip()
-            if job_title
-            else None
-        )
+        self.job_title = job_title.strip() if job_title else None
 
         self.touch()
-
 
     def update_linkedin_url(
         self,
@@ -185,14 +161,9 @@ class Contact(AggregateRoot[ContactId]):
         Update LinkedIn profile URL.
         """
 
-        self.linkedin_url = (
-            linkedin_url.strip()
-            if linkedin_url
-            else None
-        )
+        self.linkedin_url = linkedin_url.strip() if linkedin_url else None
 
         self.touch()
-
 
     # ---------------------------------------------------------
     # Lifecycle
@@ -206,7 +177,6 @@ class Contact(AggregateRoot[ContactId]):
         self.is_active = True
 
         self.touch()
-
 
     def deactivate(self) -> None:
         """

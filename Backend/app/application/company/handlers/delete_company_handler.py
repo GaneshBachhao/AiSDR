@@ -1,6 +1,7 @@
 """
 Delete Company application handler.
 """
+
 from __future__ import annotations
 
 from app.application.common.exceptions.not_found_exception import NotFoundException

@@ -22,7 +22,9 @@
         >
           <option value="" disabled>Select a discovery…</option>
           @for (option of discoveryOptions(); track option.id) {
-            <option [value]="option.id">{{ option.problem_statement ?? '(no problem statement)' }}</option>
+            <option [value]="option.id">
+              {{ option.problem_statement ?? '(no problem statement)' }}
+            </option>
           }
         </select>
         <p class="hint">
@@ -41,7 +43,7 @@
   } @else {
     <form class="form" (ngSubmit)="save()">
       <div class="field">
-        <label>Discovery</label>
+        <span class="field-label">Discovery</span>
         <p class="static-value">{{ discoveryLabel() ?? '—' }}</p>
       </div>
 

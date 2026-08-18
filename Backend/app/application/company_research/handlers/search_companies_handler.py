@@ -17,6 +17,7 @@ from __future__ import annotations
 import asyncio
 import logging
 
+from app.application.ai.ports.ai_budget_port import AIBudgetPort
 from app.application.company_research.company_research_mapper import (
     CompanyResearchMapper,
     ResearchOutcome,
@@ -53,7 +54,6 @@ from app.application.company_research.ports.evidence_research_port import (
 from app.application.company_research.ports.identity_verification_port import (
     IdentityVerificationPort,
 )
-from app.application.ai.ports.ai_budget_port import AIBudgetPort
 from app.domain.company_research.entities.candidate import CompanyCandidate
 from app.domain.company_research.services.discovery_funnel import DiscoveryFunnel
 from app.domain.company_research.services.evidence_signal_extractor import (
@@ -62,13 +62,13 @@ from app.domain.company_research.services.evidence_signal_extractor import (
 from app.domain.company_research.services.icp_matcher import IcpMatcher
 from app.domain.company_research.services.industry_classifier import IndustryClassifier
 from app.domain.company_research.services.opportunity_mapper import OpportunityMapper
-from app.domain.company_research.value_objects.pipeline_step import PipelineStep
-from app.domain.recommendation.value_objects.solution_catalog_entry import (
-    SolutionCatalogEntry,
-)
 from app.domain.company_research.services.qualification_scorer import (
     QualificationScorer,
     ScoringInputs,
+)
+from app.domain.company_research.value_objects.pipeline_step import PipelineStep
+from app.domain.recommendation.value_objects.solution_catalog_entry import (
+    SolutionCatalogEntry,
 )
 
 logger = logging.getLogger(__name__)
@@ -129,9 +129,7 @@ class SearchCompaniesHandler:
             # One identity-verification AI call per accepted candidate --
             # fail once, clearly, before fanning out any calls, rather than
             # partway through as N near-identical per-candidate failures.
-            await self._budget_port.ensure_batch_fits(
-                self._ai_provider_name, len(accepted)
-            )
+            await self._budget_port.ensure_batch_fits(self._ai_provider_name, len(accepted))
 
         semaphore = asyncio.Semaphore(self._max_concurrent_research)
 
@@ -214,9 +212,7 @@ class SearchCompaniesHandler:
             error_message=message,
         )
 
-    async def _promote_results(
-        self, results: list[CompanySearchResult]
-    ) -> list[CompanySearchResult]:
+    async def _promote_results(self, results: list[CompanySearchResult]) -> list[CompanySearchResult]:
         promoted: list[CompanySearchResult] = []
         for result in results:
             try:
@@ -236,9 +232,7 @@ class SearchCompaniesHandler:
             promoted.append(result)
         return promoted
 
-    async def _promote_lead(
-        self, result: CompanySearchResult, company_id: str
-    ) -> CompanySearchResult:
+    async def _promote_lead(self, result: CompanySearchResult, company_id: str) -> CompanySearchResult:
         try:
             outcome = await self._lead_promoter.handle(result, company_id)
         except Exception:
@@ -257,9 +251,7 @@ class SearchCompaniesHandler:
             }
         )
 
-    async def _discover_candidates(
-        self, request: CompanyResearchRequest
-    ) -> list[CompanyCandidate]:
+    async def _discover_candidates(self, request: CompanyResearchRequest) -> list[CompanyCandidate]:
         """Cheap tier first (if configured), expensive tier only to fill the
         remainder of the pool -- see docs/pamacore_aisdr_summary.md §4.
         Deduplication happens downstream in ``DiscoveryFunnel.gate_candidates``,
@@ -315,22 +307,26 @@ class SearchCompaniesHandler:
         if request.industries and not industry_match:
             return None
 
+        # matches_size is an opt-in *narrowing* filter -- only enforced when
+        # the caller explicitly requests a size band.
         size_match, employee_count, size_reason = IcpMatcher.matches_size(combined, request.company_size)
         if request.company_size and not size_match:
             return None
 
+        # enterprise_exclusion is NOT opt-in: a caller who simply omits
+        # company_size must still never get enterprise/multinational
+        # candidates back. This used to be gated behind `request.company_size`
+        # too, which meant the exclusion only ever ran when a caller
+        # explicitly asked for a size band -- silently defeating the ICP's
+        # default reject-large-companies behavior for every other request.
         enterprise_match, parent_from_text = IcpMatcher.enterprise_exclusion(combined, employee_count)
-        if request.company_size and enterprise_match:
+        if enterprise_match:
             return None
 
         signals = EvidenceSignalExtractor.extract_signals(combined)
 
-        company_specific_evidence = [
-            item for item in evidence if item.signal_scope == "company_specific"
-        ]
-        company_specific_text = " ".join(
-            item.snippet or "" for item in company_specific_evidence
-        ).lower()
+        company_specific_evidence = [item for item in evidence if item.signal_scope == "company_specific"]
+        company_specific_text = " ".join(item.snippet or "" for item in company_specific_evidence).lower()
         company_specific_signals = EvidenceSignalExtractor.extract_signals(company_specific_text)
 
         evidence_classification = EvidenceSignalExtractor.classify_evidence(

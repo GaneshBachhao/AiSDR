@@ -29,9 +29,7 @@ class DiscoveryMapper:
         try:
             return DiscoveryStatus(value)
         except ValueError as exc:
-            raise ValueError(
-                f"Invalid discovery status: {value!r}"
-            ) from exc
+            raise ValueError(f"Invalid discovery status: {value!r}") from exc
 
     def to_model(
         self,

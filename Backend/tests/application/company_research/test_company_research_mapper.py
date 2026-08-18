@@ -41,9 +41,18 @@ def _outcome(**overrides):
         employee_count=120,
         icp_match=True,
         icp_match_reason="Verified employee count 120 matches the requested company-size range.",
-        score=QualificationScore(business_fit=23, evidence_strength=22, buying_signal=17, ability=12, accessibility=9),
+        score=QualificationScore(
+            business_fit=23, evidence_strength=22, buying_signal=17, ability=12, accessibility=9
+        ),
         evidence_classification="Strong Opportunity Signal",
-        signals={"hiring": True, "growth": True, "technology": False, "ai": False, "process": False, "funding": False},
+        signals={
+            "hiring": True,
+            "growth": True,
+            "technology": False,
+            "ai": False,
+            "process": False,
+            "funding": False,
+        },
     )
     defaults.update(overrides)
     return ResearchOutcome(**defaults)

@@ -11,9 +11,7 @@ from __future__ import annotations
 
 import re
 
-_BCRYPT_PATTERN = re.compile(
-    r"^\$2[aby]\$\d{2}\$.{53}$"
-)
+_BCRYPT_PATTERN = re.compile(r"^\$2[aby]\$\d{2}\$.{53}$")
 
 
 class PasswordHash:
@@ -45,14 +43,10 @@ class PasswordHash:
     ) -> None:
 
         if not value:
-            raise ValueError(
-                "Password hash cannot be empty."
-            )
+            raise ValueError("Password hash cannot be empty.")
 
         if not _BCRYPT_PATTERN.match(value):
-            raise ValueError(
-                "Password hash is not a valid bcrypt hash."
-            )
+            raise ValueError("Password hash is not a valid bcrypt hash.")
 
     def __str__(self) -> str:
         return "PasswordHash(***)"

@@ -123,10 +123,21 @@ async def test_strips_markdown_fences_from_ai_response():
     assessment = _assessment()
     uow = _fake_uow(assessment=assessment)
     ai_service = AsyncMock()
-    fenced = "```json\n" + json.dumps(
-        [{"title": "AI Consulting", "description": "x", "solution_type": "AI Agent",
-          "priority": "Medium", "is_existing_offering": True}]
-    ) + "\n```"
+    fenced = (
+        "```json\n"
+        + json.dumps(
+            [
+                {
+                    "title": "AI Consulting",
+                    "description": "x",
+                    "solution_type": "AI Agent",
+                    "priority": "Medium",
+                    "is_existing_offering": True,
+                }
+            ]
+        )
+        + "\n```"
+    )
     ai_service.execute.return_value = _ai_response(fenced)
 
     handler = CreateRecommendationHandler(uow, ai_service)

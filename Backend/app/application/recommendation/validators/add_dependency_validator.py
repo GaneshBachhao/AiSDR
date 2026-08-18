@@ -38,10 +38,7 @@ class AddDependencyValidator:
                 message="Dependency name is required.",
             )
 
-        if (
-            command.description is not None
-            and not command.description.strip()
-        ):
+        if command.description is not None and not command.description.strip():
             result.add_error(
                 field="description",
                 message="Dependency description cannot be empty.",

@@ -63,5 +63,18 @@
         }
       </ol>
     }
+
+    <div class="actions">
+      @if (r.status === 'Draft') {
+        <button type="button" class="primary" [disabled]="submitting()" (click)="submit()">
+          {{ submitting() ? 'Submitting…' : 'Submit for Review' }}
+        </button>
+      }
+      @if (r.status === 'Under Review') {
+        <button type="button" class="primary" [disabled]="approving()" (click)="approve()">
+          {{ approving() ? 'Approving…' : 'Approve' }}
+        </button>
+      }
+    </div>
   }
 </div>

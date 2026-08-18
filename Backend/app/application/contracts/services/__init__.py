@@ -8,7 +8,6 @@ from .contact_discovery_service import ContactDiscoveryService
 from .discovery_service import DiscoveryService
 from .recommendation_service import RecommendationService
 
-
 __all__ = [
     "AIService",
     "AssessmentService",

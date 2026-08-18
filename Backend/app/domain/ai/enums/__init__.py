@@ -1,6 +1,6 @@
 from .ai_request_status import AIRequestStatus
-from .message_role import MessageRole
 from .finish_reason import FinishReason
+from .message_role import MessageRole
 
 __all__ = [
     "AIRequestStatus",

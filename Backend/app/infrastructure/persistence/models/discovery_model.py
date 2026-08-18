@@ -4,18 +4,18 @@ Discovery ORM model.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from uuid import UUID
 
-from sqlalchemy import ForeignKey
-from sqlalchemy import String
-from sqlalchemy import Text
+from sqlalchemy import ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PostgreSQLUUID
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.infrastructure.persistence.models.base_model import BaseModel
 from app.infrastructure.persistence.models.lead_model import LeadModel
+
+if TYPE_CHECKING:
+    from app.infrastructure.persistence.models.assessment_model import AssessmentModel
 
 
 class DiscoveryModel(BaseModel):
@@ -75,7 +75,7 @@ class DiscoveryModel(BaseModel):
         lazy="joined",
     )
 
-    assessment: Mapped["AssessmentModel | None"] = relationship(
+    assessment: Mapped[AssessmentModel | None] = relationship(
         "AssessmentModel",
         back_populates="discovery",
         uselist=False,

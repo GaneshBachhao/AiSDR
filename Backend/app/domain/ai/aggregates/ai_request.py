@@ -60,9 +60,7 @@ class AIRequest(AggregateRoot[AIRequestId]):
         """
 
         if self.status != AIRequestStatus.CREATED:
-            raise ValueError(
-                "Only newly created requests can be started."
-            )
+            raise ValueError("Only newly created requests can be started.")
 
         self.status = AIRequestStatus.IN_PROGRESS
         self.started_at = datetime.now(UTC)
@@ -77,9 +75,7 @@ class AIRequest(AggregateRoot[AIRequestId]):
         """
 
         if self.status != AIRequestStatus.IN_PROGRESS:
-            raise ValueError(
-                "Only executing requests can be completed."
-            )
+            raise ValueError("Only executing requests can be completed.")
 
         self.response = response
         self.status = AIRequestStatus.COMPLETED
@@ -95,9 +91,7 @@ class AIRequest(AggregateRoot[AIRequestId]):
         """
 
         if self.status != AIRequestStatus.IN_PROGRESS:
-            raise ValueError(
-                "Only executing requests can fail."
-            )
+            raise ValueError("Only executing requests can fail.")
 
         self.failure_reason = reason.strip()
         self.status = AIRequestStatus.FAILED
@@ -117,21 +111,12 @@ class AIRequest(AggregateRoot[AIRequestId]):
 
     @property
     def is_completed(self) -> bool:
-        return (
-            self.status
-            == AIRequestStatus.COMPLETED
-        )
+        return self.status == AIRequestStatus.COMPLETED
 
     @property
     def is_failed(self) -> bool:
-        return (
-            self.status
-            == AIRequestStatus.FAILED
-        )
+        return self.status == AIRequestStatus.FAILED
 
     @property
     def can_execute(self) -> bool:
-        return (
-            self.status
-            == AIRequestStatus.CREATED
-        )
+        return self.status == AIRequestStatus.CREATED

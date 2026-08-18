@@ -70,13 +70,13 @@ class LeadModel(BaseModel):
         default=False,
     )
 
-    company: Mapped["CompanyModel"] = relationship(
+    company: Mapped[CompanyModel] = relationship(
         "CompanyModel",
         back_populates="leads",
         lazy="joined",
     )
 
-    discoveries: Mapped[list["DiscoveryModel"]] = relationship(
+    discoveries: Mapped[list[DiscoveryModel]] = relationship(
         "DiscoveryModel",
         back_populates="lead",
         passive_deletes=True,

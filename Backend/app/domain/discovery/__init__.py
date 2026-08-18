@@ -9,7 +9,7 @@ from .value_objects import (
 
 __all__ = [
     "Discovery",
-    "DiscoveryStatus", 
+    "DiscoveryStatus",
     "PainPoint",
     "BusinessGoal",
     "Technology",

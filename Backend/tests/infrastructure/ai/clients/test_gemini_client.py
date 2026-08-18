@@ -44,7 +44,9 @@ async def test_send_request_returns_mapped_raw_response(monkeypatch):
     _install_fake_sdk(monkeypatch, response=_fake_response())
     client = GeminiClient(ProviderSettings(provider_name="gemini", api_key="secret"))
 
-    result = await client.send_request({"model": "gemini-2.5-pro", "contents": "hi", "temperature": 0.1, "max_tokens": 100})
+    result = await client.send_request(
+        {"model": "gemini-2.5-pro", "contents": "hi", "temperature": 0.1, "max_tokens": 100}
+    )
 
     assert result == {
         "content": "Hello.",

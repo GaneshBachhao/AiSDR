@@ -24,6 +24,4 @@ class TimeoutPolicy:
             self.pool_timeout,
         ):
             if value <= 0:
-                raise ValueError(
-                    "Timeout values must be positive."
-                )
+                raise ValueError("Timeout values must be positive.")

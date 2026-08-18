@@ -64,23 +64,15 @@ class AddImplementationRiskHandler:
         )
 
         if recommendation is None:
-            raise ValueError(
-                "Recommendation not found."
-            )
+            raise ValueError("Recommendation not found.")
 
         solution = next(
-            (
-                item
-                for item in recommendation.solutions
-                if item.solution_id == command.solution_id
-            ),
+            (item for item in recommendation.solutions if item.solution_id == command.solution_id),
             None,
         )
 
         if solution is None:
-            raise ValueError(
-                "Solution not found."
-            )
+            raise ValueError("Solution not found.")
 
         risk = ImplementationRisk(
             title=command.title,

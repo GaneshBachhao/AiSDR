@@ -7,8 +7,8 @@ Base pipeline behavior contract.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Awaitable, Callable, Generic, TypeVar
-
+from collections.abc import Awaitable, Callable
+from typing import Generic, TypeVar
 
 TRequest = TypeVar("TRequest")
 

@@ -5,4 +5,5 @@ class VersionId(Identifier):
     """
     Strongly typed identifier for Report Version.
     """
+
     pass

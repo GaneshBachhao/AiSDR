@@ -22,15 +22,11 @@ def test_map_signals_deduplicates_services():
 
 
 def test_service_matches_requested_direct_substring():
-    assert OpportunityMapper.service_matches_requested(
-        "Azure Modernization", ["azure modernization"]
-    )
+    assert OpportunityMapper.service_matches_requested("Azure Modernization", ["azure modernization"])
 
 
 def test_service_matches_requested_via_alias():
-    assert OpportunityMapper.service_matches_requested(
-        "Business Process Automation", ["workflow automation"]
-    )
+    assert OpportunityMapper.service_matches_requested("Business Process Automation", ["workflow automation"])
 
 
 def test_service_matches_requested_false_for_unrelated():
@@ -48,14 +44,17 @@ def test_map_signals_with_injected_catalog_matches_the_default_fallback():
     default_opportunities, default_services = OpportunityMapper.map_signals({"ai": True})
     catalog = [
         SolutionCatalogEntry(
-            id="ai-consulting", sector="general", pain_point="AI / Generative AI",
-            solution_type="AI Agent", title="AI Consulting", description="x",
-            is_existing_offering=True, signals=("ai",),
+            id="ai-consulting",
+            sector="general",
+            pain_point="AI / Generative AI",
+            solution_type="AI Agent",
+            title="AI Consulting",
+            description="x",
+            is_existing_offering=True,
+            signals=("ai",),
         )
     ]
-    catalog_opportunities, catalog_services = OpportunityMapper.map_signals(
-        {"ai": True}, catalog
-    )
+    catalog_opportunities, catalog_services = OpportunityMapper.map_signals({"ai": True}, catalog)
     assert catalog_opportunities == default_opportunities
     assert catalog_services == default_services
 
@@ -63,9 +62,14 @@ def test_map_signals_with_injected_catalog_matches_the_default_fallback():
 def test_map_signals_ignores_non_existing_offering_catalog_entries():
     catalog = [
         SolutionCatalogEntry(
-            id="generic-idea", sector="retail", pain_point="Something",
-            solution_type="Chatbot", title="Generic Retail Bot", description="x",
-            is_existing_offering=False, signals=("ai",),
+            id="generic-idea",
+            sector="retail",
+            pain_point="Something",
+            solution_type="Chatbot",
+            title="Generic Retail Bot",
+            description="x",
+            is_existing_offering=False,
+            signals=("ai",),
         )
     ]
     opportunities, services = OpportunityMapper.map_signals({"ai": True}, catalog)
@@ -77,9 +81,14 @@ def test_map_signals_ignores_non_existing_offering_catalog_entries():
 def test_map_signals_ignores_catalog_entries_with_no_signals():
     catalog = [
         SolutionCatalogEntry(
-            id="no-signals", sector="general", pain_point="Something",
-            solution_type="Custom", title="Untriggerable", description="x",
-            is_existing_offering=True, signals=(),
+            id="no-signals",
+            sector="general",
+            pain_point="Something",
+            solution_type="Custom",
+            title="Untriggerable",
+            description="x",
+            is_existing_offering=True,
+            signals=(),
         )
     ]
     opportunities, _ = OpportunityMapper.map_signals({"ai": True}, catalog)

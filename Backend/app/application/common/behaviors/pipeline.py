@@ -6,12 +6,12 @@ Application execution pipeline.
 
 from __future__ import annotations
 
-from typing import Awaitable, Callable, Generic, TypeVar
+from collections.abc import Awaitable, Callable
+from typing import Generic, TypeVar
 
 from app.application.common.behaviors.behavior import (
     Behavior,
 )
-
 
 TRequest = TypeVar("TRequest")
 
@@ -33,9 +33,7 @@ class Pipeline(
 
     def __init__(
         self,
-        behaviors: list[
-            Behavior[TRequest, TResponse]
-        ],
+        behaviors: list[Behavior[TRequest, TResponse]],
     ) -> None:
 
         self._behaviors = behaviors

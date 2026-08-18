@@ -8,9 +8,8 @@ Create Date: 2026-07-28 00:00:00.000000
 
 from __future__ import annotations
 
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "c1f2d9a8b7e4"
 down_revision = "7e5b22b5d8a1"
@@ -72,10 +71,7 @@ def downgrade() -> None:
     inspector = sa.inspect(bind)
 
     if "contacts" in inspector.get_table_names():
-        indexes = {
-            index["name"]
-            for index in inspector.get_indexes("contacts")
-        }
+        indexes = {index["name"] for index in inspector.get_indexes("contacts")}
 
         if op.f("ix_contacts_company_id") in indexes:
             op.drop_index(op.f("ix_contacts_company_id"), table_name="contacts")

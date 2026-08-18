@@ -30,9 +30,7 @@ class OllamaProvider(BaseAIProvider):
         self,
         request: AIRequest,
     ) -> AIResponse:
-        raise NotImplementedError(
-            "Ollama provider not implemented."
-        )
+        raise NotImplementedError("Ollama provider not implemented.")
 
     async def health_check(
         self,

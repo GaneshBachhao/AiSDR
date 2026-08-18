@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from app.domain.company.value_objects.company_size import (
     CompanySize,
 )
-
 from app.domain.company.value_objects.industry import (
     Industry,
 )

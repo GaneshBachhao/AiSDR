@@ -14,7 +14,9 @@ from app.application.company_research.handlers.promote_candidate_to_company_hand
 )
 
 
-def _result(name: str = "Acme Manufacturing", website: str | None = "https://acme.example") -> CompanySearchResult:
+def _result(
+    name: str = "Acme Manufacturing", website: str | None = "https://acme.example"
+) -> CompanySearchResult:
     return CompanySearchResult(
         company_name=name,
         website=website,

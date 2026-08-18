@@ -7,16 +7,13 @@ from __future__ import annotations
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import UUID
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+from sqlalchemy import UUID, engine_from_config, pool
 
 from app.infrastructure.persistence.database.base import Base
 
 # ---------------------------------------------------------------------
 # Import all ORM models so they are registered with Base.metadata
 # ---------------------------------------------------------------------
-
 from app.infrastructure.persistence.models.ai_request_model import (
     AIRequestModel,
 )
@@ -105,7 +102,6 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-
         context.configure(
             connection=connection,
             target_metadata=target_metadata,

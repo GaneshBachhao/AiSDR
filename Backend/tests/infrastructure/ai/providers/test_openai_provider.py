@@ -48,7 +48,12 @@ async def test_execute_builds_ai_response_from_raw_dict():
 @pytest.mark.asyncio
 async def test_execute_sends_prompt_text_not_message_objects():
     client = AsyncMock()
-    client.send_request.return_value = {"content": "ok", "finish_reason": "stop", "prompt_tokens": 1, "completion_tokens": 1}
+    client.send_request.return_value = {
+        "content": "ok",
+        "finish_reason": "stop",
+        "prompt_tokens": 1,
+        "completion_tokens": 1,
+    }
     provider = OpenAIProvider(client, ProviderSettings(provider_name="openai", api_key="secret"))
 
     request = _request()
@@ -62,7 +67,12 @@ async def test_execute_sends_prompt_text_not_message_objects():
 @pytest.mark.asyncio
 async def test_execute_maps_tool_calls_finish_reason_to_tool_call():
     client = AsyncMock()
-    client.send_request.return_value = {"content": "...", "finish_reason": "tool_calls", "prompt_tokens": 1, "completion_tokens": 1}
+    client.send_request.return_value = {
+        "content": "...",
+        "finish_reason": "tool_calls",
+        "prompt_tokens": 1,
+        "completion_tokens": 1,
+    }
     provider = OpenAIProvider(client, ProviderSettings(provider_name="openai", api_key="secret"))
 
     response = await provider.execute(_request())

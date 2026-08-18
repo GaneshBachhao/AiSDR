@@ -16,7 +16,6 @@ from app.application.common.interfaces.unit_of_work import (
     UnitOfWork,
 )
 
-
 TRequest = TypeVar("TRequest")
 
 TResponse = TypeVar("TResponse")
@@ -44,7 +43,6 @@ class TransactionBehavior(
     ) -> TResponse:
 
         async with self._unit_of_work:
-
             response = await next_handler(
                 request,
             )

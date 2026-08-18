@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, forkJoin, map, switchMap } from 'rxjs';
+import { Observable, catchError, forkJoin, map, shareReplay, switchMap, throwError } from 'rxjs';
 import { DiscoveryService } from '../discoveries/discovery.service';
 import { AssessmentService } from './assessment.service';
 import { AssessmentResponseDTO } from './assessment.models';
@@ -25,26 +25,51 @@ export class AssessmentDisplayService {
     return problemStatement ?? 'Discovery (no problem statement captured)';
   }
 
+  /** `loadAll()`'s result, cached until `invalidate()` is called -- same
+   * rationale and caching shape as LeadDisplayService.loadAll() (see its
+   * own comment for why `shareReplay` + `catchError`, not plain `share`).
+   * Callers that mutate an Assessment or Discovery are responsible for
+   * calling `invalidate()` afterward (see AssessmentForm.save(),
+   * AssessmentDetail.delete()/start()). `resolve()` stays uncached for
+   * the same reason LeadDisplayService.resolve() does. */
+  private cache: Observable<Map<string, AssessmentDisplay>> | null = null;
+
   /** Map keyed by assessment id, for screens that list many assessments at once. */
   loadAll(): Observable<Map<string, AssessmentDisplay>> {
-    return forkJoin({
-      assessments: this.assessmentService.list(),
-      discoveries: this.discoveryService.list(),
-    }).pipe(
-      map(({ assessments, discoveries }) => {
-        const discoveryById = new Map(discoveries.map((d) => [d.id, d]));
-        const result = new Map<string, AssessmentDisplay>();
-        for (const assessment of assessments) {
-          result.set(assessment.assessment_id, {
-            assessment,
-            discoveryLabel: AssessmentDisplayService.labelFor(
-              discoveryById.get(assessment.discovery_id)?.problem_statement,
-            ),
-          });
-        }
-        return result;
-      }),
-    );
+    if (!this.cache) {
+      this.cache = forkJoin({
+        assessments: this.assessmentService.list(),
+        discoveries: this.discoveryService.list(),
+      }).pipe(
+        map(({ assessments, discoveries }) => {
+          const discoveryById = new Map(discoveries.map((d) => [d.id, d]));
+          const result = new Map<string, AssessmentDisplay>();
+          for (const assessment of assessments) {
+            result.set(assessment.assessment_id, {
+              assessment,
+              discoveryLabel: AssessmentDisplayService.labelFor(
+                discoveryById.get(assessment.discovery_id)?.problem_statement,
+              ),
+            });
+          }
+          return result;
+        }),
+        catchError((err) => {
+          this.cache = null;
+          return throwError(() => err);
+        }),
+        shareReplay({ bufferSize: 1, refCount: false }),
+      );
+    }
+    return this.cache;
+  }
+
+  /** Clear the cached loadAll() result so the next call re-fetches.
+   * Call after any create/update/delete/start of an Assessment, or a
+   * create/update/delete of a Discovery, that a cached AssessmentDisplay
+   * could show stale data for. */
+  invalidate(): void {
+    this.cache = null;
   }
 
   /** Single-assessment resolution for detail/form screens that already

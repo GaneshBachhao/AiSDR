@@ -29,16 +29,10 @@ class Evidence:
         """
 
         if not self.title.strip():
-            raise ValueError(
-                "Evidence title cannot be empty."
-            )
+            raise ValueError("Evidence title cannot be empty.")
 
         if not self.description.strip():
-            raise ValueError(
-                "Evidence description cannot be empty."
-            )
+            raise ValueError("Evidence description cannot be empty.")
 
         if not self.source.strip():
-            raise ValueError(
-                "Evidence source cannot be empty."
-            )
+            raise ValueError("Evidence source cannot be empty.")

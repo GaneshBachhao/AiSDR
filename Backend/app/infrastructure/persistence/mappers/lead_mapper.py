@@ -23,11 +23,7 @@ class LeadMapper:
             contact_id=ContactId(model.contact_id),
             source=LeadSource(model.source),
             status=LeadStatus(model.status),
-            score=(
-                model.score
-                if isinstance(model.score, LeadScore)
-                else LeadScore(model.score)
-            ),
+            score=(model.score if isinstance(model.score, LeadScore) else LeadScore(model.score)),
             notes=model.notes,
             is_qualified=model.is_qualified,
         )
@@ -45,11 +41,9 @@ class LeadMapper:
             contact_id=entity.contact_id.value,
             source=entity.source.value,
             status=entity.status.value,
-
             # Preserve the domain Value Object.
             # LeadScoreType handles LeadScore -> INTEGER.
             score=entity.score,
-
             notes=entity.notes,
             is_qualified=entity.is_qualified,
         )

@@ -9,10 +9,21 @@ export type UpdateDiscoveryRequestDTO = components['schemas']['UpdateDiscoveryRe
  * so this list is transcribed directly from
  * Backend/app/domain/discovery/enums/discovery_status.py rather than
  * generated -- keep it in sync by hand if that enum changes. */
-export const DISCOVERY_STATUSES = ['CREATED', 'IN_PROGRESS', 'ON_HOLD', 'COMPLETED', 'CANCELLED'] as const;
+export const DISCOVERY_STATUSES = [
+  'CREATED',
+  'IN_PROGRESS',
+  'ON_HOLD',
+  'COMPLETED',
+  'CANCELLED',
+] as const;
 export type DiscoveryStatus = (typeof DISCOVERY_STATUSES)[number];
 
-const NEEDS_FIELDS = ['problem_statement', 'current_solution', 'business_impact', 'success_criteria'] as const;
+const NEEDS_FIELDS = [
+  'problem_statement',
+  'current_solution',
+  'business_impact',
+  'success_criteria',
+] as const;
 
 export function emptyDiscoveryForm(leadId = ''): CreateDiscoveryRequestDTO {
   return {
@@ -29,7 +40,10 @@ export function emptyDiscoveryForm(leadId = ''): CreateDiscoveryRequestDTO {
  * optional, and live data shows most records only have 1 of 4 filled, so
  * the UI should say so honestly rather than imply a record is "complete"
  * just because it exists. */
-export function discoveryCompleteness(discovery: DiscoveryResponseDTO): { filled: number; total: number } {
+export function discoveryCompleteness(discovery: DiscoveryResponseDTO): {
+  filled: number;
+  total: number;
+} {
   const filled = NEEDS_FIELDS.filter((field) => !!discovery[field]?.trim()).length;
   return { filled, total: NEEDS_FIELDS.length };
 }

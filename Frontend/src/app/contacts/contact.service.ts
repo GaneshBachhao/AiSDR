@@ -2,7 +2,11 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { ContactResponseDTO, CreateContactRequestDTO, UpdateContactRequestDTO } from './contact.models';
+import {
+  ContactResponseDTO,
+  CreateContactRequestDTO,
+  UpdateContactRequestDTO,
+} from './contact.models';
 
 /** Note: unlike /companies/search (`query`), /contacts/search uses
  * `search_text` -- verified against the generated schema, not assumed

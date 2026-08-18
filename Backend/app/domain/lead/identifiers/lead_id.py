@@ -5,4 +5,5 @@ class LeadId(Identifier):
     """
     Strongly typed identifier for Lead.
     """
+
     pass

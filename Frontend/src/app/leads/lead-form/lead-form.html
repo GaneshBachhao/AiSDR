@@ -13,7 +13,7 @@
     <form class="form" (ngSubmit)="save()">
       @if (isEditMode()) {
         <div class="field">
-          <label>Company</label>
+          <span class="field-label">Company</span>
           <p class="static-value">{{ companyName() ?? '—' }}</p>
         </div>
       } @else {
@@ -74,7 +74,12 @@
         @if (isEditMode()) {
           <div class="field">
             <label for="status">Status</label>
-            <select id="status" name="status" [ngModel]="status()" (ngModelChange)="status.set($event)">
+            <select
+              id="status"
+              name="status"
+              [ngModel]="status()"
+              (ngModelChange)="status.set($event)"
+            >
               @for (s of statuses; track s) {
                 <option [value]="s">{{ s }}</option>
               }

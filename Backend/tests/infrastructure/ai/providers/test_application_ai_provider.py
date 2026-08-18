@@ -106,9 +106,7 @@ async def test_health_check_all_reports_every_configured_provider():
     openai = AsyncMock()
     openai.health_check.return_value = False
 
-    provider = ApplicationAIProvider(
-        providers={"gemini": gemini, "openai": openai}
-    )
+    provider = ApplicationAIProvider(providers={"gemini": gemini, "openai": openai})
 
     assert await provider.health_check_all() == {
         "gemini": True,

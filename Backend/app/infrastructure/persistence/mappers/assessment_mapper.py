@@ -4,6 +4,7 @@ Assessment persistence mapper.
 Maps the Assessment aggregate to the existing assessments table without
 changing Company, Contact, Lead or Discovery persistence contracts.
 """
+
 from __future__ import annotations
 
 from app.domain.assessment.entities.assessment import Assessment
@@ -43,15 +44,9 @@ class AssessmentMapper:
             status = AssessmentStatus[str(model.status).strip().upper().replace(" ", "_")]
 
         try:
-            maturity = (
-                MaturityLevel(model.maturity_level)
-                if model.maturity_level
-                else MaturityLevel.INITIAL
-            )
+            maturity = MaturityLevel(model.maturity_level) if model.maturity_level else MaturityLevel.INITIAL
         except ValueError:
-            maturity = MaturityLevel[
-                str(model.maturity_level).strip().upper().replace(" ", "_")
-            ]
+            maturity = MaturityLevel[str(model.maturity_level).strip().upper().replace(" ", "_")]
 
         return Assessment(
             id=AssessmentId(model.id),
@@ -62,11 +57,7 @@ class AssessmentMapper:
             summary=model.summary,
             maturity_level=maturity,
             score=AssessmentScore(
-                overall_score=(
-                    0.0
-                    if model.readiness_score is None
-                    else model.readiness_score
-                ),
+                overall_score=(0.0 if model.readiness_score is None else model.readiness_score),
             ),
             strengths=model.strengths,
             weaknesses=model.weaknesses,

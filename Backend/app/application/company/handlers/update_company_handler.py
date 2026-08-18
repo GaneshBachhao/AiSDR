@@ -1,6 +1,7 @@
 """
 Update Company application handler.
 """
+
 from __future__ import annotations
 
 from sqlalchemy.exc import IntegrityError
@@ -37,10 +38,7 @@ class UpdateCompanyHandler:
         if not validation.is_valid:
             raise ValidationException(
                 message="Company validation failed.",
-                details={
-                    error.field: error.message
-                    for error in validation.errors
-                },
+                details={error.field: error.message for error in validation.errors},
             )
 
         try:
@@ -66,10 +64,7 @@ class UpdateCompanyHandler:
                     existing_company = await repository.find_by_name(
                         command.name,
                     )
-                    if (
-                        existing_company is not None
-                        and existing_company.id != company.id
-                    ):
+                    if existing_company is not None and existing_company.id != company.id:
                         raise ConflictException(
                             message="Company already exists.",
                             details={"name": command.name.strip()},
@@ -80,25 +75,15 @@ class UpdateCompanyHandler:
                     company.update_website(command.website)
 
                 if command.industry is not None:
-                    company.update_industry(
-                        self._mapper._to_industry(command.industry)
-                    )
+                    company.update_industry(self._mapper._to_industry(command.industry))
 
                 if command.company_size is not None:
-                    company.update_company_size(
-                        self._mapper._to_company_size(command.company_size)
-                    )
+                    company.update_company_size(self._mapper._to_company_size(command.company_size))
 
                 if command.employee_count is not None:
-                    company.update_employee_count(
-                        command.employee_count
-                    )
+                    company.update_employee_count(command.employee_count)
 
-                if (
-                    command.country is not None
-                    or command.state is not None
-                    or command.city is not None
-                ):
+                if command.country is not None or command.state is not None or command.city is not None:
                     company.update_location(
                         country=command.country,
                         state=command.state,

@@ -14,10 +14,10 @@ from app.domain.recommendation.value_objects.cost_estimate import (
     CostEstimate,
 )
 from app.domain.recommendation.value_objects.dependency import Dependency
+from app.domain.recommendation.value_objects.expected_roi import ROI
 from app.domain.recommendation.value_objects.implementation_risk import (
     ImplementationRisk,
 )
-from app.domain.recommendation.value_objects.expected_roi import ROI
 from app.domain.recommendation.value_objects.technology_stack import (
     TechnologyStack,
 )
@@ -36,25 +36,15 @@ class Solution:
 
     solution_type: SolutionType | str
 
-    priority: ImplementationPriority | str = (
-        ImplementationPriority.MEDIUM
-    )
+    priority: ImplementationPriority | str = ImplementationPriority.MEDIUM
 
-    technology_stack: list[TechnologyStack] = field(
-        default_factory=list
-    )
+    technology_stack: list[TechnologyStack] = field(default_factory=list)
 
-    business_benefits: list[BusinessBenefit] = field(
-        default_factory=list
-    )
+    business_benefits: list[BusinessBenefit] = field(default_factory=list)
 
-    implementation_risks: list[ImplementationRisk] = field(
-        default_factory=list
-    )
+    implementation_risks: list[ImplementationRisk] = field(default_factory=list)
 
-    dependencies: list[Dependency] = field(
-        default_factory=list
-    )
+    dependencies: list[Dependency] = field(default_factory=list)
 
     roi: ROI | None = None
 
@@ -68,18 +58,13 @@ class Solution:
     catalog entry fits. See docs/pamacore_aisdr_summary.md §7's labeling
     rule -- must always be surfaced distinctly, never blurred."""
 
-
     def __post_init__(self) -> None:
 
         if isinstance(self.solution_type, str):
-            self.solution_type = SolutionType(
-                self.solution_type
-            )
+            self.solution_type = SolutionType(self.solution_type)
 
         if isinstance(self.priority, str):
-            self.priority = ImplementationPriority(
-                self.priority
-            )
+            self.priority = ImplementationPriority(self.priority)
 
     def add_technology(
         self,

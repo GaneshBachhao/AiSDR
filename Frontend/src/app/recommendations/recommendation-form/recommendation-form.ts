@@ -1,7 +1,10 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { AssessmentDisplay, AssessmentDisplayService } from '../../assessments/assessment-display.service';
+import {
+  AssessmentDisplay,
+  AssessmentDisplayService,
+} from '../../assessments/assessment-display.service';
 import { RecommendationService } from '../recommendation.service';
 
 /** Not a plain "create" form -- there's no free-text fields to fill in,

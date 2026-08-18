@@ -4,8 +4,7 @@ Tests for Company SQLAlchemy mapper.
 
 from __future__ import annotations
 
-from datetime import UTC
-from datetime import datetime
+from datetime import UTC, datetime
 from uuid import uuid4
 
 from app.domain.company.entities.company import Company

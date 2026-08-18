@@ -46,14 +46,10 @@ class LeadValidator:
         if command.contact_id is not None:
             LeadValidator._validate_uuid(command.contact_id, "contact_id")
 
-        if command.source is not None and command.source not in {
-            item.value for item in LeadSource
-        }:
+        if command.source is not None and command.source not in {item.value for item in LeadSource}:
             raise ValueError("Invalid lead source.")
 
-        if command.status is not None and command.status not in {
-            item.value for item in LeadStatus
-        }:
+        if command.status is not None and command.status not in {item.value for item in LeadStatus}:
             raise ValueError("Invalid lead status.")
 
         if command.score is not None and not 0 <= command.score <= 100:

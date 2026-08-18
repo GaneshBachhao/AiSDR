@@ -6,11 +6,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean
-from sqlalchemy import String
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
-from sqlalchemy.orm import relationship
+from sqlalchemy import Boolean, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.infrastructure.persistence.models.base_model import (
     BaseModel,
@@ -84,7 +81,7 @@ class CompanyModel(BaseModel):
     # Relationships
     # -------------------------------------------------------------------------
 
-    leads: Mapped[list["LeadModel"]] = relationship(
+    leads: Mapped[list[LeadModel]] = relationship(
         "LeadModel",
         back_populates="company",
         cascade="all, delete-orphan",

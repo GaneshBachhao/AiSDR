@@ -57,7 +57,12 @@ async def test_execute_builds_ai_response_from_raw_dict():
 @pytest.mark.asyncio
 async def test_execute_sends_deployment_name_and_prompt_text():
     client = AsyncMock()
-    client.send_request.return_value = {"content": "ok", "finish_reason": "stop", "prompt_tokens": 1, "completion_tokens": 1}
+    client.send_request.return_value = {
+        "content": "ok",
+        "finish_reason": "stop",
+        "prompt_tokens": 1,
+        "completion_tokens": 1,
+    }
     provider = AzureOpenAIProvider(client, _settings())
 
     request = _request()

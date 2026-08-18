@@ -1,5 +1,4 @@
 from datetime import UTC, datetime
-from typing import List, Optional
 from uuid import uuid4
 
 from app.domain.shared.base import AggregateRoot
@@ -23,7 +22,7 @@ class Report(AggregateRoot[ReportId]):
     def __init__(
         self,
         name: ReportName,
-        report_id: Optional[ReportId] = None,
+        report_id: ReportId | None = None,
     ):
         report_id = report_id or ReportId(uuid4())
 
@@ -33,14 +32,12 @@ class Report(AggregateRoot[ReportId]):
 
         self._status = ReportStatus.DRAFT
 
-        self._sections: List[ReportSection] = []
-        self._versions: List[ReportVersion] = []
+        self._sections: list[ReportSection] = []
+        self._versions: list[ReportVersion] = []
 
-        self._published_at: Optional[datetime] = None
+        self._published_at: datetime | None = None
 
-        self.add_domain_event(
-            ReportCreated(self.id)
-        )
+        self.add_domain_event(ReportCreated(self.id))
 
     # --------------------------------------------------
     # Properties
@@ -55,15 +52,15 @@ class Report(AggregateRoot[ReportId]):
         return self._status
 
     @property
-    def sections(self) -> List[ReportSection]:
+    def sections(self) -> list[ReportSection]:
         return list(self._sections)
 
     @property
-    def versions(self) -> List[ReportVersion]:
+    def versions(self) -> list[ReportVersion]:
         return list(self._versions)
 
     @property
-    def published_at(self) -> Optional[datetime]:
+    def published_at(self) -> datetime | None:
         return self._published_at
 
     # --------------------------------------------------
@@ -76,9 +73,7 @@ class Report(AggregateRoot[ReportId]):
     ) -> None:
 
         if self._status != ReportStatus.DRAFT:
-            raise InvalidReportState(
-                "Sections can only be added while the report is in DRAFT."
-            )
+            raise InvalidReportState("Sections can only be added while the report is in DRAFT.")
 
         self._sections.append(section)
         self.touch()
@@ -102,14 +97,10 @@ class Report(AggregateRoot[ReportId]):
     def submit_for_review(self) -> None:
 
         if not self._sections:
-            raise ReportException(
-                "A report must contain at least one section."
-            )
+            raise ReportException("A report must contain at least one section.")
 
         if self._status != ReportStatus.DRAFT:
-            raise InvalidReportState(
-                "Only draft reports can be submitted for review."
-            )
+            raise InvalidReportState("Only draft reports can be submitted for review.")
 
         self._status = ReportStatus.IN_REVIEW
         self.touch()
@@ -117,9 +108,7 @@ class Report(AggregateRoot[ReportId]):
     def approve(self) -> None:
 
         if self._status != ReportStatus.IN_REVIEW:
-            raise InvalidReportState(
-                "Only reports under review can be approved."
-            )
+            raise InvalidReportState("Only reports under review can be approved.")
 
         self._status = ReportStatus.APPROVED
         self.touch()
@@ -127,25 +116,19 @@ class Report(AggregateRoot[ReportId]):
     def publish(self) -> None:
 
         if self._status != ReportStatus.APPROVED:
-            raise InvalidReportState(
-                "Only approved reports can be published."
-            )
+            raise InvalidReportState("Only approved reports can be published.")
 
         self._status = ReportStatus.PUBLISHED
         self._published_at = datetime.now(UTC)
 
         self.touch()
 
-        self.add_domain_event(
-            ReportPublished(self.id)
-        )
+        self.add_domain_event(ReportPublished(self.id))
 
     def archive(self) -> None:
 
         if self._status != ReportStatus.PUBLISHED:
-            raise InvalidReportState(
-                "Only published reports can be archived."
-            )
+            raise InvalidReportState("Only published reports can be archived.")
 
         self._status = ReportStatus.ARCHIVED
         self.touch()

@@ -10,7 +10,6 @@ from app.domain.shared.identifiers.identifier import Identifier
 
 from .converter_registry import converter_registry
 
-
 #
 # Generic Identifier converter
 #

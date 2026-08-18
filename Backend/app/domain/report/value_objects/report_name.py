@@ -9,21 +9,15 @@ class ReportName:
     def __init__(self, value: str):
 
         if not value:
-            raise ValueError(
-                "Report name cannot be empty."
-            )
+            raise ValueError("Report name cannot be empty.")
 
         value = value.strip()
 
         if len(value) < self.MIN_LENGTH:
-            raise ValueError(
-                "Report name is too short."
-            )
+            raise ValueError("Report name is too short.")
 
         if len(value) > self.MAX_LENGTH:
-            raise ValueError(
-                "Report name exceeds maximum length."
-            )
+            raise ValueError("Report name exceeds maximum length.")
 
         self._value = value
 
@@ -32,10 +26,7 @@ class ReportName:
         return self._value
 
     def __eq__(self, other):
-        return (
-            isinstance(other, ReportName)
-            and self._value == other.value
-        )
+        return isinstance(other, ReportName) and self._value == other.value
 
     def __hash__(self):
         return hash(self._value)

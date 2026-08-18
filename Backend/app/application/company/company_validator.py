@@ -36,10 +36,7 @@ class CompanyValidator(
             elif len(request.name.strip()) < 2:
                 result.add_error(
                     field="name",
-                    message=(
-                        "Company name must contain at least "
-                        "2 characters."
-                    ),
+                    message=("Company name must contain at least 2 characters."),
                 )
 
         elif request.name is not None:
@@ -51,16 +48,10 @@ class CompanyValidator(
             elif len(request.name.strip()) < 2:
                 result.add_error(
                     field="name",
-                    message=(
-                        "Company name must contain at least "
-                        "2 characters."
-                    ),
+                    message=("Company name must contain at least 2 characters."),
                 )
 
-        if (
-            request.employee_count is not None
-            and request.employee_count < 0
-        ):
+        if request.employee_count is not None and request.employee_count < 0:
             result.add_error(
                 field="employee_count",
                 message="Employee count cannot be negative.",

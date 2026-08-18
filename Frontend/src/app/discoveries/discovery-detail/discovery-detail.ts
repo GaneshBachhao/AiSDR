@@ -1,7 +1,10 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AssessmentService } from '../../assessments/assessment.service';
-import { AssessmentResponseDTO, assessmentStatusBadgeClass } from '../../assessments/assessment.models';
+import {
+  AssessmentResponseDTO,
+  assessmentStatusBadgeClass,
+} from '../../assessments/assessment.models';
 import { LeadDisplayService } from '../../leads/lead-display.service';
 import { RecommendationService } from '../../recommendations/recommendation.service';
 import {
@@ -9,7 +12,11 @@ import {
   recommendationStatusBadgeClass,
 } from '../../recommendations/recommendation.models';
 import { DiscoveryService } from '../discovery.service';
-import { DiscoveryResponseDTO, discoveryCompleteness, discoveryStatusBadgeClass } from '../discovery.models';
+import {
+  DiscoveryResponseDTO,
+  discoveryCompleteness,
+  discoveryStatusBadgeClass,
+} from '../discovery.models';
 
 @Component({
   selector: 'app-discovery-detail',
@@ -57,7 +64,8 @@ export class DiscoveryDetail implements OnInit {
         this.leadId.set(discovery.lead_id);
         this.loading.set(false);
         this.leadDisplayService.resolve(discovery.lead_id).subscribe({
-          next: ({ companyName, contactName }) => this.leadLabel.set(`${companyName} — ${contactName}`),
+          next: ({ companyName, contactName }) =>
+            this.leadLabel.set(`${companyName} — ${contactName}`),
         });
         this.loadAssessment(discovery.id);
       },
@@ -87,7 +95,9 @@ export class DiscoveryDetail implements OnInit {
   private loadRecommendation(assessmentId: string): void {
     this.recommendationService.list().subscribe({
       next: (recommendations) => {
-        this.recommendation.set(recommendations.find((r) => r.assessment_id === assessmentId) ?? null);
+        this.recommendation.set(
+          recommendations.find((r) => r.assessment_id === assessmentId) ?? null,
+        );
       },
     });
   }

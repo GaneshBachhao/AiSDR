@@ -7,7 +7,6 @@ from .not_found_exception import NotFoundException
 from .unauthorized_exception import UnauthorizedException
 from .validation_exception import ValidationException
 
-
 __all__ = [
     "ApplicationException",
     "ConflictException",

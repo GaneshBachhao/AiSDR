@@ -37,11 +37,7 @@ class DeleteAssessmentHandler:
         Delete an assessment.
         """
 
-        assessment_id = (
-            command.assessment_id
-            if isinstance(command, DeleteAssessmentCommand)
-            else command
-        )
+        assessment_id = command.assessment_id if isinstance(command, DeleteAssessmentCommand) else command
 
         async with self._unit_of_work:
             assessment = await self._unit_of_work.assessment_repository.get_by_id(

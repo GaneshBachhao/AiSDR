@@ -15,21 +15,13 @@ class AIValidationService:
         """
 
         if not request.prompt.value:
-            raise ValueError(
-                "Prompt cannot be empty."
-            )
+            raise ValueError("Prompt cannot be empty.")
 
         if not request.provider.value:
-            raise ValueError(
-                "Provider is required."
-            )
+            raise ValueError("Provider is required.")
 
         if not request.model.value:
-            raise ValueError(
-                "Model is required."
-            )
+            raise ValueError("Model is required.")
 
         if not request.can_execute:
-            raise ValueError(
-                "AI request cannot be executed."
-            )
+            raise ValueError("AI request cannot be executed.")

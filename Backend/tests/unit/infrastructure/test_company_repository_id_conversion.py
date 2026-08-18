@@ -1,13 +1,13 @@
-from uuid import uuid4
 from unittest.mock import AsyncMock, Mock
+from uuid import uuid4
 
 import pytest
 
 from app.domain.company.identifiers.company_id import CompanyId
+from app.infrastructure.persistence.models.company_model import CompanyModel
 from app.infrastructure.persistence.repositories.base.sqlalchemy_repository import (
     SqlAlchemyRepository,
 )
-from app.infrastructure.persistence.models.company_model import CompanyModel
 
 
 class DummyRepository(SqlAlchemyRepository):

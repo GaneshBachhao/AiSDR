@@ -13,10 +13,22 @@ export type UpdateAssessmentRequestDTO = components['schemas']['UpdateAssessment
  * OpenAPI enums -- transcribed from
  * Backend/app/domain/assessment/enums/{assessment_status,maturity_level}.py
  * by hand; keep in sync manually if those change. */
-export const ASSESSMENT_STATUSES = ['Created', 'In Progress', 'Under Review', 'Completed', 'Cancelled'] as const;
+export const ASSESSMENT_STATUSES = [
+  'Created',
+  'In Progress',
+  'Under Review',
+  'Completed',
+  'Cancelled',
+] as const;
 export type AssessmentStatus = (typeof ASSESSMENT_STATUSES)[number];
 
-export const MATURITY_LEVELS = ['Initial', 'Developing', 'Defined', 'Managed', 'Optimized'] as const;
+export const MATURITY_LEVELS = [
+  'Initial',
+  'Developing',
+  'Defined',
+  'Managed',
+  'Optimized',
+] as const;
 export type MaturityLevel = (typeof MATURITY_LEVELS)[number];
 
 export function assessmentStatusBadgeClass(status: string): string {

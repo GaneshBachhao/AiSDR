@@ -22,10 +22,7 @@ _PROFILES_DIR = Path(__file__).parent
 def _profile_from_dict(data: dict) -> DomainProfile:
     return DomainProfile(
         name=data["name"],
-        industry_keywords={
-            key: tuple(values)
-            for key, values in data.get("industry_keywords", {}).items()
-        },
+        industry_keywords={key: tuple(values) for key, values in data.get("industry_keywords", {}).items()},
         negative_service_markers=tuple(data.get("negative_service_markers", ())),
         enterprise_exclusion_threshold=data.get("enterprise_exclusion_threshold", 500),
         enterprise_exclusion_markers=tuple(data.get("enterprise_exclusion_markers", ())),

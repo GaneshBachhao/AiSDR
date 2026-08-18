@@ -3,6 +3,7 @@ User commands.
 
 Application command contracts for the User aggregate.
 """
+
 from __future__ import annotations
 
 from app.application.common.commands.command import Command

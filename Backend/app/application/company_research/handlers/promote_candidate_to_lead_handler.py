@@ -26,12 +26,12 @@ from dataclasses import dataclass
 
 from app.application.common.exceptions.conflict_exception import ConflictException
 from app.application.common.interfaces.unit_of_work import UnitOfWork
-from app.application.contact.contact_commands import CreateContactCommand
-from app.application.contact.handlers.create_contact_handler import CreateContactHandler
 from app.application.company_research.dto.company_research_response import (
     CompanySearchResult,
     DiscoveredContact,
 )
+from app.application.contact.contact_commands import CreateContactCommand
+from app.application.contact.handlers.create_contact_handler import CreateContactHandler
 from app.application.lead.handlers.create_lead_handler import CreateLeadHandler
 from app.application.lead.lead_commands import CreateLeadCommand
 from app.domain.company.identifiers.company_id import CompanyId
@@ -61,16 +61,10 @@ class PromoteCandidateToLeadHandler:
         self._create_contact_handler = create_contact_handler
         self._create_lead_handler = create_lead_handler
 
-    async def handle(
-        self, result: CompanySearchResult, company_id: str
-    ) -> LeadPromotionOutcome:
-        contact = next(
-            (item for item in result.discovered_contacts if item.email), None
-        )
+    async def handle(self, result: CompanySearchResult, company_id: str) -> LeadPromotionOutcome:
+        contact = next((item for item in result.discovered_contacts if item.email), None)
         if contact is None:
-            return LeadPromotionOutcome(
-                skipped_reason="no_verified_email_found"
-            )
+            return LeadPromotionOutcome(skipped_reason="no_verified_email_found")
 
         contact_id = await self._resolve_contact(contact, company_id)
 
@@ -80,9 +74,7 @@ class PromoteCandidateToLeadHandler:
             limit=1,
         )
         if existing_leads:
-            return LeadPromotionOutcome(
-                contact_id=contact_id, lead_id=str(existing_leads[0].id.value)
-            )
+            return LeadPromotionOutcome(contact_id=contact_id, lead_id=str(existing_leads[0].id.value))
 
         lead_response = await self._create_lead_handler.handle(
             CreateLeadCommand(
@@ -95,12 +87,8 @@ class PromoteCandidateToLeadHandler:
         )
         return LeadPromotionOutcome(contact_id=contact_id, lead_id=lead_response.id)
 
-    async def _resolve_contact(
-        self, contact: DiscoveredContact, company_id: str
-    ) -> str:
-        existing = await self._unit_of_work.contact_repository.find_by_email(
-            contact.email
-        )
+    async def _resolve_contact(self, contact: DiscoveredContact, company_id: str) -> str:
+        existing = await self._unit_of_work.contact_repository.find_by_email(contact.email)
         if existing is not None:
             return str(existing.id.value)
 
@@ -113,16 +101,12 @@ class PromoteCandidateToLeadHandler:
                     last_name=last_name,
                     email=contact.email,
                     job_title=contact.role_title,
-                    linkedin_url=(
-                        str(contact.linkedin_url) if contact.linkedin_url else None
-                    ),
+                    linkedin_url=(str(contact.linkedin_url) if contact.linkedin_url else None),
                 )
             )
             return response.id
         except ConflictException:
-            existing = await self._unit_of_work.contact_repository.find_by_email(
-                contact.email
-            )
+            existing = await self._unit_of_work.contact_repository.find_by_email(contact.email)
             if existing is not None:
                 return str(existing.id.value)
             raise

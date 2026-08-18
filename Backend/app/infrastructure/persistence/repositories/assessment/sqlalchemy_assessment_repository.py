@@ -100,8 +100,7 @@ class SqlAlchemyAssessmentRepository(
 
         if model is None:
             raise ValueError(
-                f"Assessment not found after save: "
-                f"{assessment.id.value}",
+                f"Assessment not found after save: {assessment.id.value}",
             )
 
         return AssessmentMapper.to_domain(model)
@@ -141,8 +140,7 @@ class SqlAlchemyAssessmentRepository(
             select(
                 AssessmentModel,
             ).where(
-                AssessmentModel.discovery_id
-                == discovery_id.value,
+                AssessmentModel.discovery_id == discovery_id.value,
             )
         )
 
@@ -167,12 +165,10 @@ class SqlAlchemyAssessmentRepository(
             )
             .join(
                 DiscoveryModel,
-                DiscoveryModel.id
-                == AssessmentModel.discovery_id,
+                DiscoveryModel.id == AssessmentModel.discovery_id,
             )
             .where(
-                DiscoveryModel.lead_id
-                == lead_id.value,
+                DiscoveryModel.lead_id == lead_id.value,
             )
         )
 
@@ -196,9 +192,7 @@ class SqlAlchemyAssessmentRepository(
         safe_page = max(page, 1)
         safe_page_size = max(page_size, 1)
 
-        offset = (
-            safe_page - 1
-        ) * safe_page_size
+        offset = (safe_page - 1) * safe_page_size
 
         query = select(
             AssessmentModel,
@@ -206,20 +200,12 @@ class SqlAlchemyAssessmentRepository(
 
         if discovery_id is not None:
             query = query.where(
-                AssessmentModel.discovery_id
-                == UUID(str(discovery_id)),
+                AssessmentModel.discovery_id == UUID(str(discovery_id)),
             )
 
-        result = await self._session.execute(
-            query
-            .offset(offset)
-            .limit(safe_page_size)
-        )
+        result = await self._session.execute(query.offset(offset).limit(safe_page_size))
 
-        return [
-            AssessmentMapper.to_domain(model)
-            for model in result.scalars().all()
-        ]
+        return [AssessmentMapper.to_domain(model) for model in result.scalars().all()]
 
     async def update(
         self,
@@ -233,8 +219,7 @@ class SqlAlchemyAssessmentRepository(
             select(
                 AssessmentModel,
             ).where(
-                AssessmentModel.id
-                == assessment.id.value,
+                AssessmentModel.id == assessment.id.value,
             )
         )
 
@@ -242,8 +227,7 @@ class SqlAlchemyAssessmentRepository(
 
         if model is None:
             raise ValueError(
-                f"Assessment not found: "
-                f"{assessment.id.value}",
+                f"Assessment not found: {assessment.id.value}",
             )
 
         AssessmentMapper.update_model(
@@ -261,18 +245,13 @@ class SqlAlchemyAssessmentRepository(
         Delete assessment.
         """
 
-        assessment_id = (
-            assessment.id
-            if isinstance(assessment, Assessment)
-            else assessment
-        )
+        assessment_id = assessment.id if isinstance(assessment, Assessment) else assessment
 
         result = await self._session.execute(
             select(
                 AssessmentModel,
             ).where(
-                AssessmentModel.id
-                == assessment_id.value,
+                AssessmentModel.id == assessment_id.value,
             )
         )
 
@@ -293,8 +272,7 @@ class SqlAlchemyAssessmentRepository(
             select(
                 AssessmentModel.id,
             ).where(
-                AssessmentModel.id
-                == assessment_id.value,
+                AssessmentModel.id == assessment_id.value,
             )
         )
 

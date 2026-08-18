@@ -6,10 +6,7 @@ Architecture Freeze v5.0
 
 from __future__ import annotations
 
-from fastapi import APIRouter
-from fastapi import Query
-from fastapi import Response
-from fastapi import status
+from fastapi import APIRouter, Query, Response, status
 
 from app.application.company.company_commands import (
     CreateCompanyCommand,

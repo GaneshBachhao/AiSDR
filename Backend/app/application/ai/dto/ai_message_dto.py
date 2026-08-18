@@ -8,7 +8,6 @@ from pydantic import BaseModel, ConfigDict
 
 
 class AIMessageDTO(BaseModel):
-
     model_config = ConfigDict(
         frozen=True,
         extra="forbid",

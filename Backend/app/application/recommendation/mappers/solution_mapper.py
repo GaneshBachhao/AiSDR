@@ -15,16 +15,8 @@ class SolutionMapper:
 
         return RecommendationDTO(
             id=recommendation.id.value,
-            assessment_id=(
-                recommendation.assessment_id.value
-                if recommendation.assessment_id
-                else None
-            ),
-            discovery_id=(
-                recommendation.discovery_id.value
-                if recommendation.discovery_id
-                else None
-            ),
+            assessment_id=(recommendation.assessment_id.value if recommendation.assessment_id else None),
+            discovery_id=(recommendation.discovery_id.value if recommendation.discovery_id else None),
             status=recommendation.status.value,
             summary=recommendation.summary,
             solutions=recommendation.solutions,

@@ -61,13 +61,6 @@ describe('App', () => {
     await fixture.whenStable();
     const headings = fixture.nativeElement.querySelectorAll('.nav-heading');
     const labels = Array.from(headings).map((el) => (el as HTMLElement).textContent?.trim());
-    expect(labels).toEqual([
-      'Discover',
-      'Discover Needs',
-      'Assess',
-      'Qualify',
-      'Recommend',
-      'Act',
-    ]);
+    expect(labels).toEqual(['Discover', 'Discover Needs', 'Assess', 'Qualify', 'Recommend', 'Act']);
   });
 });

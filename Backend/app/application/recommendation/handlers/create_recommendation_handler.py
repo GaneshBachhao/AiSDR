@@ -18,21 +18,23 @@ import logging
 import re
 
 from app.application.ai.services.ai_execution_service import AIExecutionService
+from app.application.common.exceptions.not_found_exception import NotFoundException
+from app.application.common.interfaces.unit_of_work import UnitOfWork
 from app.application.recommendation.commands.create_recommendation import CreateRecommendationCommand
 from app.application.recommendation.dto.recommendation_dto import RecommendationDTO
 from app.application.recommendation.mappers.recommendation_mapper import RecommendationMapper
-from app.application.recommendation.validators.create_recommendation_validator import CreateRecommendationValidator
-from app.application.common.exceptions.not_found_exception import NotFoundException
-from app.application.common.interfaces.unit_of_work import UnitOfWork
+from app.application.recommendation.validators.create_recommendation_validator import (
+    CreateRecommendationValidator,
+)
 from app.domain.ai.aggregates.ai_request import AIRequest
 from app.domain.ai.value_objects.max_tokens import MaxTokens
 from app.domain.ai.value_objects.model_name import ModelName
 from app.domain.ai.value_objects.prompt import Prompt
 from app.domain.ai.value_objects.provider_name import ProviderName
 from app.domain.ai.value_objects.temperature import Temperature
+from app.domain.assessment.identifiers.assessment_id import AssessmentId
 from app.domain.recommendation.entities.recommendation import Recommendation
 from app.domain.recommendation.entities.solution import Solution
-from app.domain.assessment.identifiers.assessment_id import AssessmentId
 from app.infrastructure.ai.composition import default_model_for_provider
 from app.infrastructure.configuration.solution_catalog import load_solution_catalog
 
@@ -41,8 +43,15 @@ logger = logging.getLogger(__name__)
 _JSON_FENCE = re.compile(r"^```(?:json)?\s*|\s*```$", re.IGNORECASE | re.MULTILINE)
 
 _VALID_SOLUTION_TYPES = (
-    "AI Agent", "Copilot", "Automation", "Analytics", "Chatbot",
-    "Knowledge Assistant", "Document Intelligence", "Predictive AI", "Custom",
+    "AI Agent",
+    "Copilot",
+    "Automation",
+    "Analytics",
+    "Chatbot",
+    "Knowledge Assistant",
+    "Document Intelligence",
+    "Predictive AI",
+    "Custom",
 )
 _VALID_PRIORITIES = ("Low", "Medium", "High", "Critical")
 
@@ -73,15 +82,11 @@ class CreateRecommendationHandler:
         assessment_id = AssessmentId(command.assessment_id)
 
         async with self._unit_of_work:
-            existing = await self._unit_of_work.recommendation_repository.get_by_assessment_id(
-                assessment_id
-            )
+            existing = await self._unit_of_work.recommendation_repository.get_by_assessment_id(assessment_id)
             if existing is not None:
                 return RecommendationMapper.domain_to_dto(existing)
 
-            assessment = await self._unit_of_work.assessment_repository.get_by_id(
-                assessment_id
-            )
+            assessment = await self._unit_of_work.assessment_repository.get_by_id(assessment_id)
             if assessment is None:
                 raise NotFoundException(
                     message="Assessment not found.",
@@ -94,9 +99,7 @@ class CreateRecommendationHandler:
 
         recommendation = Recommendation(
             assessment_id=assessment_id,
-            executive_summary=(
-                f"{len(solutions)} solution(s) generated from assessment findings."
-            ),
+            executive_summary=(f"{len(solutions)} solution(s) generated from assessment findings."),
         )
         for solution in solutions:
             recommendation.add_solution(solution)
@@ -152,7 +155,9 @@ class CreateRecommendationHandler:
             f"Summary: {assessment.summary}" if assessment.summary else None,
             f"Strengths: {assessment.strengths}" if assessment.strengths else None,
             f"Weaknesses: {assessment.weaknesses}" if assessment.weaknesses else None,
-            f"Opportunities: {assessment.opportunities_summary}" if assessment.opportunities_summary else None,
+            f"Opportunities: {assessment.opportunities_summary}"
+            if assessment.opportunities_summary
+            else None,
             f"Risks: {assessment.risks}" if assessment.risks else None,
         ]
         return "\n".join(p for p in parts if p)
@@ -199,9 +204,7 @@ AI Solution Catalog:
         try:
             items = json.loads(cleaned)
         except (json.JSONDecodeError, TypeError) as exc:
-            raise ValueError(
-                f"AI response was not valid JSON: {exc}"
-            ) from exc
+            raise ValueError(f"AI response was not valid JSON: {exc}") from exc
 
         if not isinstance(items, list) or not items:
             raise ValueError("AI response did not contain any solutions.")

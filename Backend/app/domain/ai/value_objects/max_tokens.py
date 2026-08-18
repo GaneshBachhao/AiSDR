@@ -17,6 +17,4 @@ class MaxTokens:
     def __post_init__(self) -> None:
 
         if not self.MIN <= self.value <= self.MAX:
-            raise ValueError(
-                "Max tokens out of allowed range."
-            )
+            raise ValueError("Max tokens out of allowed range.")

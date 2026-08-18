@@ -7,4 +7,5 @@ class WorkflowId(Identifier):
     """
     Strongly typed identifier for Workflow aggregate.
     """
+
     pass

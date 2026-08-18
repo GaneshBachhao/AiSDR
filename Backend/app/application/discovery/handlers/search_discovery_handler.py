@@ -13,7 +13,9 @@ from app.application.discovery.dto.discovery_responses import DiscoveryResponseD
 class SearchDiscoveryHandler:
     """Handle the Search Discoveries use case."""
 
-    def __init__(self, unit_of_work: UnitOfWork, validator: DiscoveryValidator, mapper: DiscoveryMapper) -> None:
+    def __init__(
+        self, unit_of_work: UnitOfWork, validator: DiscoveryValidator, mapper: DiscoveryMapper
+    ) -> None:
         self._unit_of_work = unit_of_work
         self._validator = validator
         self._mapper = mapper

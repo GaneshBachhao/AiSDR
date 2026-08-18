@@ -12,13 +12,12 @@ from app.application.common.behaviors.behavior import (
     Behavior,
     NextHandler,
 )
-from app.application.common.validation.validator import (
-    Validator,
-)
 from app.application.common.exceptions.application_exception import (
     ApplicationException,
 )
-
+from app.application.common.validation.validator import (
+    Validator,
+)
 
 TRequest = TypeVar("TRequest")
 
@@ -51,8 +50,6 @@ class ValidationBehavior(
         )
 
         if not result.is_valid:
-            raise ApplicationException(
-                "Request validation failed."
-            )
+            raise ApplicationException("Request validation failed.")
 
         return await next_handler(request)

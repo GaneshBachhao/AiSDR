@@ -4,8 +4,7 @@ Tests for CreateCompanyHandler.
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
@@ -113,5 +112,4 @@ async def test_duplicate_company_raises_conflict(
     unit_of_work.company_repository.find_by_name.return_value = Mock()
 
     with pytest.raises(ConflictException):
-
         await handler.handle(command)

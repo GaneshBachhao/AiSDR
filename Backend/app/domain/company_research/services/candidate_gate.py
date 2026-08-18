@@ -18,18 +18,40 @@ class DeterministicCandidateGate:
 
     DEFAULT_BLOCKED_DOMAINS = frozenset(
         {
-            "wikipedia.org", "linkedin.com", "facebook.com", "youtube.com",
-            "twitter.com", "x.com", "instagram.com", "indiamart.com",
-            "tradeindia.com", "justdial.com", "sulekha.com", "scribd.com",
-            "simplyhired.co.in", "indeed.com", "glassdoor.co.in", "glassdoor.com",
+            "wikipedia.org",
+            "linkedin.com",
+            "facebook.com",
+            "youtube.com",
+            "twitter.com",
+            "x.com",
+            "instagram.com",
+            "indiamart.com",
+            "tradeindia.com",
+            "justdial.com",
+            "sulekha.com",
+            "scribd.com",
+            "simplyhired.co.in",
+            "indeed.com",
+            "glassdoor.co.in",
+            "glassdoor.com",
         }
     )
     DEFAULT_BLOCKED_EXTENSIONS = frozenset(
         {".pdf", ".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx", ".zip", ".rar"}
     )
     DEFAULT_BLOCKED_TITLE_MARKERS = (
-        "top 10", "top 20", "list of", "directory", "market report", "industry report",
-        "press release", "news", "blog", "article", "whitepaper", "brochure",
+        "top 10",
+        "top 20",
+        "list of",
+        "directory",
+        "market report",
+        "industry report",
+        "press release",
+        "news",
+        "blog",
+        "article",
+        "whitepaper",
+        "brochure",
     )
 
     def __init__(

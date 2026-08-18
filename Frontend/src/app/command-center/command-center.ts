@@ -70,9 +70,7 @@ export class CommandCenter implements OnInit {
         this.loading.set(false);
       },
       error: () => {
-        this.errorMessage.set(
-          'Could not load dashboard counts. Check that the API is running.',
-        );
+        this.errorMessage.set('Could not load dashboard counts. Check that the API is running.');
         this.loading.set(false);
       },
     });

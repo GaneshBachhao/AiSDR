@@ -24,8 +24,4 @@ class AIProviderSettings(BaseSettings):
     def fallback_list(self) -> list[str]:
         """Parse ``AI_PROVIDER_FALLBACK`` (comma-separated) into an ordered list."""
 
-        return [
-            name.strip().lower()
-            for name in self.ai_provider_fallback.split(",")
-            if name.strip()
-        ]
+        return [name.strip().lower() for name in self.ai_provider_fallback.split(",") if name.strip()]

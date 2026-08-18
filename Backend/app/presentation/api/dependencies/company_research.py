@@ -11,10 +11,10 @@ from typing import Annotated
 
 from fastapi import Depends
 
+from app.application.ai.ports.ai_budget_port import AIBudgetPort
 from app.application.ai.services.ai_execution_service import AIExecutionService
 from app.application.common.interfaces.unit_of_work import UnitOfWork
 from app.application.company.handlers.create_company_handler import CreateCompanyHandler
-from app.application.contact.handlers.create_contact_handler import CreateContactHandler
 from app.application.company_research.handlers.promote_candidate_to_company_handler import (
     PromoteCandidateToCompanyHandler,
 )
@@ -24,8 +24,11 @@ from app.application.company_research.handlers.promote_candidate_to_lead_handler
 from app.application.company_research.handlers.search_companies_handler import (
     SearchCompaniesHandler,
 )
+from app.application.contact.handlers.create_contact_handler import CreateContactHandler
 from app.application.lead.handlers.create_lead_handler import CreateLeadHandler
-from app.application.ai.ports.ai_budget_port import AIBudgetPort
+from app.domain.recommendation.value_objects.solution_catalog_entry import (
+    SolutionCatalogEntry,
+)
 from app.infrastructure.ai.composition import (
     build_ai_budget_guard,
     build_ai_execution_service,
@@ -46,13 +49,10 @@ from app.infrastructure.company_research.tavily_discovery_adapter import (
 from app.infrastructure.company_research.tavily_evidence_adapter import (
     TavilyEvidenceAdapter,
 )
-from app.domain.recommendation.value_objects.solution_catalog_entry import (
-    SolutionCatalogEntry,
-)
-from app.infrastructure.configuration.solution_catalog import load_existing_offerings
 from app.infrastructure.configuration.company_research_settings import (
     CompanyResearchSettings,
 )
+from app.infrastructure.configuration.solution_catalog import load_existing_offerings
 from app.integrations.tavily.tavily_client import AgneticTavilyClient
 from app.presentation.api.dependencies.handlers import (
     get_create_company_handler,

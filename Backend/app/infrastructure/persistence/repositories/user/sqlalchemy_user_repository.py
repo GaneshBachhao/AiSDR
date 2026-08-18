@@ -1,6 +1,7 @@
 """
 SQLAlchemy implementation of UserRepository.
 """
+
 from __future__ import annotations
 
 from sqlalchemy import select
@@ -31,9 +32,7 @@ class SqlAlchemyUserRepository(
 
     async def find_by_email(self, email: str) -> User | None:
         result = await self._session.execute(
-            select(UserModel).where(
-                UserModel.email == email.strip().lower()
-            )
+            select(UserModel).where(UserModel.email == email.strip().lower())
         )
         model = result.scalar_one_or_none()
         return None if model is None else self.mapper.to_domain(model)

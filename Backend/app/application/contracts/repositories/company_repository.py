@@ -4,6 +4,7 @@ Company repository contract.
 Architecture Freeze v5.0
 Defines the application-facing persistence contract for Company.
 """
+
 from __future__ import annotations
 
 from abc import abstractmethod

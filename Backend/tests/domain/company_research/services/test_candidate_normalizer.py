@@ -9,8 +9,7 @@ def test_normalize_name_strips_punctuation_and_case():
 
 def test_normalize_root_url_strips_www_path_and_query():
     assert (
-        CandidateNormalizer.normalize_root_url("https://www.acme.example/about?x=1")
-        == "https://acme.example"
+        CandidateNormalizer.normalize_root_url("https://www.acme.example/about?x=1") == "https://acme.example"
     )
 
 

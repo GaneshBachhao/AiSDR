@@ -44,7 +44,10 @@ describe('LeadForm', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         provideRouter([]),
-        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: new Map(), queryParamMap: new Map() } } },
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { paramMap: new Map(), queryParamMap: new Map() } },
+        },
       ],
     }).compileComponents();
     httpMock = TestBed.inject(HttpTestingController);

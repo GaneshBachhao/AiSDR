@@ -63,9 +63,7 @@ class AddRoadmapPhaseHandler:
         )
 
         if recommendation is None:
-            raise ValueError(
-                "Recommendation not found."
-            )
+            raise ValueError("Recommendation not found.")
 
         phase = RoadmapPhase(
             phase_name=command.name,

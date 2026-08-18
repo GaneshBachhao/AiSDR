@@ -40,11 +40,7 @@ class AISettings:
 
     def __post_init__(self) -> None:
 
-        provider = (
-            self.default_provider
-            .strip()
-            .lower()
-        )
+        provider = self.default_provider.strip().lower()
 
         object.__setattr__(
             self,
@@ -52,23 +48,14 @@ class AISettings:
             provider,
         )
 
-        if (
-            self.request_timeout_seconds
-            <= 0
-        ):
-            raise ValueError(
-                "Invalid timeout."
-            )
+        if self.request_timeout_seconds <= 0:
+            raise ValueError("Invalid timeout.")
 
         if self.max_retries < 0:
-            raise ValueError(
-                "Invalid retry count."
-            )
+            raise ValueError("Invalid retry count.")
 
         if provider not in self.providers:
-            raise ValueError(
-                f"Default provider '{provider}' is not configured."
-            )
+            raise ValueError(f"Default provider '{provider}' is not configured.")
 
     def get_provider(
         self,
@@ -76,13 +63,9 @@ class AISettings:
     ) -> ProviderSettings:
 
         try:
-            return self.providers[
-                provider_name.lower()
-            ]
+            return self.providers[provider_name.lower()]
         except KeyError as ex:
-            raise ValueError(
-                f"Provider '{provider_name}' not configured."
-            ) from ex
+            raise ValueError(f"Provider '{provider_name}' not configured.") from ex
 
     def get_model(
         self,
@@ -90,10 +73,6 @@ class AISettings:
     ) -> ModelSettings:
 
         try:
-            return self.models[
-                model_name
-            ]
+            return self.models[model_name]
         except KeyError as ex:
-            raise ValueError(
-                f"Model '{model_name}' not configured."
-            ) from ex
+            raise ValueError(f"Model '{model_name}' not configured.") from ex

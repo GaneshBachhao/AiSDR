@@ -118,7 +118,9 @@ describe('DiscoveryDetail', () => {
       opportunities: null,
       risks: null,
     };
-    httpMock.expectOne(`${base}/assessments?page=1&page_size=1&discovery_id=d1`).flush([assessment]);
+    httpMock
+      .expectOne(`${base}/assessments?page=1&page_size=1&discovery_id=d1`)
+      .flush([assessment]);
     await fixture.whenStable();
 
     const recommendation: RecommendationResponseDTO = {

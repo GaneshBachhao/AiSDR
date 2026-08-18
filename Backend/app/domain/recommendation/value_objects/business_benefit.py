@@ -21,11 +21,7 @@ class BusinessBenefit:
         Validate business invariants.
         """
         if not self.title.strip():
-            raise ValueError(
-                "Business benefit title cannot be empty."
-            )
+            raise ValueError("Business benefit title cannot be empty.")
 
         if not self.description.strip():
-            raise ValueError(
-                "Business benefit description cannot be empty."
-            )
+            raise ValueError("Business benefit description cannot be empty.")

@@ -45,11 +45,7 @@ class ContactMapper:
             phone=entity.phone,
             job_title=entity.job_title,
             linkedin_url=entity.linkedin_url,
-            company_id=(
-                entity.company_id.value
-                if entity.company_id is not None
-                else None
-            ),
+            company_id=(entity.company_id.value if entity.company_id is not None else None),
             is_active=entity.is_active,
             created_at=entity.created_at,
             updated_at=entity.updated_at,
@@ -67,11 +63,7 @@ class ContactMapper:
         model.phone = entity.phone
         model.job_title = entity.job_title
         model.linkedin_url = entity.linkedin_url
-        model.company_id = (
-            entity.company_id.value
-            if entity.company_id is not None
-            else None
-        )
+        model.company_id = entity.company_id.value if entity.company_id is not None else None
         model.is_active = entity.is_active
         model.updated_at = entity.updated_at
         return model

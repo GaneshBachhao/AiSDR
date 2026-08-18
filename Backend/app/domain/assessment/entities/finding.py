@@ -3,8 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from uuid import UUID, uuid4
 
-from app.domain.assessment.value_objects.evidence import Evidence
 from app.domain.assessment.enums.finding_type import FindingType
+from app.domain.assessment.value_objects.evidence import Evidence
 
 
 @dataclass
@@ -36,19 +36,13 @@ class Finding:
         Validate business invariants.
         """
         if not self.title.strip():
-            raise ValueError(
-                "Finding title cannot be empty."
-            )
+            raise ValueError("Finding title cannot be empty.")
 
         if not self.description.strip():
-            raise ValueError(
-                "Finding description cannot be empty."
-            )
+            raise ValueError("Finding description cannot be empty.")
 
         if not 1 <= self.severity <= 5:
-            raise ValueError(
-                "Severity must be between 1 and 5."
-            )
+            raise ValueError("Severity must be between 1 and 5.")
 
     def add_evidence(
         self,

@@ -15,7 +15,9 @@
           <div class="nav-group">
             <div class="nav-heading">{{ group.heading }}</div>
             @for (item of group.items; track item.path) {
-              <a class="nav-link" [routerLink]="item.path" routerLinkActive="active">{{ item.label }}</a>
+              <a class="nav-link" [routerLink]="item.path" routerLinkActive="active">{{
+                item.label
+              }}</a>
             }
           </div>
         }

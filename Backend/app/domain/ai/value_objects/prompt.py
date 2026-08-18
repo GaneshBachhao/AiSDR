@@ -19,14 +19,10 @@ class Prompt:
         value = self.value.strip()
 
         if len(value) < self.MIN_LENGTH:
-            raise ValueError(
-                "Prompt cannot be empty."
-            )
+            raise ValueError("Prompt cannot be empty.")
 
         if len(value) > self.MAX_LENGTH:
-            raise ValueError(
-                "Prompt exceeds maximum length."
-            )
+            raise ValueError("Prompt exceeds maximum length.")
 
         object.__setattr__(
             self,

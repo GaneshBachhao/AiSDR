@@ -6,8 +6,7 @@ Architecture Freeze v5.0
 
 from __future__ import annotations
 
-from fastapi import APIRouter
-from fastapi import status
+from fastapi import APIRouter, Depends, status
 
 from app.application.contact.contact_commands import DeleteContactCommand
 from app.application.contact.contact_mapper import ContactMapper
@@ -28,10 +27,8 @@ from app.presentation.api.dependencies.handlers import (
     ListContactHandlerDependency,
     SearchContactHandlerDependency,
     UpdateContactHandlerDependency,
+    get_contact_mapper,
 )
-from app.presentation.api.dependencies.handlers import get_contact_mapper
-from fastapi import Depends
-
 
 router = APIRouter(
     prefix="/contacts",

@@ -50,3 +50,19 @@ class SqlAlchemyRecommendationRepository(
             .limit(page_size)
         )
         return [self.mapper.to_domain(model) for model in result.scalars().all()]
+
+    async def update(self, entity: Recommendation) -> None:
+        """
+        Update the already-persisted ORM row in place.
+
+        This avoids merging a newly-created ORM instance with missing
+        server-managed timestamp/audit fields (the same reason
+        Company/Assessment/User's repositories override update() too).
+        """
+        db_id = entity.id.value
+        model = await self._session.get(RecommendationModel, db_id)
+
+        if model is None:
+            return
+
+        self.mapper.update_model(model, entity)

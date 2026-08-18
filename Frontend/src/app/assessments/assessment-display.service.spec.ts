@@ -85,4 +85,37 @@ describe('AssessmentDisplayService', () => {
       discoveryLabel: 'Manual monthly reporting.',
     });
   });
+
+  it('a second loadAll() call reuses the cached result instead of re-fetching', () => {
+    service.loadAll().subscribe();
+    httpMock.expectOne(`${base}/assessments?page=1&page_size=200`).flush([assessment]);
+    httpMock.expectOne(`${base}/discoveries?limit=500`).flush([discovery]);
+
+    let secondResult: Map<string, unknown> | undefined;
+    service.loadAll().subscribe((map) => (secondResult = map));
+
+    expect(secondResult?.get('a1')).toEqual({
+      assessment,
+      discoveryLabel: 'Manual monthly reporting.',
+    });
+  });
+
+  it('invalidate() clears the cache so the next loadAll() re-fetches', () => {
+    service.loadAll().subscribe();
+    httpMock.expectOne(`${base}/assessments?page=1&page_size=200`).flush([assessment]);
+    httpMock.expectOne(`${base}/discoveries?limit=500`).flush([discovery]);
+
+    service.invalidate();
+
+    const updatedAssessment = { ...assessment, status: 'In Progress' };
+    let secondResult: Map<string, unknown> | undefined;
+    service.loadAll().subscribe((map) => (secondResult = map));
+
+    httpMock.expectOne(`${base}/assessments?page=1&page_size=200`).flush([updatedAssessment]);
+    httpMock.expectOne(`${base}/discoveries?limit=500`).flush([discovery]);
+
+    expect(
+      (secondResult?.get('a1') as { assessment: AssessmentResponseDTO }).assessment.status,
+    ).toBe('In Progress');
+  });
 });

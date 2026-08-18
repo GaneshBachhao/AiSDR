@@ -1,16 +1,16 @@
 import pytest
 from pydantic import ValidationError
 
+from app.application.company_research.dto.company_research_request import (
+    CompanyResearchRequest,
+)
+from app.application.company_research.dto.company_research_response import DiscoveredContact
 from app.application.company_research.ports.company_discovery_port import CompanyDiscoveryPort
 from app.application.company_research.ports.contact_discovery_port import ContactDiscoveryPort
 from app.application.company_research.ports.identity_verification_port import (
     IdentityVerificationPort,
     IdentityVerificationResult,
 )
-from app.application.company_research.dto.company_research_request import (
-    CompanyResearchRequest,
-)
-from app.application.company_research.dto.company_research_response import DiscoveredContact
 from app.domain.company_research.entities.candidate import CompanyCandidate
 
 

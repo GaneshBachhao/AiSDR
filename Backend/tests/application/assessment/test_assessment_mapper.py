@@ -14,7 +14,6 @@ from app.application.assessment.dto.assessment_request import (
     CreateAssessmentRequestDTO,
     UpdateAssessmentRequestDTO,
 )
-from app.domain.assessment.entities.assessment import Assessment
 
 
 class TestAssessmentMapper:

@@ -18,33 +18,18 @@ class ValueObject(ABC):
         """
         Compare value objects by their attributes.
         """
-        return (
-            isinstance(other, self.__class__)
-            and self.__dict__ == other.__dict__
-        )
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
 
     def __hash__(self) -> int:
         """
         Generate hash from value attributes.
         """
-        return hash(
-            tuple(
-                sorted(
-                    self.__dict__.items()
-                )
-            )
-        )
+        return hash(tuple(sorted(self.__dict__.items())))
 
     def __repr__(self) -> str:
         """
         Return readable representation.
         """
-        values = ", ".join(
-            f"{key}={value!r}"
-            for key, value in self.__dict__.items()
-        )
+        values = ", ".join(f"{key}={value!r}" for key, value in self.__dict__.items())
 
-        return (
-            f"{self.__class__.__name__}"
-            f"({values})"
-        )
+        return f"{self.__class__.__name__}({values})"

@@ -11,6 +11,9 @@ from app.application.ai.dto.ai_response_dto import (
 from app.application.ai.mappers.ai_mapper import (
     AIMapper,
 )
+from app.application.ai.services.ai_execution_service import (
+    AIExecutionService,
+)
 from app.application.ai.validators.execute_ai_request_validator import (
     ExecuteAIRequestValidator,
 )
@@ -25,9 +28,6 @@ from app.application.common.handler.handler_result import (
 )
 from app.domain.ai.repositories.ai_request_repository import (
     AIRequestRepository,
-)
-from app.application.ai.services.ai_execution_service import (
-    AIExecutionService,
 )
 from app.domain.ai.services.ai_validation_service import (
     AIValidationService,
@@ -70,9 +70,7 @@ class ExecuteAIRequestHandler(
                 errors=validation.errors,
             )
 
-        ai_request = AIMapper.dto_to_domain(
-            AIMapper.command_to_dto(request)
-        )
+        ai_request = AIMapper.dto_to_domain(AIMapper.command_to_dto(request))
 
         self._validation_service.validate(
             ai_request,

@@ -14,11 +14,11 @@
       @if (isEditMode()) {
         <div class="field-row">
           <div class="field">
-            <label>Lead</label>
+            <span class="field-label">Lead</span>
             <p class="static-value">{{ leadLabel() ?? '—' }}</p>
           </div>
           <div class="field">
-            <label>Assessment</label>
+            <span class="field-label">Assessment</span>
             <p class="static-value">{{ assessmentLabel() ?? '—' }}</p>
           </div>
         </div>
@@ -35,7 +35,9 @@
             >
               <option value="" disabled>Select a lead…</option>
               @for (entry of leadOptions(); track entry[0]) {
-                <option [value]="entry[0]">{{ entry[1].companyName }} — {{ entry[1].contactName }}</option>
+                <option [value]="entry[0]">
+                  {{ entry[1].companyName }} — {{ entry[1].contactName }}
+                </option>
               }
             </select>
           </div>

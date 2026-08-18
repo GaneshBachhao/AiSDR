@@ -55,7 +55,12 @@ describe('ContactService', () => {
 
   it('creates a contact', () => {
     service
-      .create({ company_id: 'c1', first_name: 'Jane', last_name: 'Doe', email: 'jane@acme.example' })
+      .create({
+        company_id: 'c1',
+        first_name: 'Jane',
+        last_name: 'Doe',
+        email: 'jane@acme.example',
+      })
       .subscribe();
     const req = httpMock.expectOne(base);
     expect(req.request.method).toBe('POST');

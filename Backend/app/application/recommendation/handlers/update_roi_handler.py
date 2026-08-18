@@ -63,35 +63,23 @@ class UpdateROIHandler:
         )
 
         if recommendation is None:
-            raise ValueError(
-                "Recommendation not found."
-            )
+            raise ValueError("Recommendation not found.")
 
         solution = next(
-            (
-                item
-                for item in recommendation.solutions
-                if item.solution_id == command.solution_id
-            ),
+            (item for item in recommendation.solutions if item.solution_id == command.solution_id),
             None,
         )
 
         if solution is None:
-            raise ValueError(
-                "Solution not found."
-            )
+            raise ValueError("Solution not found.")
 
-        roi_percentage = (
-            command.expected_return
-            / command.investment_cost
-        ) * 100
+        roi_percentage = (command.expected_return / command.investment_cost) * 100
 
         roi = ROI(
             percentage=roi_percentage,
             payback_period="12 months",
             remarks=(
-                f"Expected return: {command.expected_return}, "
-                f"Investment cost: {command.investment_cost}"
+                f"Expected return: {command.expected_return}, Investment cost: {command.investment_cost}"
             ),
         )
 

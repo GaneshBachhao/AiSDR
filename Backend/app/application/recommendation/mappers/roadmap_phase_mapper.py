@@ -3,7 +3,6 @@ from __future__ import annotations
 from app.application.recommendation.dto.recommendation_dto import (
     RecommendationDTO,
 )
-
 from app.domain.assessment.identifiers.assessment_id import (
     AssessmentId,
 )
@@ -43,10 +42,7 @@ class RecommendationMapper:
             summary=recommendation.executive_summary,
             recommendation_text=None,
             business_benefits=[],
-            solutions=[
-                solution.title
-                for solution in recommendation.solutions
-            ],
+            solutions=[solution.title for solution in recommendation.solutions],
             dependencies=[],
             implementation_risks=[],
             roadmap_phases=[

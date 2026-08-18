@@ -7,4 +7,5 @@ class ReportId(Identifier):
     """
     Strongly typed identifier for Report aggregate.
     """
+
     pass

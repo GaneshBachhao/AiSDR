@@ -13,14 +13,10 @@ class VersionNumber:
         minor: int = 0,
     ):
         if major < 0:
-            raise ValueError(
-                "Major version cannot be negative."
-            )
+            raise ValueError("Major version cannot be negative.")
 
         if minor < 0:
-            raise ValueError(
-                "Minor version cannot be negative."
-            )
+            raise ValueError("Minor version cannot be negative.")
 
         self._major = major
         self._minor = minor
@@ -46,16 +42,12 @@ class VersionNumber:
         )
 
     def __eq__(self, other):
-        return (
-            isinstance(other, VersionNumber)
-            and (
-                self.major,
-                self.minor,
-            )
-            == (
-                other.major,
-                other.minor,
-            )
+        return isinstance(other, VersionNumber) and (
+            self.major,
+            self.minor,
+        ) == (
+            other.major,
+            other.minor,
         )
 
     def __lt__(self, other):

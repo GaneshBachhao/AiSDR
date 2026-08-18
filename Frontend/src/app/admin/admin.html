@@ -22,7 +22,9 @@
       </div>
       <div class="detail-row">
         <span class="detail-label">Fallback order</span>
-        <span>{{ c.fallback_order.length > 0 ? c.fallback_order.join(' → ') : 'None configured' }}</span>
+        <span>{{
+          c.fallback_order.length > 0 ? c.fallback_order.join(' → ') : 'None configured'
+        }}</span>
       </div>
     </section>
 

@@ -4,7 +4,10 @@ import { forkJoin } from 'rxjs';
 import { ContactService } from '../../contacts/contact.service';
 import { ContactResponseDTO } from '../../contacts/contact.models';
 import { DiscoveryService } from '../../discoveries/discovery.service';
-import { DiscoveryResponseDTO, discoveryStatusBadgeClass } from '../../discoveries/discovery.models';
+import {
+  DiscoveryResponseDTO,
+  discoveryStatusBadgeClass,
+} from '../../discoveries/discovery.models';
 import { LeadService } from '../../leads/lead.service';
 import { LeadResponseDTO, leadStatusBadgeClass } from '../../leads/lead.models';
 import { CompanyService } from '../company.service';
@@ -79,7 +82,9 @@ export class CompanyDetail implements OnInit {
       next: ({ contacts, leads, discoveries }) => {
         const companyContacts = contacts.filter((c) => c.company_id === companyId);
         this.contacts.set(companyContacts);
-        this.contactNameById.set(new Map(contacts.map((c) => [c.id, `${c.first_name} ${c.last_name}`])));
+        this.contactNameById.set(
+          new Map(contacts.map((c) => [c.id, `${c.first_name} ${c.last_name}`])),
+        );
         this.leads.set(leads);
         const leadIds = new Set(leads.map((l) => l.id));
         this.discoveries.set(discoveries.filter((d) => leadIds.has(d.lead_id)));

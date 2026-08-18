@@ -16,7 +16,6 @@ from app.application.common.validation.validation_result import (
     ValidationResult,
 )
 
-
 TRequest = TypeVar(
     "TRequest",
 )

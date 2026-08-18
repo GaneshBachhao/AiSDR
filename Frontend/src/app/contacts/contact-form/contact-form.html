@@ -13,7 +13,7 @@
     <form class="form" (ngSubmit)="save()">
       @if (isEditMode()) {
         <div class="field">
-          <label>Company</label>
+          <span class="field-label">Company</span>
           <p class="static-value">{{ companyName() ?? '—' }}</p>
         </div>
       } @else {
@@ -111,7 +111,13 @@
         <button
           type="submit"
           class="primary"
-          [disabled]="saving() || !form().first_name || !form().last_name || !form().email || !form().company_id"
+          [disabled]="
+            saving() ||
+            !form().first_name ||
+            !form().last_name ||
+            !form().email ||
+            !form().company_id
+          "
         >
           {{ saving() ? 'Saving…' : 'Save' }}
         </button>

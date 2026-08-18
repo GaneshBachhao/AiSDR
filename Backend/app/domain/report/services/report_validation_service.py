@@ -17,20 +17,12 @@ class ReportValidationService:
         """
 
         if not report.has_sections():
-            raise ReportException(
-                "A report must contain at least one section."
-            )
+            raise ReportException("A report must contain at least one section.")
 
-        incomplete = [
-            section
-            for section in report.sections
-            if not section.is_completed
-        ]
+        incomplete = [section for section in report.sections if not section.is_completed]
 
         if incomplete:
-            raise ReportException(
-                "All report sections must be completed before review."
-            )
+            raise ReportException("All report sections must be completed before review.")
 
     def validate_can_approve(
         self,
@@ -38,9 +30,7 @@ class ReportValidationService:
     ) -> None:
 
         if report.status != ReportStatus.IN_REVIEW:
-            raise ReportException(
-                "Only reports under review can be approved."
-            )
+            raise ReportException("Only reports under review can be approved.")
 
     def validate_can_publish(
         self,
@@ -48,6 +38,4 @@ class ReportValidationService:
     ) -> None:
 
         if report.status != ReportStatus.APPROVED:
-            raise ReportException(
-                "Only approved reports can be published."
-            )
+            raise ReportException("Only approved reports can be published.")

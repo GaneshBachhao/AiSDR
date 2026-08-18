@@ -96,9 +96,7 @@ def build_ai_providers() -> dict[str, BaseAIProvider]:
     return {
         "gemini": GeminiProvider(GeminiClient(gemini_settings), gemini_settings),
         "openai": OpenAIProvider(OpenAIClient(openai_settings), openai_settings),
-        "azure_openai": AzureOpenAIProvider(
-            AzureOpenAIClient(azure_openai_settings), azure_openai_settings
-        ),
+        "azure_openai": AzureOpenAIProvider(AzureOpenAIClient(azure_openai_settings), azure_openai_settings),
     }
 
 
@@ -114,9 +112,7 @@ def build_ai_execution_service() -> AIExecutionService:
 
     providers = build_ai_providers()
     fallback_settings = AIProviderSettings()
-    default_models = {
-        name: default_model_for_provider(name) for name in providers
-    }
+    default_models = {name: default_model_for_provider(name) for name in providers}
 
     application_provider = ApplicationAIProvider(
         providers=providers,
@@ -222,8 +218,6 @@ def ai_config_diagnostics() -> list[ProviderDiagnostics]:
             configured=bool(azure.azure_openai_api_key and azure.azure_openai_endpoint),
             model=azure.azure_openai_model,
             key_fingerprint=_key_fingerprint(azure.azure_openai_api_key),
-            key_source=_key_source(
-                "AZURE_OPENAI_API_KEY", azure.azure_openai_api_key
-            ),
+            key_source=_key_source("AZURE_OPENAI_API_KEY", azure.azure_openai_api_key),
         ),
     ]

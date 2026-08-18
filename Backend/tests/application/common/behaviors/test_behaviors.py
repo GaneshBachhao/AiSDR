@@ -36,7 +36,6 @@ async def test_pipeline_executes_behavior_order() -> None:
     calls: list[str] = []
 
     class SampleBehavior:
-
         async def handle(
             self,
             request: str,
@@ -53,7 +52,6 @@ async def test_pipeline_executes_behavior_order() -> None:
 
             return result
 
-
     pipeline = Pipeline(
         behaviors=[
             SampleBehavior(),
@@ -67,7 +65,6 @@ async def test_pipeline_executes_behavior_order() -> None:
         calls.append("handler")
 
         return request
-
 
     result = await pipeline.execute(
         "test",

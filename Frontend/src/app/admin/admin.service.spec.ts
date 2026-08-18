@@ -13,7 +13,13 @@ describe('AdminService', () => {
     default_provider: 'gemini',
     fallback_order: [],
     providers: [
-      { provider: 'gemini', configured: true, model: 'gemini-3.5-flash', key_fingerprint: '***Ot5A', key_source: 'dotenv_file' },
+      {
+        provider: 'gemini',
+        configured: true,
+        model: 'gemini-3.5-flash',
+        key_fingerprint: '***Ot5A',
+        key_source: 'dotenv_file',
+      },
     ],
   };
 

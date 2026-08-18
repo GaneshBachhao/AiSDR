@@ -13,9 +13,7 @@ class LeadScore:
 
     def __post_init__(self) -> None:
         if not 0 <= self.value <= 100:
-            raise ValueError(
-                "Lead score must be between 0 and 100."
-            )
+            raise ValueError("Lead score must be between 0 and 100.")
 
     @property
     def is_hot(self) -> bool:

@@ -5,7 +5,6 @@ from app.application.recommendation.commands.create_recommendation import (
 
 
 class CreateRecommendationValidator:
-
     def validate(
         self,
         command: CreateRecommendationCommand,

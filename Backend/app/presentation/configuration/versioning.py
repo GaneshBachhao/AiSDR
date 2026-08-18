@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 
-
 API_VERSION = "v1"
 
 

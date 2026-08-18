@@ -1,6 +1,7 @@
 """
 Central registry for Domain <-> Persistence conversions.
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable

@@ -6,9 +6,8 @@ AI providers, clients, and services.
 """
 
 from .ai_settings import AISettings
-from .provider_settings import ProviderSettings
 from .model_settings import ModelSettings
-
+from .provider_settings import ProviderSettings
 
 __all__ = [
     "AISettings",

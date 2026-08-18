@@ -57,7 +57,13 @@ async def test_discover_skips_blocked_domains():
 @pytest.mark.asyncio
 async def test_discover_skips_listicle_style_titles():
     client = _client_returning(
-        [{"title": "Top 10 Manufacturing Companies in India", "url": "https://example.com/blog", "content": "x"}]
+        [
+            {
+                "title": "Top 10 Manufacturing Companies in India",
+                "url": "https://example.com/blog",
+                "content": "x",
+            }
+        ]
     )
     adapter = TavilyDiscoveryAdapter(client=client, settings=CompanyResearchSettings())
     request = CompanyResearchRequest(geography="India")

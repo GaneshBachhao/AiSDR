@@ -20,9 +20,7 @@ class Email:
     - Email format must be valid.
     """
 
-    _EMAIL_PATTERN = re.compile(
-        r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
-    )
+    _EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
     def __init__(
         self,
@@ -45,22 +43,16 @@ class Email:
     ) -> None:
 
         if not value:
-            raise ValueError(
-                "Email cannot be empty."
-            )
+            raise ValueError("Email cannot be empty.")
 
         if not self._EMAIL_PATTERN.match(value):
-            raise ValueError(
-                "Invalid email format."
-            )
+            raise ValueError("Invalid email format.")
 
     def __str__(self) -> str:
         return self.value
 
     def __repr__(self) -> str:
-        return (
-            f"Email('{self.value}')"
-        )
+        return f"Email('{self.value}')"
 
     def __eq__(
         self,

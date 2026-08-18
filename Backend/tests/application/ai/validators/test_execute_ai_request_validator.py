@@ -9,10 +9,10 @@ from app.application.ai.validators.execute_ai_request_validator import (
     ExecuteAIRequestValidator,
 )
 
-
 # ==========================================================
 # Helpers
 # ==========================================================
+
 
 def create_command() -> ExecuteAIRequestCommand:
     """
@@ -32,6 +32,7 @@ def create_command() -> ExecuteAIRequestCommand:
 # Happy Path
 # ==========================================================
 
+
 def test_validator_accepts_valid_command() -> None:
     """
     Validator should accept a valid command.
@@ -50,6 +51,7 @@ def test_validator_accepts_valid_command() -> None:
 # ==========================================================
 # Provider
 # ==========================================================
+
 
 def test_validator_rejects_blank_provider() -> None:
     """
@@ -75,6 +77,7 @@ def test_validator_rejects_blank_provider() -> None:
 # Model
 # ==========================================================
 
+
 def test_validator_rejects_blank_model() -> None:
     """
     Model containing only whitespace should fail.
@@ -98,6 +101,7 @@ def test_validator_rejects_blank_model() -> None:
 # ==========================================================
 # Prompt
 # ==========================================================
+
 
 def test_validator_rejects_blank_prompt() -> None:
     """
@@ -123,6 +127,7 @@ def test_validator_rejects_blank_prompt() -> None:
 # Multiple Errors
 # ==========================================================
 
+
 def test_validator_returns_multiple_errors() -> None:
     """
     Validator should collect all validation errors.
@@ -143,10 +148,7 @@ def test_validator_returns_multiple_errors() -> None:
     assert not result.is_valid
     assert len(result.errors) == 3
 
-    fields = {
-        error.field
-        for error in result.errors
-    }
+    fields = {error.field for error in result.errors}
 
     assert fields == {
         "provider",
@@ -158,6 +160,7 @@ def test_validator_returns_multiple_errors() -> None:
 # ==========================================================
 # Validation Messages
 # ==========================================================
+
 
 def test_validator_returns_provider_message() -> None:
     """

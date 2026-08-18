@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DiscoveryService } from '../../discoveries/discovery.service';
 import { DiscoveryResponseDTO } from '../../discoveries/discovery.models';
+import { AssessmentDisplayService } from '../assessment-display.service';
 import { AssessmentService } from '../assessment.service';
 import { MATURITY_LEVELS, UpdateAssessmentRequestDTO } from '../assessment.models';
 
@@ -15,6 +16,7 @@ import { MATURITY_LEVELS, UpdateAssessmentRequestDTO } from '../assessment.model
 })
 export class AssessmentForm implements OnInit {
   private readonly service = inject(AssessmentService);
+  private readonly displayService = inject(AssessmentDisplayService);
   private readonly discoveryService = inject(DiscoveryService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -78,7 +80,10 @@ export class AssessmentForm implements OnInit {
     });
   }
 
-  update<K extends keyof UpdateAssessmentRequestDTO>(field: K, value: UpdateAssessmentRequestDTO[K]): void {
+  update<K extends keyof UpdateAssessmentRequestDTO>(
+    field: K,
+    value: UpdateAssessmentRequestDTO[K],
+  ): void {
     this.form.update((f) => ({ ...f, [field]: value }));
   }
 
@@ -92,7 +97,10 @@ export class AssessmentForm implements OnInit {
       : this.service.create({ discovery_id: this.discoveryId() });
 
     request.subscribe({
-      next: (assessment) => this.router.navigate(['/assessments', assessment.assessment_id]),
+      next: (assessment) => {
+        this.displayService.invalidate();
+        this.router.navigate(['/assessments', assessment.assessment_id]);
+      },
       error: (err) => {
         this.errorMessage.set(this.describeError(err));
         this.saving.set(false);

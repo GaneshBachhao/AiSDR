@@ -56,13 +56,8 @@ class Company(AggregateRoot[CompanyId]):
             raise ValueError("Company name cannot be empty.")
 
     def _validate_employee_count(self) -> None:
-        if (
-            self.employee_count is not None
-            and self.employee_count < 0
-        ):
-            raise ValueError(
-                "Employee count cannot be negative."
-            )
+        if self.employee_count is not None and self.employee_count < 0:
+            raise ValueError("Employee count cannot be negative.")
 
     def update_name(self, name: str) -> None:
         if not name.strip():
@@ -94,9 +89,7 @@ class Company(AggregateRoot[CompanyId]):
         employee_count: int | None,
     ) -> None:
         if employee_count is not None and employee_count < 0:
-            raise ValueError(
-                "Employee count cannot be negative."
-            )
+            raise ValueError("Employee count cannot be negative.")
         self.employee_count = employee_count
         self.touch()
 

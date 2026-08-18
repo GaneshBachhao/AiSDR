@@ -13,4 +13,5 @@ class ContactId(Identifier):
     """
     Strongly typed identifier for Contact aggregate.
     """
+
     pass

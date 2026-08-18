@@ -24,21 +24,13 @@ class Stakeholder:
     def __post_init__(self) -> None:
 
         if not self.name.strip():
-            raise ValueError(
-                "Stakeholder name cannot be empty."
-            )
+            raise ValueError("Stakeholder name cannot be empty.")
 
         if not self.designation.strip():
-            raise ValueError(
-                "Stakeholder designation cannot be empty."
-            )
+            raise ValueError("Stakeholder designation cannot be empty.")
 
         if not self.department.strip():
-            raise ValueError(
-                "Stakeholder department cannot be empty."
-            )
+            raise ValueError("Stakeholder department cannot be empty.")
 
         if not 1 <= self.influence_level <= 5:
-            raise ValueError(
-                "Influence level must be between 1 and 5."
-            )
+            raise ValueError("Influence level must be between 1 and 5.")

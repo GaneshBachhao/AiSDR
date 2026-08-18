@@ -5,4 +5,5 @@ class ReportId(Identifier):
     """
     Strongly typed identifier for Report.
     """
+
     pass

@@ -4,9 +4,7 @@ Tests for UpdateAssessmentHandler.
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock
-from unittest.mock import Mock
-from unittest.mock import patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -53,9 +51,7 @@ async def test_update_assessment_success(
 
     assessment = Mock()
 
-    unit_of_work.assessment_repository.get_by_id.return_value = (
-        assessment
-    )
+    unit_of_work.assessment_repository.get_by_id.return_value = assessment
 
     command = UpdateAssessmentCommand(
         assessment_id="00000000-0000-0000-0000-000000000002",
@@ -72,7 +68,6 @@ async def test_update_assessment_success(
             "app.application.assessment.handlers.update_assessment_handler.AssessmentMapper.to_update_response"
         ) as mapper,
     ):
-
         validator.return_value.has_errors.return_value = False
 
         mapper.return_value = "response"
@@ -111,15 +106,11 @@ async def test_update_assessment_validation_failure(
     with patch(
         "app.application.assessment.handlers.update_assessment_handler.AssessmentValidator.validate_update"
     ) as validator:
-
         validator.return_value.has_errors.return_value = True
 
-        validator.return_value.error_messages.return_value = (
-            "Validation failed."
-        )
+        validator.return_value.error_messages.return_value = "Validation failed."
 
         with pytest.raises(ValueError):
-
             await handler.handle(command)
 
 
@@ -141,9 +132,7 @@ async def test_update_assessment_not_found(
     with patch(
         "app.application.assessment.handlers.update_assessment_handler.AssessmentValidator.validate_update"
     ) as validator:
-
         validator.return_value.has_errors.return_value = False
 
         with pytest.raises(NotFoundException):
-
             await handler.handle(command)

@@ -77,9 +77,7 @@ export class CompanyResearch {
 
     this.service.retry(failure, this.request()).subscribe({
       next: (outcome) => {
-        this.failures.update((items) =>
-          items.filter((item) => item !== failure),
-        );
+        this.failures.update((items) => items.filter((item) => item !== failure));
         if (outcome && 'qualification_score' in outcome) {
           this.results.update((items) => [...items, outcome as CompanySearchResult]);
         } else if (outcome && 'failed_step' in outcome) {

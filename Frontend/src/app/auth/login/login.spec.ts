@@ -65,12 +65,15 @@ describe('Login', () => {
     component['password'].set('wrong-password');
     component.submit();
 
-    httpMock
-      .expectOne(`${environment.apiBaseUrl}/auth/login`)
-      .flush(
-        { success: false, message: 'Invalid email or password.', error_code: 'UNAUTHORIZED', details: {} },
-        { status: 401, statusText: 'Unauthorized' },
-      );
+    httpMock.expectOne(`${environment.apiBaseUrl}/auth/login`).flush(
+      {
+        success: false,
+        message: 'Invalid email or password.',
+        error_code: 'UNAUTHORIZED',
+        details: {},
+      },
+      { status: 401, statusText: 'Unauthorized' },
+    );
     fixture.detectChanges();
 
     const errorEl = fixture.nativeElement.querySelector('.error');

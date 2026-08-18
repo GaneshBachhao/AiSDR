@@ -39,9 +39,7 @@ def handler():
 @pytest.fixture
 def client(app, handler):
 
-    app.dependency_overrides[
-        get_list_company_handler
-    ] = lambda: handler
+    app.dependency_overrides[get_list_company_handler] = lambda: handler
 
     yield TestClient(app)
 

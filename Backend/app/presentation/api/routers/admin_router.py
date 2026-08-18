@@ -34,7 +34,6 @@ async def get_ai_config_diagnostics() -> AIConfigDiagnosticsResponse:
         default_provider=default_ai_provider(),
         fallback_order=AIProviderSettings().fallback_list(),
         providers=[
-            ProviderDiagnosticsSchema.model_validate(diagnostics)
-            for diagnostics in ai_config_diagnostics()
+            ProviderDiagnosticsSchema.model_validate(diagnostics) for diagnostics in ai_config_diagnostics()
         ],
     )

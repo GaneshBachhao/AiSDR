@@ -20,9 +20,7 @@ class _FakeSessionManager:
     the real (process-global-singleton) DatabaseSessionManager entirely."""
 
     def __init__(self, engine: AsyncEngine) -> None:
-        self._factory = async_sessionmaker(
-            bind=engine, autoflush=False, expire_on_commit=False
-        )
+        self._factory = async_sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
 
     def create_session(self):
         return self._factory()
@@ -75,16 +73,12 @@ async def test_count_requests_today_is_scoped_per_provider(engine):
 
     gemini_request = _request(provider="gemini")
     gemini_request.start()
-    gemini_request.complete(
-        AIResponse(content="ok", finish_reason=FinishReason.STOP)
-    )
+    gemini_request.complete(AIResponse(content="ok", finish_reason=FinishReason.STOP))
     await tracker.log(gemini_request)
 
     openai_request = _request(provider="openai", model="gpt-4.1")
     openai_request.start()
-    openai_request.complete(
-        AIResponse(content="ok", finish_reason=FinishReason.STOP)
-    )
+    openai_request.complete(AIResponse(content="ok", finish_reason=FinishReason.STOP))
     await tracker.log(openai_request)
 
     assert await tracker.count_requests_today("gemini") == 1

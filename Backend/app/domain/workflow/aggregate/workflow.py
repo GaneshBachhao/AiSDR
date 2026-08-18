@@ -1,5 +1,4 @@
 from datetime import UTC, datetime
-from typing import List, Optional
 from uuid import uuid4
 
 from app.domain.shared.base import AggregateRoot
@@ -28,7 +27,7 @@ class Workflow(AggregateRoot[WorkflowId]):
     def __init__(
         self,
         name: WorkflowName,
-        workflow_id: Optional[WorkflowId] = None,
+        workflow_id: WorkflowId | None = None,
     ):
         workflow_id = workflow_id or WorkflowId(uuid4())
 
@@ -37,10 +36,10 @@ class Workflow(AggregateRoot[WorkflowId]):
         self._name = name
         self._status = WorkflowStatus.DRAFT
 
-        self._steps: List[WorkflowStep] = []
+        self._steps: list[WorkflowStep] = []
 
-        self._started_at: Optional[datetime] = None
-        self._completed_at: Optional[datetime] = None
+        self._started_at: datetime | None = None
+        self._completed_at: datetime | None = None
 
     # ----------------------------
     # Properties
@@ -55,15 +54,15 @@ class Workflow(AggregateRoot[WorkflowId]):
         return self._status
 
     @property
-    def steps(self) -> List[WorkflowStep]:
+    def steps(self) -> list[WorkflowStep]:
         return list(self._steps)
 
     @property
-    def started_at(self) -> Optional[datetime]:
+    def started_at(self) -> datetime | None:
         return self._started_at
 
     @property
-    def completed_at(self) -> Optional[datetime]:
+    def completed_at(self) -> datetime | None:
         return self._completed_at
 
     # ----------------------------
@@ -79,9 +78,7 @@ class Workflow(AggregateRoot[WorkflowId]):
         """
 
         if self._status != WorkflowStatus.DRAFT:
-            raise InvalidWorkflowState(
-                "Cannot add steps after workflow execution begins"
-            )
+            raise InvalidWorkflowState("Cannot add steps after workflow execution begins")
 
         self._steps.append(step)
         self.touch()
@@ -96,14 +93,10 @@ class Workflow(AggregateRoot[WorkflowId]):
         """
 
         if not self._steps:
-            raise WorkflowException(
-                "Workflow must contain at least one step"
-            )
+            raise WorkflowException("Workflow must contain at least one step")
 
         if self._status != WorkflowStatus.DRAFT:
-            raise InvalidWorkflowState(
-                "Only draft workflow can be prepared"
-            )
+            raise InvalidWorkflowState("Only draft workflow can be prepared")
 
         self._status = WorkflowStatus.READY
         self.touch()
@@ -114,17 +107,13 @@ class Workflow(AggregateRoot[WorkflowId]):
         """
 
         if self._status != WorkflowStatus.READY:
-            raise InvalidWorkflowState(
-                "Workflow must be ready before starting"
-            )
+            raise InvalidWorkflowState("Workflow must be ready before starting")
 
         self._status = WorkflowStatus.RUNNING
         self._started_at = datetime.now(UTC)
 
         self.touch()
-        self.add_domain_event(
-            WorkflowStarted(self.id)
-        )
+        self.add_domain_event(WorkflowStarted(self.id))
 
     def complete(self) -> None:
         """
@@ -132,22 +121,16 @@ class Workflow(AggregateRoot[WorkflowId]):
         """
 
         if self._status != WorkflowStatus.RUNNING:
-            raise InvalidWorkflowState(
-                "Only running workflow can be completed"
-            )
+            raise InvalidWorkflowState("Only running workflow can be completed")
 
         if not all(step.is_completed for step in self._steps):
-            raise WorkflowException(
-                "All workflow steps must be completed"
-            )
+            raise WorkflowException("All workflow steps must be completed")
 
         self._status = WorkflowStatus.COMPLETED
         self._completed_at = datetime.now(UTC)
 
         self.touch()
-        self.add_domain_event(
-            WorkflowCompleted(self.id)
-        )
+        self.add_domain_event(WorkflowCompleted(self.id))
 
     def fail(self) -> None:
         """
@@ -158,9 +141,7 @@ class Workflow(AggregateRoot[WorkflowId]):
             WorkflowStatus.RUNNING,
             WorkflowStatus.READY,
         ):
-            raise InvalidWorkflowState(
-                "Workflow cannot fail from current state"
-            )
+            raise InvalidWorkflowState("Workflow cannot fail from current state")
 
         self._status = WorkflowStatus.FAILED
         self.touch()
@@ -171,9 +152,7 @@ class Workflow(AggregateRoot[WorkflowId]):
         """
 
         if self._status == WorkflowStatus.COMPLETED:
-            raise InvalidWorkflowState(
-                "Completed workflow cannot be cancelled"
-            )
+            raise InvalidWorkflowState("Completed workflow cannot be cancelled")
 
         self._status = WorkflowStatus.CANCELLED
         self.touch()

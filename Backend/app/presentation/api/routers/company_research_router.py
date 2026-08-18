@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from pydantic import BaseModel
-
 from fastapi import APIRouter, HTTPException, status
+from pydantic import BaseModel
 
 from app.application.company_research.dto.company_research_request import (
     CompanyResearchRequest,

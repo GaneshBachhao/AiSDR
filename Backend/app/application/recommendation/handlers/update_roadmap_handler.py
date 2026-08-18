@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from app.domain.shared.enums import Currency
-
 from app.application.common.exceptions.validation_exception import (
     ValidationException,
 )
@@ -26,6 +24,7 @@ from app.domain.recommendation.repositories.recommendation_repository import (
 from app.domain.recommendation.value_objects.cost_estimate import (
     CostEstimate,
 )
+from app.domain.shared.enums import Currency
 
 
 class UpdateCostEstimateHandler:
@@ -65,23 +64,15 @@ class UpdateCostEstimateHandler:
         )
 
         if recommendation is None:
-            raise ValueError(
-                "Recommendation not found."
-            )
+            raise ValueError("Recommendation not found.")
 
         solution = next(
-            (
-                item
-                for item in recommendation.solutions
-                if item.solution_id == command.solution_id
-            ),
+            (item for item in recommendation.solutions if item.solution_id == command.solution_id),
             None,
         )
 
         if solution is None:
-            raise ValueError(
-                "Solution not found."
-            )
+            raise ValueError("Solution not found.")
 
         cost_estimate = CostEstimate(
             amount=command.estimated_cost,

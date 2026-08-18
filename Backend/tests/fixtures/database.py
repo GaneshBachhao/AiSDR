@@ -5,14 +5,12 @@ Database fixtures.
 from __future__ import annotations
 
 import pytest_asyncio
-
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     create_async_engine,
 )
 
 from app.infrastructure.persistence.database.base import Base
-
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 

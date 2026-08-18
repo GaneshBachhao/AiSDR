@@ -22,7 +22,9 @@ _RESOLVED_CONTACT_ID = str(uuid4())
 
 
 def _result(**contacts_kwargs) -> CompanySearchResult:
-    contacts = [DiscoveredContact(name="Jane Doe", role_title="COO", **contacts_kwargs)] if contacts_kwargs else []
+    contacts = (
+        [DiscoveredContact(name="Jane Doe", role_title="COO", **contacts_kwargs)] if contacts_kwargs else []
+    )
     return CompanySearchResult(
         company_name="Acme Manufacturing",
         website="https://acme.example",
@@ -135,9 +137,7 @@ async def test_conflict_on_create_resolves_to_the_now_existing_contact():
     uow = MagicMock()
     existing_after_conflict = MagicMock()
     existing_after_conflict.id.value = _RESOLVED_CONTACT_ID
-    uow.contact_repository.find_by_email = AsyncMock(
-        side_effect=[None, existing_after_conflict]
-    )
+    uow.contact_repository.find_by_email = AsyncMock(side_effect=[None, existing_after_conflict])
     uow.lead_repository.list = AsyncMock(return_value=[])
     create_contact_handler = AsyncMock()
     create_contact_handler.handle.side_effect = ConflictException(

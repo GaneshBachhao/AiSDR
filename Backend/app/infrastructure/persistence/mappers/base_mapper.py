@@ -5,14 +5,10 @@ Generic Domain <-> ORM mapper.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import asdict
-from dataclasses import is_dataclass
-from typing import Any
-from typing import Generic
-from typing import TypeVar
+from dataclasses import asdict, is_dataclass
+from typing import Any, Generic, TypeVar
 
 from sqlalchemy.inspection import inspect
-
 
 TDomain = TypeVar("TDomain")
 TModel = TypeVar("TModel")
@@ -62,15 +58,9 @@ class BaseMapper(Generic[TDomain, TModel], ABC):
         if is_dataclass(domain):
             data = asdict(domain)
         elif hasattr(domain, "__dict__"):
-            data = {
-                key: value
-                for key, value in vars(domain).items()
-                if not key.startswith("_")
-            }
+            data = {key: value for key, value in vars(domain).items() if not key.startswith("_")}
         else:
-            raise TypeError(
-                f"Unsupported domain object type: {type(domain).__name__}"
-            )
+            raise TypeError(f"Unsupported domain object type: {type(domain).__name__}")
 
         return BaseMapper._normalize_values(data)
 
@@ -83,16 +73,10 @@ class BaseMapper(Generic[TDomain, TModel], ABC):
         """
 
         if isinstance(value, dict):
-            return {
-                key: BaseMapper._normalize_values(item)
-                for key, item in value.items()
-            }
+            return {key: BaseMapper._normalize_values(item) for key, item in value.items()}
 
         if isinstance(value, list):
-            return [
-                BaseMapper._normalize_values(item)
-                for item in value
-            ]
+            return [BaseMapper._normalize_values(item) for item in value]
 
         if hasattr(value, "value"):
             return value.value
@@ -107,10 +91,7 @@ class BaseMapper(Generic[TDomain, TModel], ABC):
         Convert SQLAlchemy model into dictionary.
         """
 
-        return {
-            column.key: getattr(model, column.key)
-            for column in inspect(model).mapper.column_attrs
-        }
+        return {column.key: getattr(model, column.key) for column in inspect(model).mapper.column_attrs}
 
     @staticmethod
     def copy_matching_fields(
@@ -122,15 +103,9 @@ class BaseMapper(Generic[TDomain, TModel], ABC):
         """
 
         try:
-            fields = {
-                column.key
-                for column in inspect(
-                    destination_type
-                ).mapper.column_attrs
-            }
+            fields = {column.key for column in inspect(destination_type).mapper.column_attrs}
 
         except Exception:
-
             fields = set(
                 getattr(
                     destination_type,
@@ -139,8 +114,4 @@ class BaseMapper(Generic[TDomain, TModel], ABC):
                 ).keys()
             )
 
-        return {
-            key: value
-            for key, value in source.items()
-            if key in fields
-        }
+        return {key: value for key, value in source.items() if key in fields}

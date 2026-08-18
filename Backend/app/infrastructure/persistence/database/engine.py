@@ -31,7 +31,6 @@ class DatabaseEngine:
         self._engine: AsyncEngine | None = None
         self._session_factory: async_sessionmaker | None = None
 
-
     @property
     def engine(
         self,
@@ -44,7 +43,6 @@ class DatabaseEngine:
             self._engine = self._create_engine()
 
         return self._engine
-
 
     @property
     def session_factory(
@@ -63,7 +61,6 @@ class DatabaseEngine:
 
         return self._session_factory
 
-
     async def dispose(
         self,
     ) -> None:
@@ -73,7 +70,6 @@ class DatabaseEngine:
 
         if self._engine is not None:
             await self._engine.dispose()
-
 
     def _create_engine(
         self,
@@ -88,27 +84,20 @@ class DatabaseEngine:
 
         database_url = self._settings.database_url
 
-
-        if database_url.startswith(
-            "sqlite:///"
-        ):
+        if database_url.startswith("sqlite:///"):
             database_url = database_url.replace(
                 "sqlite:///",
                 "sqlite+aiosqlite:///",
                 1,
             )
 
-
         engine_kwargs = {
             "echo": self._settings.echo,
             "future": True,
         }
 
-
         # SQLite specific configuration
-        if database_url.startswith(
-            "sqlite+aiosqlite:///"
-        ):
+        if database_url.startswith("sqlite+aiosqlite:///"):
             engine_kwargs.update(
                 {
                     "connect_args": {
@@ -116,7 +105,6 @@ class DatabaseEngine:
                     }
                 }
             )
-
 
         # PostgreSQL specific configuration
         else:
@@ -129,16 +117,13 @@ class DatabaseEngine:
                 }
             )
 
-
         return create_async_engine(
             database_url,
             **engine_kwargs,
         )
 
 
-
 _database_engine: DatabaseEngine | None = None
-
 
 
 def get_database_engine(
@@ -150,16 +135,12 @@ def get_database_engine(
 
     global _database_engine
 
-
     if _database_engine is None:
-
         _database_engine = DatabaseEngine(
             settings,
         )
 
-
     return _database_engine
-
 
 
 def get_async_engine(
@@ -169,10 +150,7 @@ def get_async_engine(
     Dependency helper.
     """
 
-    return get_database_engine(
-        settings
-    ).engine
-
+    return get_database_engine(settings).engine
 
 
 def get_session_factory(
@@ -182,6 +160,4 @@ def get_session_factory(
     Dependency helper.
     """
 
-    return get_database_engine(
-        settings
-    ).session_factory
+    return get_database_engine(settings).session_factory

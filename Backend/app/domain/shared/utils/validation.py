@@ -22,9 +22,7 @@ class Validation:
         Validate required text values.
         """
         if not value or not value.strip():
-            raise ValueError(
-                f"{field_name} is required."
-            )
+            raise ValueError(f"{field_name} is required.")
 
     @staticmethod
     def max_length(
@@ -36,9 +34,7 @@ class Validation:
         Validate maximum string length.
         """
         if len(value) > length:
-            raise ValueError(
-                f"{field_name} cannot exceed {length} characters."
-            )
+            raise ValueError(f"{field_name} cannot exceed {length} characters.")
 
     @staticmethod
     def range(
@@ -51,10 +47,7 @@ class Validation:
         Validate numeric range.
         """
         if not minimum <= value <= maximum:
-            raise ValueError(
-                f"{field_name} must be between "
-                f"{minimum} and {maximum}."
-            )
+            raise ValueError(f"{field_name} must be between {minimum} and {maximum}.")
 
     @staticmethod
     def positive(
@@ -65,9 +58,7 @@ class Validation:
         Validate positive numbers.
         """
         if value < 0:
-            raise ValueError(
-                f"{field_name} cannot be negative."
-            )
+            raise ValueError(f"{field_name} cannot be negative.")
 
     @staticmethod
     def valid_uuid(
@@ -78,9 +69,7 @@ class Validation:
         Validate UUID values.
         """
         if not isinstance(value, UUID):
-            raise ValueError(
-                f"{field_name} must be a valid UUID."
-            )
+            raise ValueError(f"{field_name} must be a valid UUID.")
 
     @staticmethod
     def valid_email(
@@ -89,12 +78,7 @@ class Validation:
         """
         Basic email format validation.
         """
-        pattern = (
-            r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
-        )
+        pattern = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
 
         if not re.match(pattern, email):
-            raise ValueError(
-                "Invalid email format."
-            )
-        
+            raise ValueError("Invalid email format.")

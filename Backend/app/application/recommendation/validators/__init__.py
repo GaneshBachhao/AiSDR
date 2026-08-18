@@ -38,10 +38,7 @@ class UpdateROIValidator:
                 message="Investment cost cannot be negative.",
             )
 
-        if (
-            command.investment_cost == 0
-            and command.expected_return > 0
-        ):
+        if command.investment_cost == 0 and command.expected_return > 0:
             result.add_error(
                 field="investment_cost",
                 message="Investment cost must be greater than zero when calculating ROI.",

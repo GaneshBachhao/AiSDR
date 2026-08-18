@@ -4,6 +4,7 @@ Company Request DTOs.
 Architecture Freeze v5.0
 Contains incoming application request contracts for the Company aggregate.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass

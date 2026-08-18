@@ -9,10 +9,10 @@ from app.application.ai.commands.execute_ai_request import (
     ExecuteAIRequestCommand,
 )
 
-
 # ==========================================================
 # Happy Path
 # ==========================================================
+
 
 def test_create_valid_command() -> None:
     """
@@ -38,13 +38,13 @@ def test_create_valid_command() -> None:
 # Provider
 # ==========================================================
 
+
 def test_provider_is_required() -> None:
     """
     Provider cannot be empty.
     """
 
     with pytest.raises(ValidationError):
-
         ExecuteAIRequestCommand(
             provider="",
             model="gemini",
@@ -58,7 +58,6 @@ def test_provider_min_length() -> None:
     """
 
     with pytest.raises(ValidationError):
-
         ExecuteAIRequestCommand(
             provider="A",
             model="gemini",
@@ -70,13 +69,13 @@ def test_provider_min_length() -> None:
 # Model
 # ==========================================================
 
+
 def test_model_is_required() -> None:
     """
     Model cannot be empty.
     """
 
     with pytest.raises(ValidationError):
-
         ExecuteAIRequestCommand(
             provider="gemini",
             model="",
@@ -88,13 +87,13 @@ def test_model_is_required() -> None:
 # Prompt
 # ==========================================================
 
+
 def test_prompt_is_required() -> None:
     """
     Prompt cannot be empty.
     """
 
     with pytest.raises(ValidationError):
-
         ExecuteAIRequestCommand(
             provider="gemini",
             model="gemini-pro",
@@ -106,13 +105,13 @@ def test_prompt_is_required() -> None:
 # Temperature
 # ==========================================================
 
+
 def test_temperature_below_zero_should_fail() -> None:
     """
     Temperature cannot be negative.
     """
 
     with pytest.raises(ValidationError):
-
         ExecuteAIRequestCommand(
             provider="gemini",
             model="gemini",
@@ -127,7 +126,6 @@ def test_temperature_above_two_should_fail() -> None:
     """
 
     with pytest.raises(ValidationError):
-
         ExecuteAIRequestCommand(
             provider="gemini",
             model="gemini",
@@ -140,13 +138,13 @@ def test_temperature_above_two_should_fail() -> None:
 # Max Tokens
 # ==========================================================
 
+
 def test_max_tokens_must_be_positive() -> None:
     """
     Max tokens must be greater than zero.
     """
 
     with pytest.raises(ValidationError):
-
         ExecuteAIRequestCommand(
             provider="gemini",
             model="gemini",
@@ -158,6 +156,7 @@ def test_max_tokens_must_be_positive() -> None:
 # ==========================================================
 # Configuration
 # ==========================================================
+
 
 def test_command_is_immutable() -> None:
     """
@@ -171,7 +170,6 @@ def test_command_is_immutable() -> None:
     )
 
     with pytest.raises(ValidationError):
-
         command.provider = "openai"
 
 
@@ -181,7 +179,6 @@ def test_extra_fields_are_forbidden() -> None:
     """
 
     with pytest.raises(ValidationError):
-
         ExecuteAIRequestCommand(
             provider="gemini",
             model="gemini",

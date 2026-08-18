@@ -24,11 +24,8 @@ class FakeRecommendationRepository(
         recommendation: Recommendation | None = None,
     ) -> None:
 
-        self.recommendation = (
-            recommendation
-            or Recommendation(
-                assessment_id=AssessmentId(),
-            )
+        self.recommendation = recommendation or Recommendation(
+            assessment_id=AssessmentId(),
         )
 
         self.saved_recommendation: Recommendation | None = None
@@ -62,10 +59,7 @@ class FakeRecommendationRepository(
 
         self.deleted_recommendation = recommendation
 
-        if (
-            self.recommendation.id.value
-            == recommendation.id.value
-        ):
+        if self.recommendation.id.value == recommendation.id.value:
             self.recommendation = None
 
     async def get_by_id(
@@ -76,10 +70,7 @@ class FakeRecommendationRepository(
         if self.recommendation is None:
             return None
 
-        if (
-            self.recommendation.id.value
-            == recommendation_id
-        ):
+        if self.recommendation.id.value == recommendation_id:
             return self.recommendation
 
         return None
@@ -92,10 +83,7 @@ class FakeRecommendationRepository(
         if self.recommendation is None:
             return None
 
-        if (
-            self.recommendation.assessment_id.value
-            == assessment_id
-        ):
+        if self.recommendation.assessment_id.value == assessment_id:
             return self.recommendation
 
         return None

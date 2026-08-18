@@ -70,10 +70,7 @@ class ValidationResult:
         Returns True if a specific field has an error.
         """
 
-        return any(
-            error.field == field
-            for error in self.errors
-        )
+        return any(error.field == field for error in self.errors)
 
     def error_messages(
         self,
@@ -82,7 +79,4 @@ class ValidationResult:
         Returns plain validation messages.
         """
 
-        return [
-            error.message
-            for error in self.errors
-        ]
+        return [error.message for error in self.errors]

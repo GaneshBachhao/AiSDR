@@ -56,6 +56,7 @@ export class AssessmentDetail implements OnInit {
     this.service.start(assessment.assessment_id).subscribe({
       next: (updated) => {
         this.assessment.set(updated);
+        this.displayService.invalidate();
         this.starting.set(false);
       },
       error: () => {
@@ -73,7 +74,10 @@ export class AssessmentDetail implements OnInit {
     }
     this.deleting.set(true);
     this.service.remove(assessment.assessment_id).subscribe({
-      next: () => this.router.navigate(['/assessments']),
+      next: () => {
+        this.displayService.invalidate();
+        this.router.navigate(['/assessments']);
+      },
       error: () => {
         this.errorMessage.set('Delete failed. Check that the API is running.');
         this.deleting.set(false);

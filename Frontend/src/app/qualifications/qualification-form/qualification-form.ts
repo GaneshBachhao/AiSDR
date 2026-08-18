@@ -1,7 +1,10 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { AssessmentDisplay, AssessmentDisplayService } from '../../assessments/assessment-display.service';
+import {
+  AssessmentDisplay,
+  AssessmentDisplayService,
+} from '../../assessments/assessment-display.service';
 import { LeadDisplay, LeadDisplayService } from '../../leads/lead-display.service';
 import { QualificationService } from '../qualification.service';
 import {
@@ -61,7 +64,8 @@ export class QualificationForm implements OnInit {
             recommendation: qualification.recommendation,
           });
           this.leadDisplayService.resolve(qualification.lead_id).subscribe({
-            next: ({ companyName, contactName }) => this.leadLabel.set(`${companyName} — ${contactName}`),
+            next: ({ companyName, contactName }) =>
+              this.leadLabel.set(`${companyName} — ${contactName}`),
           });
           this.assessmentDisplayService.resolve(qualification.assessment_id).subscribe({
             next: ({ discoveryLabel }) => this.assessmentLabel.set(discoveryLabel),
@@ -69,7 +73,9 @@ export class QualificationForm implements OnInit {
           this.loading.set(false);
         },
         error: () => {
-          this.errorMessage.set('Could not load this qualification. Check that the API is running.');
+          this.errorMessage.set(
+            'Could not load this qualification. Check that the API is running.',
+          );
           this.loading.set(false);
         },
       });
@@ -77,7 +83,9 @@ export class QualificationForm implements OnInit {
     }
 
     const params = this.route.snapshot.queryParamMap;
-    this.form.set(emptyQualificationForm(params.get('lead_id') ?? '', params.get('assessment_id') ?? ''));
+    this.form.set(
+      emptyQualificationForm(params.get('lead_id') ?? '', params.get('assessment_id') ?? ''),
+    );
 
     this.leadDisplayService.loadAll().subscribe({
       next: (leads) => this.leadOptions.set([...leads.entries()]),
@@ -101,10 +109,13 @@ export class QualificationForm implements OnInit {
     this.errorMessage.set(null);
     const id = this.qualificationId();
 
-    const request = id ? this.service.update(id, this.toUpdateDto()) : this.service.create(this.form());
+    const request = id
+      ? this.service.update(id, this.toUpdateDto())
+      : this.service.create(this.form());
 
     request.subscribe({
-      next: (qualification) => this.router.navigate(['/qualifications', qualification.qualification_id]),
+      next: (qualification) =>
+        this.router.navigate(['/qualifications', qualification.qualification_id]),
       error: (err) => {
         this.errorMessage.set(this.describeError(err));
         this.saving.set(false);

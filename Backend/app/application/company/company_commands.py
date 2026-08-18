@@ -4,6 +4,7 @@ Company Commands.
 Architecture Freeze v5.0
 Application command contracts for the Company aggregate.
 """
+
 from __future__ import annotations
 
 from app.application.common.commands.command import Command

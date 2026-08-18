@@ -24,10 +24,7 @@ class UpdateQualificationHandler:
         if validation.has_errors():
             raise ValidationException(
                 message="Qualification validation failed.",
-                details={
-                    error.field: error.message
-                    for error in validation.errors
-                },
+                details={error.field: error.message for error in validation.errors},
             )
 
         qualification_id = QualificationId(command.qualification_id)

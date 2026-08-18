@@ -1,5 +1,4 @@
 from datetime import UTC, datetime
-from typing import Optional
 from uuid import uuid4
 
 from app.domain.shared.base import Entity
@@ -18,7 +17,7 @@ class ReportVersion(Entity[VersionId]):
         self,
         version_number: VersionNumber,
         change_summary: str,
-        version_id: Optional[VersionId] = None,
+        version_id: VersionId | None = None,
     ):
         version_id = version_id or VersionId(uuid4())
 
@@ -30,7 +29,7 @@ class ReportVersion(Entity[VersionId]):
         self._published = False
 
         self._created_at = datetime.now(UTC)
-        self._published_at: Optional[datetime] = None
+        self._published_at: datetime | None = None
 
     # --------------------------------------------------
     # Properties
@@ -53,7 +52,7 @@ class ReportVersion(Entity[VersionId]):
         return self._published
 
     @property
-    def published_at(self) -> Optional[datetime]:
+    def published_at(self) -> datetime | None:
         return self._published_at
 
     # --------------------------------------------------
@@ -63,9 +62,7 @@ class ReportVersion(Entity[VersionId]):
     def publish(self) -> None:
 
         if self._published:
-            raise ReportException(
-                "Version has already been published."
-            )
+            raise ReportException("Version has already been published.")
 
         self._published = True
         self._published_at = datetime.now(UTC)

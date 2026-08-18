@@ -14,6 +14,9 @@ from app.application.ai.dto.ai_response_dto import (
 from app.application.ai.mappers.ai_mapper import (
     AIMapper,
 )
+from app.domain.ai.aggregates.ai_request import (
+    AIRequest,
+)
 from app.domain.ai.entities.ai_response import (
     AIResponse,
 )
@@ -23,14 +26,11 @@ from app.domain.ai.enums.finish_reason import (
 from app.domain.ai.value_objects.token_usage import (
     TokenUsage,
 )
-from app.domain.ai.aggregates.ai_request import (
-    AIRequest,
-)
-
 
 # ==========================================================
 # Helpers
 # ==========================================================
+
 
 def create_command() -> ExecuteAIRequestCommand:
     return ExecuteAIRequestCommand(
@@ -57,6 +57,7 @@ def create_response() -> AIResponse:
 # Command -> DTO
 # ==========================================================
 
+
 def test_command_to_dto():
     command = create_command()
 
@@ -74,6 +75,7 @@ def test_command_to_dto():
 # ==========================================================
 # DTO -> Domain
 # ==========================================================
+
 
 def test_dto_to_domain():
     dto = AIRequestDTO(
@@ -99,6 +101,7 @@ def test_dto_to_domain():
 # Response -> DTO
 # ==========================================================
 
+
 def test_response_to_dto():
     response = create_response()
 
@@ -115,6 +118,7 @@ def test_response_to_dto():
 # Token Usage Mapping
 # ==========================================================
 
+
 def test_token_usage_mapping():
     response = create_response()
 
@@ -129,6 +133,7 @@ def test_token_usage_mapping():
 # Finish Reason Mapping
 # ==========================================================
 
+
 def test_finish_reason_mapping():
     response = create_response()
 
@@ -140,6 +145,7 @@ def test_finish_reason_mapping():
 # ==========================================================
 # Timestamp Mapping
 # ==========================================================
+
 
 def test_created_at_mapping():
     response = create_response()
@@ -153,6 +159,7 @@ def test_created_at_mapping():
 # Response Id Mapping
 # ==========================================================
 
+
 def test_response_id_mapping():
     response = create_response()
 
@@ -164,6 +171,7 @@ def test_response_id_mapping():
 # ==========================================================
 # Value Object Preservation
 # ==========================================================
+
 
 def test_value_objects_are_preserved():
     dto = AIRequestDTO(
@@ -187,6 +195,7 @@ def test_value_objects_are_preserved():
 # Total Token Calculation
 # ==========================================================
 
+
 def test_total_tokens_are_calculated():
     usage = TokenUsage(
         prompt_tokens=10,
@@ -199,6 +208,7 @@ def test_total_tokens_are_calculated():
 # ==========================================================
 # End-to-End Mapping
 # ==========================================================
+
 
 def test_end_to_end_mapping():
     command = create_command()

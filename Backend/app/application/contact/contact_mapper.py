@@ -106,7 +106,4 @@ class ContactMapper:
         contacts: list[Contact],
     ) -> list[ContactResponseDTO]:
         """Map a Contact collection to response DTOs."""
-        return [
-            ContactMapper.to_response(contact)
-            for contact in contacts
-        ]
+        return [ContactMapper.to_response(contact) for contact in contacts]

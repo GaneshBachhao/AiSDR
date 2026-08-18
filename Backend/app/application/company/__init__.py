@@ -12,7 +12,6 @@ from app.application.common.validation.validation_result import (
 from app.application.common.validation.validator import (
     Validator,
 )
-
 from app.application.company.company_commands import (
     CreateCompanyCommand,
     UpdateCompanyCommand,
@@ -20,9 +19,7 @@ from app.application.company.company_commands import (
 
 
 class CompanyValidator(
-    Validator[
-        CreateCompanyCommand | UpdateCompanyCommand
-    ],
+    Validator[CreateCompanyCommand | UpdateCompanyCommand],
 ):
     """
     Validates Company commands.
@@ -49,10 +46,7 @@ class CompanyValidator(
             if len(request.name.strip()) < 2:
                 result.add_error(
                     field="name",
-                    message=(
-                        "Company name must contain at least "
-                        "2 characters."
-                    ),
+                    message=("Company name must contain at least 2 characters."),
                 )
 
             self._validate_optional_text_fields(
@@ -72,10 +66,7 @@ class CompanyValidator(
             elif len(request.name.strip()) < 2:
                 result.add_error(
                     field="name",
-                    message=(
-                        "Company name must contain at least "
-                        "2 characters."
-                    ),
+                    message=("Company name must contain at least 2 characters."),
                 )
 
         self._validate_optional_text_fields(

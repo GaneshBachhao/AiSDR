@@ -4,8 +4,7 @@ Repository supporting specifications.
 
 from __future__ import annotations
 
-from typing import Generic
-from typing import TypeVar
+from typing import Generic, TypeVar
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -41,13 +40,8 @@ class SpecificationRepository(
         specification,
     ) -> list[TEntity]:
 
-        query = specification.apply(
-            select(self.model_type)
-        )
+        query = specification.apply(select(self.model_type))
 
         result = await self._session.execute(query)
 
-        return [
-            self.mapper.to_domain(model)
-            for model in result.scalars().all()
-        ]
+        return [self.mapper.to_domain(model) for model in result.scalars().all()]

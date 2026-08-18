@@ -5,6 +5,7 @@ import { CompanyService } from '../../companies/company.service';
 import { CompanyResponseDTO } from '../../companies/company.models';
 import { ContactService } from '../../contacts/contact.service';
 import { ContactResponseDTO } from '../../contacts/contact.models';
+import { LeadDisplayService } from '../lead-display.service';
 import { LeadService } from '../lead.service';
 import {
   CreateLeadRequestDTO,
@@ -23,6 +24,7 @@ import {
 })
 export class LeadForm implements OnInit {
   private readonly service = inject(LeadService);
+  private readonly displayService = inject(LeadDisplayService);
   private readonly companyService = inject(CompanyService);
   private readonly contactService = inject(ContactService);
   private readonly route = inject(ActivatedRoute);
@@ -115,7 +117,10 @@ export class LeadForm implements OnInit {
       : this.service.create(this.form());
 
     request.subscribe({
-      next: (lead) => this.router.navigate(['/leads', lead.id]),
+      next: (lead) => {
+        this.displayService.invalidate();
+        this.router.navigate(['/leads', lead.id]);
+      },
       error: (err) => {
         this.errorMessage.set(this.describeError(err));
         this.saving.set(false);

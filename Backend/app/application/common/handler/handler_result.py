@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Generic, TypeVar
 
-
 T = TypeVar("T")
 
 
@@ -36,7 +35,7 @@ class HandlerResult(Generic[T]):
         data: T | None = None,
         message: str | None = None,
         metadata: dict[str, Any] | None = None,
-    ) -> "HandlerResult[T]":
+    ) -> HandlerResult[T]:
         """
         Successful execution.
         """
@@ -55,7 +54,7 @@ class HandlerResult(Generic[T]):
         error_code: str | None = None,
         errors: list[str] | None = None,
         metadata: dict[str, Any] | None = None,
-    ) -> "HandlerResult[T]":
+    ) -> HandlerResult[T]:
         """
         Failed execution.
         """
@@ -92,7 +91,6 @@ class HandlerResult(Generic[T]):
         """
 
         if not self.success:
-
             raise ValueError(
                 self.message or "Handler execution failed.",
             )

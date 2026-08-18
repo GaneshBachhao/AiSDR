@@ -19,19 +19,10 @@ class ImplementationRisk:
         Validate business invariants.
         """
         if not self.title.strip():
-            raise ValueError(
-                "Risk title cannot be empty."
-            )
+            raise ValueError("Risk title cannot be empty.")
 
         if not self.description.strip():
-            raise ValueError(
-                "Risk description cannot be empty."
-            )
+            raise ValueError("Risk description cannot be empty.")
 
-        if (
-            self.mitigation is not None
-            and not self.mitigation.strip()
-        ):
-            raise ValueError(
-                "Mitigation cannot be empty."
-            )
+        if self.mitigation is not None and not self.mitigation.strip():
+            raise ValueError("Mitigation cannot be empty.")

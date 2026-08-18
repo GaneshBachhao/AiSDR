@@ -87,9 +87,7 @@ async def update_discovery(
     handler: UpdateDiscoveryHandlerDependency,
 ) -> DiscoveryResponseDTO:
     """Update a discovery session."""
-    return await handler.handle(
-        DiscoveryMapper.to_update_command(discovery_id, request)
-    )
+    return await handler.handle(DiscoveryMapper.to_update_command(discovery_id, request))
 
 
 @router.delete(

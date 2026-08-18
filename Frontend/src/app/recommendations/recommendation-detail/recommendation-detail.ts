@@ -2,7 +2,10 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AssessmentDisplayService } from '../../assessments/assessment-display.service';
 import { RecommendationService } from '../recommendation.service';
-import { RecommendationResponseDTO, recommendationStatusBadgeClass } from '../recommendation.models';
+import {
+  RecommendationResponseDTO,
+  recommendationStatusBadgeClass,
+} from '../recommendation.models';
 
 @Component({
   selector: 'app-recommendation-detail',
@@ -22,6 +25,8 @@ export class RecommendationDetail implements OnInit {
   protected readonly assessmentLabel = signal<string | null>(null);
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal<string | null>(null);
+  protected readonly submitting = signal(false);
+  protected readonly approving = signal(false);
 
   private get id(): string {
     return this.route.snapshot.paramMap.get('id')!;
@@ -39,6 +44,44 @@ export class RecommendationDetail implements OnInit {
       error: () => {
         this.errorMessage.set('Could not load this recommendation. Check that the API is running.');
         this.loading.set(false);
+      },
+    });
+  }
+
+  submit(): void {
+    const recommendation = this.recommendation();
+    if (!recommendation) return;
+    this.submitting.set(true);
+    this.errorMessage.set(null);
+    this.service.submit(recommendation.id).subscribe({
+      next: (updated) => {
+        this.recommendation.set(updated);
+        this.submitting.set(false);
+      },
+      error: () => {
+        this.errorMessage.set(
+          'Could not submit this recommendation for review. Check that the API is running.',
+        );
+        this.submitting.set(false);
+      },
+    });
+  }
+
+  approve(): void {
+    const recommendation = this.recommendation();
+    if (!recommendation) return;
+    this.approving.set(true);
+    this.errorMessage.set(null);
+    this.service.approve(recommendation.id).subscribe({
+      next: (updated) => {
+        this.recommendation.set(updated);
+        this.approving.set(false);
+      },
+      error: () => {
+        this.errorMessage.set(
+          'Could not approve this recommendation. Check that the API is running.',
+        );
+        this.approving.set(false);
       },
     });
   }

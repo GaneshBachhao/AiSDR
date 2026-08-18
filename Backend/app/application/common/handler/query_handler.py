@@ -7,10 +7,8 @@ Provides the common execution pipeline for all query handlers
 
 from __future__ import annotations
 
-from abc import ABC
-from abc import abstractmethod
-from typing import Generic
-from typing import TypeVar
+from abc import ABC, abstractmethod
+from typing import Generic, TypeVar
 
 from app.application.common.handler.base_handler import (
     BaseHandler,

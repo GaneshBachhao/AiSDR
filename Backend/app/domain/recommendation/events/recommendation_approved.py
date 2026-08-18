@@ -1,6 +1,5 @@
-from app.domain.shared.base import DomainEvent
-
 from app.domain.recommendation.identifiers.recommendation_id import RecommendationId
+from app.domain.shared.base import DomainEvent
 
 
 class RecommendationApproved(DomainEvent):

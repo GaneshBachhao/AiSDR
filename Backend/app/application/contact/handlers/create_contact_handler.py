@@ -59,10 +59,7 @@ class CreateContactHandler:
         if not validation.is_valid:
             raise ValidationException(
                 message="Contact validation failed.",
-                details={
-                    error.field: error.message
-                    for error in validation.errors
-                },
+                details={error.field: error.message for error in validation.errors},
             )
 
         try:
@@ -86,10 +83,8 @@ class CreateContactHandler:
                         details={"company_id": command.company_id},
                     )
 
-                existing = (
-                    await self._unit_of_work.contact_repository.find_by_email(
-                        contact.email.value,
-                    )
+                existing = await self._unit_of_work.contact_repository.find_by_email(
+                    contact.email.value,
                 )
 
                 if existing is not None:

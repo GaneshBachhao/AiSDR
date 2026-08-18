@@ -54,7 +54,13 @@ describe('LeadService', () => {
 
   it('creates a lead', () => {
     service
-      .create({ company_id: 'c1', contact_id: 'ct1', source: 'AI Research', score: 74, notes: null })
+      .create({
+        company_id: 'c1',
+        contact_id: 'ct1',
+        source: 'AI Research',
+        score: 74,
+        notes: null,
+      })
       .subscribe();
     const req = httpMock.expectOne(base);
     expect(req.request.method).toBe('POST');

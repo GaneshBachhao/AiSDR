@@ -178,7 +178,7 @@ class CompanyResearchMapper:
         for marker in markers:
             idx = lower.find(marker)
             if idx >= 0:
-                value = text[idx + len(marker):].split(".")[0].strip()
+                value = text[idx + len(marker) :].split(".")[0].strip()
                 if 2 <= len(value) <= 100:
                     return value.title()
         return fallback

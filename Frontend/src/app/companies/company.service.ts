@@ -2,7 +2,11 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { CompanyResponseDTO, CreateCompanyRequestDTO, UpdateCompanyRequestDTO } from './company.models';
+import {
+  CompanyResponseDTO,
+  CreateCompanyRequestDTO,
+  UpdateCompanyRequestDTO,
+} from './company.models';
 
 @Injectable({ providedIn: 'root' })
 export class CompanyService {

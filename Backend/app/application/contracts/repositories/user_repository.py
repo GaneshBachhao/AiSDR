@@ -3,6 +3,7 @@ User repository contract.
 
 Defines the application-facing persistence contract for User.
 """
+
 from __future__ import annotations
 
 from abc import abstractmethod

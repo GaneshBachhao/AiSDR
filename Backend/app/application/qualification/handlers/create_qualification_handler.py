@@ -28,10 +28,7 @@ class CreateQualificationHandler(
         if validation.has_errors():
             raise ValidationException(
                 message="Qualification validation failed.",
-                details={
-                    error.field: error.message
-                    for error in validation.errors
-                },
+                details={error.field: error.message for error in validation.errors},
             )
 
         qualification = Qualification(

@@ -15,13 +15,44 @@ class EvidenceSignalExtractor:
     SIGNAL_KEYWORDS = {
         "hiring": ("hiring", "careers", "job opening", "vacancy", "recruiting"),
         "growth": ("expansion", "expanded", "acquisition", "funding", "investment", "new location", "growth"),
-        "technology": ("cloud", "azure", "software", "technology", "digital", "data", "erp", "crm", "modernization", "migration"),
-        "ai": ("artificial intelligence", "generative ai", "machine learning", "ai ", "automation", "copilot"),
-        "process": ("manual process", "workflow", "documents", "reporting", "compliance", "operations", "integration"),
+        "technology": (
+            "cloud",
+            "azure",
+            "software",
+            "technology",
+            "digital",
+            "data",
+            "erp",
+            "crm",
+            "modernization",
+            "migration",
+        ),
+        "ai": (
+            "artificial intelligence",
+            "generative ai",
+            "machine learning",
+            "ai ",
+            "automation",
+            "copilot",
+        ),
+        "process": (
+            "manual process",
+            "workflow",
+            "documents",
+            "reporting",
+            "compliance",
+            "operations",
+            "integration",
+        ),
         "funding": ("funding", "investment", "raised", "series a", "series b", "grant"),
     }
 
-    SCALE_STRONG_MARKERS = ("enterprise", "employees", "revenue", "funding", "investment", "million", "billion")
+    # "enterprise" is deliberately NOT a strong-scale marker -- evidence
+    # describing a company as "enterprise"-scale should count against a
+    # small/mid-size ICP, not toward the highest "ability" score. It used
+    # to be here, which meant candidates whose evidence text literally
+    # said "enterprise" scored the maximum ability sub-score.
+    SCALE_STRONG_MARKERS = ("employees", "revenue", "funding", "investment", "million", "billion")
     SCALE_MODERATE_MARKERS = ("established", "global company", "large company")
 
     @classmethod
@@ -92,9 +123,7 @@ class EvidenceSignalExtractor:
         conservatively, not permissively.
         """
         confirmed = sum(1 for value in signals.values() if value)
-        confirmed_company_specific = sum(
-            1 for value in (company_specific_signals or {}).values() if value
-        )
+        confirmed_company_specific = sum(1 for value in (company_specific_signals or {}).values() if value)
 
         if (
             confirmed >= 2

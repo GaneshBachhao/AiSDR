@@ -4,8 +4,7 @@ Tests for DeleteAssessmentHandler.
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
@@ -49,9 +48,7 @@ async def test_delete_assessment_success(
 
     assessment = Mock()
 
-    unit_of_work.assessment_repository.get_by_id.return_value = (
-        assessment
-    )
+    unit_of_work.assessment_repository.get_by_id.return_value = assessment
 
     await handler.handle("00000000-0000-0000-0000-000000000002")
 
@@ -74,5 +71,4 @@ async def test_delete_assessment_not_found(
     unit_of_work.assessment_repository.get_by_id.return_value = None
 
     with pytest.raises(NotFoundException):
-
         await handler.handle("00000000-0000-0000-0000-000000000002")

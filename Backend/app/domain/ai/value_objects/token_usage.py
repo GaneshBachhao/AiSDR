@@ -18,24 +18,15 @@ class TokenUsage:
     def __post_init__(self) -> None:
 
         if self.prompt_tokens < 0:
-            raise ValueError(
-                "Prompt tokens cannot be negative."
-            )
+            raise ValueError("Prompt tokens cannot be negative.")
 
         if self.completion_tokens < 0:
-            raise ValueError(
-                "Completion tokens cannot be negative."
-            )
+            raise ValueError("Completion tokens cannot be negative.")
 
         if self.total_tokens < 0:
-            raise ValueError(
-                "Total tokens cannot be negative."
-            )
+            raise ValueError("Total tokens cannot be negative.")
 
-        calculated = (
-            self.prompt_tokens
-            + self.completion_tokens
-        )
+        calculated = self.prompt_tokens + self.completion_tokens
 
         if self.total_tokens == 0:
             object.__setattr__(
@@ -45,6 +36,4 @@ class TokenUsage:
             )
 
         elif self.total_tokens != calculated:
-            raise ValueError(
-                "Total tokens must equal prompt + completion tokens."
-            )
+            raise ValueError("Total tokens must equal prompt + completion tokens.")

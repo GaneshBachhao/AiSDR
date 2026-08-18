@@ -80,9 +80,7 @@ async def test_gather_tags_evidence_without_the_company_name_as_industry_general
 @pytest.mark.asyncio
 async def test_gather_deduplicates_urls_across_queries():
     client = Mock()
-    client.search.return_value = [
-        {"title": "Acme", "url": "https://acme.example/page", "content": "x"}
-    ]
+    client.search.return_value = [{"title": "Acme", "url": "https://acme.example/page", "content": "x"}]
     adapter = TavilyEvidenceAdapter(client=client, settings=CompanyResearchSettings())
     request = CompanyResearchRequest(geography="India")
 

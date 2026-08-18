@@ -18,7 +18,9 @@
       </h1>
       <span class="badge {{ discoveryStatusBadgeClass(d.status) }}">{{ d.status }}</span>
       @let completeness = discoveryCompleteness(d);
-      <p class="subtitle">{{ completeness.filled }} of {{ completeness.total }} needs fields captured</p>
+      <p class="subtitle">
+        {{ completeness.filled }} of {{ completeness.total }} needs fields captured
+      </p>
     </header>
 
     <section class="details">
@@ -63,7 +65,11 @@
           View Assessment ({{ a.status }})
         </a>
       } @else {
-        <a class="button secondary" routerLink="/assessments/new" [queryParams]="{ discovery_id: d.id }">
+        <a
+          class="button secondary"
+          routerLink="/assessments/new"
+          [queryParams]="{ discovery_id: d.id }"
+        >
           + Add Assessment
         </a>
       }

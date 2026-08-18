@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any
 
 
 class HandlerException(Exception):
@@ -12,15 +12,14 @@ class HandlerException(Exception):
     def __init__(
         self,
         message: str,
-        error_code: Optional[str] = None,
-        details: Optional[dict[str, Any]] = None,
+        error_code: str | None = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(message)
 
         self.message = message
         self.error_code = error_code
         self.details = details or {}
-
 
     def to_dict(self) -> dict[str, Any]:
         """
@@ -46,9 +45,7 @@ class ValidationHandlerException(HandlerException):
         super().__init__(
             message=message,
             error_code="VALIDATION_ERROR",
-            details={
-                "errors": errors
-            },
+            details={"errors": errors},
         )
 
 
@@ -76,7 +73,7 @@ class HandlerExecutionException(HandlerException):
     def __init__(
         self,
         message: str,
-        details: Optional[dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(
             message=message,

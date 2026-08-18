@@ -12,17 +12,15 @@ from app.infrastructure.configuration.database_settings import (
     DatabaseSettings,
 )
 
-from app.infrastructure.persistence.database.base import (
-    Base,
-)
-
-from app.infrastructure.persistence.database.engine import (
-    get_async_engine,
-)
-
 # IMPORTANT:
 # Import all SQLAlchemy models so metadata is populated.
 from app.infrastructure.persistence import models  # noqa: F401
+from app.infrastructure.persistence.database.base import (
+    Base,
+)
+from app.infrastructure.persistence.database.engine import (
+    get_async_engine,
+)
 
 
 async def initialize_database() -> None:
@@ -37,7 +35,6 @@ async def initialize_database() -> None:
     )
 
     async with engine.begin() as connection:
-
         await connection.run_sync(
             Base.metadata.create_all,
         )
@@ -47,22 +44,19 @@ async def initialize_database() -> None:
         # -------------------------------
         from sqlalchemy import text
 
-        result = await connection.execute(
-            text("PRAGMA database_list")
-        )
+        result = await connection.execute(text("PRAGMA database_list"))
 
         print("\nDATABASE:")
         print(result.fetchall())
 
-        result = await connection.execute(
-            text("PRAGMA table_info(assessments)")
-        )
+        result = await connection.execute(text("PRAGMA table_info(assessments)"))
 
         print("\nASSESSMENTS TABLE:")
         for row in result.fetchall():
             print(row)
 
         print("-" * 80)
+
 
 async def shutdown_database() -> None:
     """
@@ -92,9 +86,7 @@ async def lifespan(
 
     await initialize_database()
 
-
     yield
-
 
     # ----------------------------
     # Shutdown

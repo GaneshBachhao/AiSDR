@@ -23,10 +23,10 @@ from app.domain.ai.value_objects.provider_name import ProviderName
 from app.domain.ai.value_objects.temperature import Temperature
 from app.domain.ai.value_objects.token_usage import TokenUsage
 
-
 # ==========================================================
 # Helpers
 # ==========================================================
+
 
 def create_request() -> AIRequest:
     return AIRequest(
@@ -52,6 +52,7 @@ def create_response() -> AIResponse:
 # ==========================================================
 # Happy Path
 # ==========================================================
+
 
 @pytest.mark.asyncio
 async def test_execute_returns_response() -> None:
@@ -124,20 +125,18 @@ async def test_provider_called_once() -> None:
 # Failure
 # ==========================================================
 
+
 @pytest.mark.asyncio
 async def test_execute_marks_request_failed() -> None:
     provider = AsyncMock(spec=AIProvider)
 
-    provider.execute.side_effect = RuntimeError(
-        "Provider unavailable."
-    )
+    provider.execute.side_effect = RuntimeError("Provider unavailable.")
 
     service = AIExecutionService(provider)
 
     request = create_request()
 
     with pytest.raises(RuntimeError):
-
         await service.execute(request)
 
     assert request.is_failed
@@ -149,16 +148,13 @@ async def test_execute_marks_request_failed() -> None:
 async def test_execute_propagates_exception() -> None:
     provider = AsyncMock(spec=AIProvider)
 
-    provider.execute.side_effect = RuntimeError(
-        "Boom"
-    )
+    provider.execute.side_effect = RuntimeError("Boom")
 
     service = AIExecutionService(provider)
 
     request = create_request()
 
     with pytest.raises(RuntimeError):
-
         await service.execute(request)
 
 
@@ -166,16 +162,13 @@ async def test_execute_propagates_exception() -> None:
 async def test_failed_request_status() -> None:
     provider = AsyncMock(spec=AIProvider)
 
-    provider.execute.side_effect = RuntimeError(
-        "Failure"
-    )
+    provider.execute.side_effect = RuntimeError("Failure")
 
     service = AIExecutionService(provider)
 
     request = create_request()
 
     with pytest.raises(RuntimeError):
-
         await service.execute(request)
 
     assert request.status == AIRequestStatus.FAILED

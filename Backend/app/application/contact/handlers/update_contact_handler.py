@@ -48,10 +48,7 @@ class UpdateContactHandler:
         if not validation.is_valid:
             raise ValidationException(
                 message="Contact validation failed.",
-                details={
-                    error.field: error.message
-                    for error in validation.errors
-                },
+                details={error.field: error.message for error in validation.errors},
             )
 
         try:
@@ -74,30 +71,19 @@ class UpdateContactHandler:
                         details={"contact_id": command.contact_id},
                     )
 
-                if (
-                    command.first_name is not None
-                    or command.last_name is not None
-                ):
+                if command.first_name is not None or command.last_name is not None:
                     contact.update_name(
                         first_name=(
-                            command.first_name
-                            if command.first_name is not None
-                            else contact.first_name
+                            command.first_name if command.first_name is not None else contact.first_name
                         ),
-                        last_name=(
-                            command.last_name
-                            if command.last_name is not None
-                            else contact.last_name
-                        ),
+                        last_name=(command.last_name if command.last_name is not None else contact.last_name),
                     )
 
                 if command.email is not None:
                     normalized_email = Email(command.email)
 
-                    existing = (
-                        await self._unit_of_work.contact_repository.find_by_email(
-                            normalized_email.value,
-                        )
+                    existing = await self._unit_of_work.contact_repository.find_by_email(
+                        normalized_email.value,
                     )
 
                     if existing is not None and existing.id != contact.id:

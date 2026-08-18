@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
   CreateQualificationRequestDTO,
+  QualificationListItemDTO,
   QualificationResponseDTO,
   UpdateQualificationRequestDTO,
 } from './qualification.models';
@@ -16,8 +17,8 @@ export class QualificationService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiBaseUrl}/qualifications`;
 
-  list(): Observable<QualificationResponseDTO[]> {
-    return this.http.get<QualificationResponseDTO[]>(this.base, {
+  list(): Observable<QualificationListItemDTO[]> {
+    return this.http.get<QualificationListItemDTO[]>(this.base, {
       params: new HttpParams().set('skip', 0).set('limit', 200),
     });
   }

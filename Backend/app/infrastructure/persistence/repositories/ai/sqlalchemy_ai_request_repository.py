@@ -7,15 +7,12 @@ from __future__ import annotations
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.ai.aggregates.ai_request import AIRequest
-
 from app.infrastructure.persistence.mappers.ai_request_mapper import (
     AIRequestMapper,
 )
-
 from app.infrastructure.persistence.models.ai_request_model import (
     AIRequestModel,
 )
-
 from app.infrastructure.persistence.repositories.base.sqlalchemy_repository import (
     SqlAlchemyRepository,
 )

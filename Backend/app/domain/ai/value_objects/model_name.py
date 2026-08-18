@@ -19,14 +19,10 @@ class ModelName:
         value = self.value.strip()
 
         if len(value) < self.MIN_LENGTH:
-            raise ValueError(
-                "Model name is too short."
-            )
+            raise ValueError("Model name is too short.")
 
         if len(value) > self.MAX_LENGTH:
-            raise ValueError(
-                "Model name is too long."
-            )
+            raise ValueError("Model name is too long.")
 
         object.__setattr__(
             self,

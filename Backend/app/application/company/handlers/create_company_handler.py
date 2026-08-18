@@ -8,6 +8,7 @@ Transaction rule:
 - The transaction is explicitly committed before returning the response.
 - Other aggregates/domains are not modified by this handler.
 """
+
 from __future__ import annotations
 
 from sqlalchemy.exc import IntegrityError
@@ -42,10 +43,7 @@ class CreateCompanyHandler:
         if not validation.is_valid:
             raise ValidationException(
                 message="Company validation failed.",
-                details={
-                    error.field: error.message
-                    for error in validation.errors
-                },
+                details={error.field: error.message for error in validation.errors},
             )
 
         company = self._mapper.to_domain(command)

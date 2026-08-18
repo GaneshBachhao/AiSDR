@@ -1,9 +1,33 @@
 # Company Search & Prompt Fine-Tuning Plan
 
-Planning only — nothing in this document has been implemented, and no
-Gemini/Tavily calls were made to produce it. Grounded in a full read of
-the actual current code (exact files/lines cited throughout), not
-assumptions about what the logic probably does.
+Originally planning-only; §6 step 1 has since been implemented (see
+status note below). Grounded throughout in a full read of the actual
+current code (exact files/lines cited), not assumptions about what the
+logic probably does.
+
+## Status
+
+- **`[x]` Done (2026-08-17), zero live API calls:** §6 step 1 — un-gated
+  `enterprise_exclusion` in `search_companies_handler.py` (it now applies
+  unconditionally instead of only when the caller supplies
+  `company_size`), and removed `"enterprise"` from
+  `EvidenceSignalExtractor.SCALE_STRONG_MARKERS` (§1a, §1c below). Two new
+  regression tests added
+  (`test_enterprise_marker_in_evidence_is_rejected_even_without_company_size_requested`,
+  `test_large_employee_count_in_evidence_is_rejected_even_without_company_size_requested`
+  in `tests/application/company_research/handlers/test_search_companies_handler.py`,
+  plus `test_scale_signal_the_word_enterprise_alone_is_not_a_strong_marker`
+  in `tests/domain/company_research/services/test_evidence_signal_extractor.py`)
+  — all confirmed to fail against the pre-fix code and pass after. Full
+  backend suite: 535 passing (up from 532), no regressions. **Not yet
+  live-verified against a real `/company-research/search` call** — that's
+  the one step in this plan that costs real Tavily/Gemini quota, still
+  pending whenever you're ready to spend it.
+- **`[ ]` Not started:** §1b (continuous `size_score` curve), §1a's new
+  job-posting/freelance-marketplace/anonymous-buyer rejects, §1a's
+  UN/government-procurement language detection, §2's `DomainProfile`
+  wiring, §3 (discovery query tuning), §4 (identity-prompt enrichment),
+  §1d (tier tagging), §5 (recommendation-prompt review).
 
 ## Context: why giant companies show up in results today
 

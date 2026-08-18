@@ -5,7 +5,6 @@ Session fixtures.
 from __future__ import annotations
 
 import pytest_asyncio
-
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,

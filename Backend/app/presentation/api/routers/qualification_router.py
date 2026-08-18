@@ -8,11 +8,12 @@ from app.application.qualification.dto.qualification_request import (
     CreateQualificationRequestDTO,
     UpdateQualificationRequestDTO,
 )
-from app.application.qualification.handlers.create_qualification_handler import CreateQualificationHandler
-from app.application.qualification.handlers.delete_qualification_handler import DeleteQualificationHandler
-from app.application.qualification.handlers.get_qualification_handler import GetQualificationHandler
-from app.application.qualification.handlers.list_qualification_handler import ListQualificationHandler
-from app.application.qualification.handlers.update_qualification_handler import UpdateQualificationHandler
+from app.application.qualification.dto.qualification_response import (
+    CreateQualificationResponseDTO,
+    GetQualificationResponseDTO,
+    ListQualificationResponseDTO,
+    UpdateQualificationResponseDTO,
+)
 from app.application.qualification.qualification_commands import (
     CreateQualificationCommand,
     DeleteQualificationCommand,
@@ -30,7 +31,6 @@ from app.presentation.api.dependencies.handlers import (
     UpdateQualificationHandlerDependency,
 )
 
-
 router = APIRouter(
     prefix="/qualifications",
     tags=["Qualifications"],
@@ -39,6 +39,7 @@ router = APIRouter(
 
 @router.post(
     "",
+    response_model=CreateQualificationResponseDTO,
     status_code=status.HTTP_201_CREATED,
 )
 async def create_qualification(
@@ -51,6 +52,7 @@ async def create_qualification(
 
 @router.get(
     "/{qualification_id}",
+    response_model=GetQualificationResponseDTO,
 )
 async def get_qualification(
     qualification_id: str,
@@ -64,6 +66,7 @@ async def get_qualification(
 
 @router.get(
     "",
+    response_model=list[ListQualificationResponseDTO],
 )
 async def list_qualifications(
     handler: ListQualificationHandlerDependency,
@@ -83,6 +86,7 @@ async def list_qualifications(
 
 @router.put(
     "/{qualification_id}",
+    response_model=UpdateQualificationResponseDTO,
 )
 async def update_qualification(
     qualification_id: str,

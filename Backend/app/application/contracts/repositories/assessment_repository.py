@@ -15,6 +15,9 @@ from app.domain.assessment.entities.assessment import (
 from app.domain.assessment.identifiers.assessment_id import (
     AssessmentId,
 )
+from app.domain.discovery.identifiers.discovery_id import (
+    DiscoveryId,
+)
 from app.domain.lead.identifiers.lead_id import (
     LeadId,
 )
@@ -39,5 +42,15 @@ class AssessmentRepository(
     ) -> Assessment | None:
         """
         Returns the assessment associated with a lead.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_by_discovery(
+        self,
+        discovery_id: DiscoveryId,
+    ) -> Assessment | None:
+        """
+        Returns the assessment associated with a discovery, if any.
         """
         raise NotImplementedError

@@ -3,7 +3,6 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { Router, UrlTree, provideRouter, convertToParamMap } from '@angular/router';
 import { authGuard } from './auth.guard';
-import { AuthService } from './auth.service';
 
 describe('authGuard', () => {
   beforeEach(() => {
@@ -17,10 +16,7 @@ describe('authGuard', () => {
 
   function runGuard(): boolean | UrlTree {
     return TestBed.runInInjectionContext(() =>
-      authGuard(
-        { paramMap: convertToParamMap({}) } as never,
-        { url: '/companies' } as never,
-      ),
+      authGuard({ paramMap: convertToParamMap({}) } as never, { url: '/companies' } as never),
     ) as boolean | UrlTree;
   }
 

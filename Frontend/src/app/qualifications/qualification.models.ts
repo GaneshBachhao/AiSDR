@@ -1,46 +1,27 @@
-/**
- * Unlike every prior module, `qualification_router.py` has no
- * `response_model=` on any route (verified directly in
- * Backend/app/presentation/api/routers/qualification_router.py), so
- * `openapi-typescript` emits `unknown` for every response body here --
- * there's no generated schema to alias onto. Hand-written instead, from
- * the real DTOs in
- * Backend/app/application/qualification/dto/qualification_response.py,
- * the same manual-sync discipline already used for DiscoveryStatus/
- * AssessmentStatus. A real fix would be adding response_model= server-side
- * (a backend change, out of scope here -- see frontend_backlog.md
- * EPIC-F02's "surfaced, not fixed" note, which first flagged this gap).
- */
-export interface QualificationResponseDTO {
-  qualification_id: string;
-  lead_id: string;
-  assessment_id: string;
-  status: string;
-  score: number;
-  recommendation: string | null;
-}
+import type { components } from '../api/schema';
 
-export interface CreateQualificationRequestDTO {
-  lead_id: string;
-  assessment_id: string;
-  status?: string | null;
-  score?: number | null;
-  recommendation?: string | null;
-}
-
-export interface UpdateQualificationRequestDTO {
-  status?: string | null;
-  score?: number | null;
-  recommendation?: string | null;
-}
+/** qualification_router.py now declares response_model= on every route
+ * (fixed 2026-08-18, see Backend IS-3 in
+ * AiSDR/docs/intermediate_sprint_no_api_quota.md) -- these are real
+ * generated types now, not hand-transcribed ones.
+ *
+ * GetQualificationResponseDTO is the canonical single-record shape (get,
+ * create, update all return the identical fields). ListQualificationResponseDTO
+ * is genuinely narrower -- it omits `recommendation` entirely (confirmed
+ * by reading qualification_mapper.py's to_list_response), so it gets its
+ * own alias rather than being folded into the single-record type. */
+export type QualificationResponseDTO = components['schemas']['GetQualificationResponseDTO'];
+export type QualificationListItemDTO = components['schemas']['ListQualificationResponseDTO'];
+export type CreateQualificationRequestDTO = components['schemas']['CreateQualificationRequestDTO'];
+export type UpdateQualificationRequestDTO = components['schemas']['UpdateQualificationRequestDTO'];
 
 /** Transcribed from
  * Backend/app/domain/qualification/enums/qualification_status.py --
- * also not an OpenAPI enum, same situation as DiscoveryStatus/
- * AssessmentStatus. A new Qualification always starts as "Partially
- * Qualified" with score 0 unless status/score are passed explicitly on
- * create (Qualification.__init__ hardcodes that default; the create
- * handler only overrides it if the request included a value). */
+ * not an OpenAPI enum, same situation as DiscoveryStatus/AssessmentStatus.
+ * A new Qualification always starts as "Partially Qualified" with score 0
+ * unless status/score are passed explicitly on create
+ * (Qualification.__init__ hardcodes that default; the create handler
+ * only overrides it if the request included a value). */
 export const QUALIFICATION_STATUSES = [
   'Qualified',
   'Partially Qualified',
@@ -49,7 +30,10 @@ export const QUALIFICATION_STATUSES = [
 ] as const;
 export type QualificationStatus = (typeof QUALIFICATION_STATUSES)[number];
 
-export function emptyQualificationForm(leadId = '', assessmentId = ''): CreateQualificationRequestDTO {
+export function emptyQualificationForm(
+  leadId = '',
+  assessmentId = '',
+): CreateQualificationRequestDTO {
   return {
     lead_id: leadId,
     assessment_id: assessmentId,

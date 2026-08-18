@@ -18,9 +18,6 @@ from sqlalchemy import func, select
 from app.application.company.company_mapper import CompanyMapper
 from app.application.company.company_validator import CompanyValidator
 from app.application.company.handlers.create_company_handler import CreateCompanyHandler
-from app.application.contact.contact_mapper import ContactMapper
-from app.application.contact.contact_validator import ContactValidator
-from app.application.contact.handlers.create_contact_handler import CreateContactHandler
 from app.application.company_research.dto.company_research_response import (
     CompanySearchResult,
     DiscoveredContact,
@@ -31,6 +28,9 @@ from app.application.company_research.handlers.promote_candidate_to_company_hand
 from app.application.company_research.handlers.promote_candidate_to_lead_handler import (
     PromoteCandidateToLeadHandler,
 )
+from app.application.contact.contact_mapper import ContactMapper
+from app.application.contact.contact_validator import ContactValidator
+from app.application.contact.handlers.create_contact_handler import CreateContactHandler
 from app.application.lead.handlers.create_lead_handler import CreateLeadHandler
 from app.domain.lead.enums.lead_source import LeadSource
 from app.infrastructure.persistence.models.contact_model import ContactModel
@@ -56,9 +56,7 @@ def _result() -> CompanySearchResult:
         suggested_first_message="x",
         confidence_level="Medium",
         discovered_contacts=[
-            DiscoveredContact(
-                name="Jane Doe", role_title="COO", email="jane.doe@acme.example"
-            )
+            DiscoveredContact(name="Jane Doe", role_title="COO", email="jane.doe@acme.example")
         ],
     )
 
@@ -75,9 +73,7 @@ async def test_promoting_the_same_result_twice_creates_only_one_contact_and_one_
     uow = SqlAlchemyUnitOfWork(session=async_session)
     company_promoter = PromoteCandidateToCompanyHandler(
         uow,
-        CreateCompanyHandler(
-            unit_of_work=uow, validator=CompanyValidator(), mapper=CompanyMapper()
-        ),
+        CreateCompanyHandler(unit_of_work=uow, validator=CompanyValidator(), mapper=CompanyMapper()),
     )
     lead_promoter = PromoteCandidateToLeadHandler(
         unit_of_work=uow,
@@ -106,9 +102,7 @@ async def test_promoted_lead_carries_ai_research_source_and_score_hypothesis_evi
     uow = SqlAlchemyUnitOfWork(session=async_session)
     company_promoter = PromoteCandidateToCompanyHandler(
         uow,
-        CreateCompanyHandler(
-            unit_of_work=uow, validator=CompanyValidator(), mapper=CompanyMapper()
-        ),
+        CreateCompanyHandler(unit_of_work=uow, validator=CompanyValidator(), mapper=CompanyMapper()),
     )
     lead_promoter = PromoteCandidateToLeadHandler(
         unit_of_work=uow,

@@ -5,4 +5,5 @@ class RecommendationId(Identifier):
     """
     Strongly typed identifier for Recommendation.
     """
+
     pass

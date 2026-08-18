@@ -5,4 +5,5 @@ class StepId(Identifier):
     """
     Strongly typed identifier for Workflow Step.
     """
+
     pass

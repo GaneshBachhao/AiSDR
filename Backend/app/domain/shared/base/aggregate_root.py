@@ -11,7 +11,6 @@ from app.domain.shared.base.domain_event import DomainEvent
 from app.domain.shared.base.entity import Entity
 from app.domain.shared.identifiers import Identifier
 
-
 TId = TypeVar("TId", bound=Identifier)
 
 

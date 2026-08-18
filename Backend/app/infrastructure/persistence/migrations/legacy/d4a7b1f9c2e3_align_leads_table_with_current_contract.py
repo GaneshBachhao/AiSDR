@@ -8,9 +8,8 @@ Create Date: 2026-08-02 00:00:00.000000
 
 from __future__ import annotations
 
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "d4a7b1f9c2e3"
 down_revision = "9b4c6d1e2f3a"
@@ -45,9 +44,7 @@ def upgrade() -> None:
             )
 
         if "website" not in existing_columns:
-            batch_op.add_column(
-                sa.Column("website", sa.String(length=500), nullable=True)
-            )
+            batch_op.add_column(sa.Column("website", sa.String(length=500), nullable=True))
 
         if "status" not in existing_columns:
             batch_op.add_column(
@@ -67,7 +64,10 @@ def upgrade() -> None:
     if "ix_leads_email" not in {index["name"] for index in inspector.get_indexes("leads")}:
         op.create_index("ix_leads_email", "leads", ["email"], unique=False)
 
-    if "ix_leads_contact_id" not in {index["name"] for index in inspector.get_indexes("leads")} and "contact_id" in remaining_columns:
+    if (
+        "ix_leads_contact_id" not in {index["name"] for index in inspector.get_indexes("leads")}
+        and "contact_id" in remaining_columns
+    ):
         op.create_index("ix_leads_contact_id", "leads", ["contact_id"], unique=False)
 
 
@@ -91,14 +91,10 @@ def downgrade() -> None:
             batch_op.drop_column("contact_id")
 
         if "contact_name" not in existing_columns:
-            batch_op.add_column(
-                sa.Column("contact_name", sa.String(length=200), nullable=False)
-            )
+            batch_op.add_column(sa.Column("contact_name", sa.String(length=200), nullable=False))
 
         if "job_title" not in existing_columns:
-            batch_op.add_column(
-                sa.Column("job_title", sa.String(length=150), nullable=True)
-            )
+            batch_op.add_column(sa.Column("job_title", sa.String(length=150), nullable=True))
 
     indexes = {index["name"] for index in inspector.get_indexes("leads")}
 

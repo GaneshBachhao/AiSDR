@@ -29,7 +29,6 @@ from app.presentation.api.dependencies.handlers import (
     UpdateLeadHandlerDependency,
 )
 
-
 router = APIRouter(
     prefix="/leads",
     tags=["Leads"],

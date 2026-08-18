@@ -1,5 +1,7 @@
 # tests/application/common/exceptions/test_application_exceptions.py
 
+import pytest
+
 from app.application.common.exceptions import (
     ApplicationException,
     ErrorCode,
@@ -88,8 +90,5 @@ def test_exception_details_are_immutable() -> None:
         details={"a": 1},
     )
 
-    try:
+    with pytest.raises(TypeError):
         exception.details["a"] = 2  # type: ignore[index]
-        assert False
-    except TypeError:
-        assert True

@@ -11,4 +11,5 @@ class DiscoveryId(Identifier):
     """
     Strongly typed identifier for Discovery aggregate.
     """
+
     pass

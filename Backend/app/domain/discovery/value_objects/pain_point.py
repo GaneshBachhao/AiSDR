@@ -23,16 +23,10 @@ class PainPoint:
     def __post_init__(self) -> None:
 
         if not self.title.strip():
-            raise ValueError(
-                "Pain point title cannot be empty."
-            )
+            raise ValueError("Pain point title cannot be empty.")
 
         if not self.description.strip():
-            raise ValueError(
-                "Pain point description cannot be empty."
-            )
+            raise ValueError("Pain point description cannot be empty.")
 
         if not 1 <= self.severity <= 5:
-            raise ValueError(
-                "Severity must be between 1 and 5."
-            )
+            raise ValueError("Severity must be between 1 and 5.")

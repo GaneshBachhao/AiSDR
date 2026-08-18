@@ -12,7 +12,9 @@ def test_infers_manufacturing_from_keywords():
 
 
 def test_infer_returns_none_without_keyword_hits():
-    industry = IndustryClassifier.infer_industry("A generic page with no industry signal.", "Acme", ["Manufacturing"])
+    industry = IndustryClassifier.infer_industry(
+        "A generic page with no industry signal.", "Acme", ["Manufacturing"]
+    )
     assert industry is None
 
 

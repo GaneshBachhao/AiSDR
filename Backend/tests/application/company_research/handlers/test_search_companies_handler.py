@@ -4,9 +4,6 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from app.infrastructure.ai.exceptions.ai_budget_exceeded_exception import (
-    AIBudgetExceededException,
-)
 from app.application.company_research.dto.company_research_request import (
     CompanyResearchRequest,
 )
@@ -29,6 +26,9 @@ from app.application.company_research.ports.identity_verification_port import (
     IdentityVerificationResult,
 )
 from app.domain.company_research.entities.candidate import CompanyCandidate
+from app.infrastructure.ai.exceptions.ai_budget_exceeded_exception import (
+    AIBudgetExceededException,
+)
 
 
 def _candidate(name: str, website: str) -> CompanyCandidate:
@@ -179,6 +179,51 @@ async def test_company_size_gate_rejects_unknown_employee_count():
 
 
 @pytest.mark.asyncio
+async def test_enterprise_marker_in_evidence_is_rejected_even_without_company_size_requested():
+    """Regression guard: enterprise_exclusion used to be gated behind
+    `if request.company_size:`, so a caller who simply omitted
+    company_size (the default -- an empty list) got zero enterprise
+    filtering at all. The exclusion must apply unconditionally."""
+    candidate = CompanyCandidate(
+        company_name="Global Conglomerate Corp",
+        website="https://globalconglomerate.example",
+        title="Global Conglomerate Corp | Official Site",
+        content="Global Conglomerate Corp is a Fortune 500 multinational corporation.",
+        source_url="https://globalconglomerate.example",
+    )
+    handler = SearchCompaniesHandler(
+        ScriptedDiscoveryAdapter([candidate]),
+        ScriptedIdentityAdapter(
+            {"Global Conglomerate Corp": _verified("https://globalconglomerate.example")}
+        ),
+        ScriptedEvidenceAdapter({}),
+    )
+    # No company_size on the request -- the default, empty-list case.
+    request = CompanyResearchRequest(geography="India")
+    results = (await handler.handle(request)).results
+    assert results == []
+
+
+@pytest.mark.asyncio
+async def test_large_employee_count_in_evidence_is_rejected_even_without_company_size_requested():
+    candidate = CompanyCandidate(
+        company_name="Massive Industries",
+        website="https://massiveindustries.example",
+        title="Massive Industries | Official Site",
+        content="Massive Industries employs over 12,000 employees worldwide.",
+        source_url="https://massiveindustries.example",
+    )
+    handler = SearchCompaniesHandler(
+        ScriptedDiscoveryAdapter([candidate]),
+        ScriptedIdentityAdapter({"Massive Industries": _verified("https://massiveindustries.example")}),
+        ScriptedEvidenceAdapter({}),
+    )
+    request = CompanyResearchRequest(geography="India")
+    results = (await handler.handle(request)).results
+    assert results == []
+
+
+@pytest.mark.asyncio
 async def test_minimum_qualification_score_filters_low_scoring_results():
     candidate = _candidate("Acme Manufacturing", "https://acme.example")
     handler = SearchCompaniesHandler(
@@ -199,9 +244,7 @@ async def test_results_sorted_and_truncated_to_number_of_companies():
         ScriptedIdentityAdapter(
             {"Acme A": _verified("https://a.example"), "Acme B": _verified("https://b.example")}
         ),
-        ScriptedEvidenceAdapter(
-            {"Acme A": _hiring_evidence("Acme A"), "Acme B": []}
-        ),
+        ScriptedEvidenceAdapter({"Acme A": _hiring_evidence("Acme A"), "Acme B": []}),
     )
     request = CompanyResearchRequest(geography="India", number_of_companies=1)
     results = (await handler.handle(request)).results
@@ -494,9 +537,7 @@ async def test_lead_promoter_invoked_with_the_persisted_company_id_after_company
     promoter = AsyncMock()
     promoter.handle.return_value = "company-123"
     lead_promoter = AsyncMock()
-    lead_promoter.handle.return_value = LeadPromotionOutcome(
-        contact_id="contact-1", lead_id="lead-1"
-    )
+    lead_promoter.handle.return_value = LeadPromotionOutcome(contact_id="contact-1", lead_id="lead-1")
     handler = SearchCompaniesHandler(
         ScriptedDiscoveryAdapter([candidate]),
         ScriptedIdentityAdapter({"Acme Manufacturing": _verified("https://acme.example")}),
@@ -527,9 +568,7 @@ async def test_lead_creation_skipped_reason_surfaces_when_no_email_found():
     promoter = AsyncMock()
     promoter.handle.return_value = "company-123"
     lead_promoter = AsyncMock()
-    lead_promoter.handle.return_value = LeadPromotionOutcome(
-        skipped_reason="no_verified_email_found"
-    )
+    lead_promoter.handle.return_value = LeadPromotionOutcome(skipped_reason="no_verified_email_found")
     handler = SearchCompaniesHandler(
         ScriptedDiscoveryAdapter([candidate]),
         ScriptedIdentityAdapter({"Acme Manufacturing": _verified("https://acme.example")}),
@@ -633,9 +672,7 @@ async def test_contact_discovery_skipped_below_minimum_qualification_score():
 async def test_contact_discovery_invoked_and_merged_when_score_clears_threshold():
     candidate = _candidate("Acme Manufacturing", "https://acme.example")
     contact_port = AsyncMock()
-    contact_port.discover.return_value = [
-        DiscoveredContact(name="Jane Doe", role_title="COO")
-    ]
+    contact_port.discover.return_value = [DiscoveredContact(name="Jane Doe", role_title="COO")]
     handler = SearchCompaniesHandler(
         ScriptedDiscoveryAdapter([candidate]),
         ScriptedIdentityAdapter({"Acme Manufacturing": _verified("https://acme.example")}),

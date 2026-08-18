@@ -7,4 +7,5 @@ class AssessmentId(Identifier):
     """
     Strongly typed identifier for Assessment aggregate.
     """
+
     pass

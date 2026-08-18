@@ -8,7 +8,6 @@ from pydantic import BaseModel, ConfigDict
 
 
 class TokenUsageDTO(BaseModel):
-
     model_config = ConfigDict(
         frozen=True,
         extra="forbid",
@@ -22,7 +21,6 @@ class TokenUsageDTO(BaseModel):
 
 
 class AIResponseDTO(BaseModel):
-
     model_config = ConfigDict(
         frozen=True,
         extra="forbid",

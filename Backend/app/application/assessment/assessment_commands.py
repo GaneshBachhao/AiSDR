@@ -4,6 +4,7 @@ Assessment commands.
 Architecture Freeze v5.0
 Application command contracts for the Assessment aggregate.
 """
+
 from __future__ import annotations
 
 from app.application.common.commands.command import Command

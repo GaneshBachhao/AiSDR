@@ -4,10 +4,10 @@ import { forkJoin } from 'rxjs';
 import { AssessmentDisplayService } from '../../assessments/assessment-display.service';
 import { LeadDisplay, LeadDisplayService } from '../../leads/lead-display.service';
 import { QualificationService } from '../qualification.service';
-import { QualificationResponseDTO, qualificationStatusBadgeClass } from '../qualification.models';
+import { QualificationListItemDTO, qualificationStatusBadgeClass } from '../qualification.models';
 
 interface QualificationRow {
-  qualification: QualificationResponseDTO;
+  qualification: QualificationListItemDTO;
   leadLabel: string;
   assessmentLabel: string;
 }
@@ -44,7 +44,8 @@ export class QualificationList implements OnInit {
             qualification,
             leadLabel: this.leadLabel(qualification.lead_id, leads),
             assessmentLabel:
-              assessments.get(qualification.assessment_id)?.discoveryLabel ?? 'Assessment (not found)',
+              assessments.get(qualification.assessment_id)?.discoveryLabel ??
+              'Assessment (not found)',
           })),
         );
         this.loading.set(false);

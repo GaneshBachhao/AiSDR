@@ -6,12 +6,10 @@ Application AIProvider port.
 from __future__ import annotations
 
 from app.application.ai.ports import AIProvider
-
 from app.domain.ai.aggregates.ai_request import AIRequest
 from app.domain.ai.entities.ai_response import AIResponse
 from app.domain.ai.value_objects.model_name import ModelName
 from app.domain.ai.value_objects.provider_name import ProviderName
-
 from app.infrastructure.ai.exceptions.ai_client_exception import (
     AIClientException,
 )
@@ -47,9 +45,7 @@ class ApplicationAIProvider(AIProvider):
     ) -> None:
 
         self._providers = providers
-        self._fallback_order = [
-            name.lower() for name in (fallback_order or [])
-        ]
+        self._fallback_order = [name.lower() for name in (fallback_order or [])]
         self._default_models = default_models or {}
 
     async def execute(
@@ -69,9 +65,7 @@ class ApplicationAIProvider(AIProvider):
         )
 
         if provider is None:
-            raise ValueError(
-                f"Unsupported AI provider: {provider_name}"
-            )
+            raise ValueError(f"Unsupported AI provider: {provider_name}")
 
         attempted = {provider_name}
 
@@ -81,7 +75,6 @@ class ApplicationAIProvider(AIProvider):
             last_error = primary_error
 
         for fallback_name in self._fallback_order:
-
             if fallback_name in attempted:
                 continue
 
@@ -133,7 +126,4 @@ class ApplicationAIProvider(AIProvider):
         Check health of every configured provider.
         """
 
-        return {
-            name: await self.health_check(name)
-            for name in self._providers
-        }
+        return {name: await self.health_check(name) for name in self._providers}

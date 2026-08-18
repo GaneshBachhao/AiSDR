@@ -6,8 +6,8 @@ Revises: d4a7b1f9c2e3
 
 from __future__ import annotations
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 revision = "f2c7e1a9b4d6"
 down_revision = "d4a7b1f9c2e3"
@@ -51,13 +51,10 @@ def upgrade() -> None:
 
         columns = {column["name"] for column in sa.inspect(bind).get_columns("leads")}
 
-    null_contacts = bind.execute(
-        sa.text("SELECT COUNT(*) FROM leads WHERE contact_id IS NULL")
-    ).scalar_one()
+    null_contacts = bind.execute(sa.text("SELECT COUNT(*) FROM leads WHERE contact_id IS NULL")).scalar_one()
     if null_contacts:
         raise RuntimeError(
-            "Cannot make leads.contact_id required while existing Lead rows "
-            "contain NULL contact_id values."
+            "Cannot make leads.contact_id required while existing Lead rows contain NULL contact_id values."
         )
 
     with op.batch_alter_table("leads") as batch_op:

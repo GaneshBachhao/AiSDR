@@ -1,6 +1,7 @@
 """
 SQLAlchemy implementation of CompanyRepository.
 """
+
 from __future__ import annotations
 
 from sqlalchemy import select
@@ -30,19 +31,13 @@ class SqlAlchemyCompanyRepository(
         super().__init__(session=session, mapper=CompanyMapper())
 
     async def find_by_name(self, name: str) -> Company | None:
-        result = await self._session.execute(
-            select(CompanyModel).where(
-                CompanyModel.name == name.strip()
-            )
-        )
+        result = await self._session.execute(select(CompanyModel).where(CompanyModel.name == name.strip()))
         model = result.scalar_one_or_none()
         return None if model is None else self.mapper.to_domain(model)
 
     async def find_by_website(self, website: str) -> Company | None:
         result = await self._session.execute(
-            select(CompanyModel).where(
-                CompanyModel.website == website.strip()
-            )
+            select(CompanyModel).where(CompanyModel.website == website.strip())
         )
         model = result.scalar_one_or_none()
         return None if model is None else self.mapper.to_domain(model)
@@ -59,10 +54,7 @@ class SqlAlchemyCompanyRepository(
             .offset(skip)
             .limit(limit)
         )
-        return [
-            self.mapper.to_domain(model)
-            for model in result.scalars().all()
-        ]
+        return [self.mapper.to_domain(model) for model in result.scalars().all()]
 
     async def search(
         self,
@@ -84,10 +76,7 @@ class SqlAlchemyCompanyRepository(
             .offset(skip)
             .limit(limit)
         )
-        return [
-            self.mapper.to_domain(model)
-            for model in result.scalars().all()
-        ]
+        return [self.mapper.to_domain(model) for model in result.scalars().all()]
 
     async def update(self, entity: Company) -> None:
         """

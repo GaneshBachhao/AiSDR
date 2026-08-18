@@ -52,7 +52,9 @@
                 <span class="badge badge-neutral">{{ lead.source }}</span>
               }
             </td>
-            <td><span class="badge {{ leadStatusBadgeClass(lead.status) }}">{{ lead.status }}</span></td>
+            <td>
+              <span class="badge {{ leadStatusBadgeClass(lead.status) }}">{{ lead.status }}</span>
+            </td>
             <td class="score">{{ lead.score }}</td>
           </tr>
         }

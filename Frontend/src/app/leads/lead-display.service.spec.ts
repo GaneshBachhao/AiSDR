@@ -84,4 +84,41 @@ describe('LeadDisplayService', () => {
       contactName: 'Jane Doe',
     });
   });
+
+  it('a second loadAll() call reuses the cached result instead of re-fetching', () => {
+    service.loadAll().subscribe();
+    httpMock.expectOne(`${environment.apiBaseUrl}/leads?limit=500`).flush([lead]);
+    httpMock.expectOne(`${environment.apiBaseUrl}/companies?limit=500`).flush([company]);
+    httpMock.expectOne(`${environment.apiBaseUrl}/contacts?limit=500`).flush([contact]);
+
+    let secondResult: Map<string, unknown> | undefined;
+    service.loadAll().subscribe((map) => (secondResult = map));
+
+    // No new HTTP requests -- httpMock.verify() in afterEach would fail
+    // if the cache didn't hold, since it asserts no outstanding requests.
+    expect(secondResult?.get('l1')).toEqual({
+      lead,
+      companyName: 'Acme Manufacturing',
+      contactName: 'Jane Doe',
+    });
+  });
+
+  it('invalidate() clears the cache so the next loadAll() re-fetches', () => {
+    service.loadAll().subscribe();
+    httpMock.expectOne(`${environment.apiBaseUrl}/leads?limit=500`).flush([lead]);
+    httpMock.expectOne(`${environment.apiBaseUrl}/companies?limit=500`).flush([company]);
+    httpMock.expectOne(`${environment.apiBaseUrl}/contacts?limit=500`).flush([contact]);
+
+    service.invalidate();
+
+    const renamedCompany = { ...company, name: 'Acme Renamed' };
+    let secondResult: Map<string, unknown> | undefined;
+    service.loadAll().subscribe((map) => (secondResult = map));
+
+    httpMock.expectOne(`${environment.apiBaseUrl}/leads?limit=500`).flush([lead]);
+    httpMock.expectOne(`${environment.apiBaseUrl}/companies?limit=500`).flush([renamedCompany]);
+    httpMock.expectOne(`${environment.apiBaseUrl}/contacts?limit=500`).flush([contact]);
+
+    expect((secondResult?.get('l1') as { companyName: string }).companyName).toBe('Acme Renamed');
+  });
 });

@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from sqlalchemy.exc import IntegrityError
 
-from app.application.common.exceptions.validation_exception import (
-    ValidationException,
-)
 from app.application.common.exceptions.not_found_exception import (
     NotFoundException,
+)
+from app.application.common.exceptions.validation_exception import (
+    ValidationException,
 )
 from app.application.common.interfaces.unit_of_work import UnitOfWork
 from app.application.discovery.discovery_commands import UpdateDiscoveryCommand
@@ -43,10 +43,7 @@ class UpdateDiscoveryHandler:
         if not validation.is_valid:
             raise ValidationException(
                 message="Discovery validation failed.",
-                details={
-                    error.field: error.message
-                    for error in validation.errors
-                },
+                details={error.field: error.message for error in validation.errors},
             )
 
         try:
@@ -60,11 +57,7 @@ class UpdateDiscoveryHandler:
             ) from exc
 
         async with self._unit_of_work:
-            discovery = (
-                await self._unit_of_work
-                .discovery_repository
-                .get_by_id(discovery_id)
-            )
+            discovery = await self._unit_of_work.discovery_repository.get_by_id(discovery_id)
 
             if discovery is None:
                 raise NotFoundException(
@@ -90,9 +83,7 @@ class UpdateDiscoveryHandler:
             # -------------------------------------------------
 
             if command.status is not None:
-                status = DiscoveryStatus(
-                    command.status.strip().upper()
-                )
+                status = DiscoveryStatus(command.status.strip().upper())
 
                 discovery.update_status(status)
 
@@ -101,9 +92,7 @@ class UpdateDiscoveryHandler:
             # -------------------------------------------------
 
             try:
-                await self._unit_of_work.discovery_repository.update(
-                    discovery
-                )
+                await self._unit_of_work.discovery_repository.update(discovery)
 
                 await self._unit_of_work.commit()
 

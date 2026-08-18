@@ -3,7 +3,10 @@ import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { AssessmentDisplayService } from '../../assessments/assessment-display.service';
 import { RecommendationService } from '../recommendation.service';
-import { RecommendationResponseDTO, recommendationStatusBadgeClass } from '../recommendation.models';
+import {
+  RecommendationResponseDTO,
+  recommendationStatusBadgeClass,
+} from '../recommendation.models';
 
 interface RecommendationRow {
   recommendation: RecommendationResponseDTO;
@@ -39,7 +42,8 @@ export class RecommendationList implements OnInit {
           recommendations.map((recommendation) => ({
             recommendation,
             assessmentLabel:
-              assessments.get(recommendation.assessment_id)?.discoveryLabel ?? 'Assessment (not found)',
+              assessments.get(recommendation.assessment_id)?.discoveryLabel ??
+              'Assessment (not found)',
           })),
         );
         this.loading.set(false);

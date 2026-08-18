@@ -50,7 +50,13 @@ def _ai_service(content: str | None = None, side_effect=None):
 async def test_rejects_same_word_unrelated_company_match():
     """The defect this port exists to fix: 'Motors' overlap must not create a false match."""
     client = _tavily_client(
-        [{"title": "Tata Motors Official Site", "url": "https://tatamotors.com", "content": "Tata Motors is a large multinational automobile manufacturer."}]
+        [
+            {
+                "title": "Tata Motors Official Site",
+                "url": "https://tatamotors.com",
+                "content": "Tata Motors is a large multinational automobile manufacturer.",
+            }
+        ]
     )
     ai_service = _ai_service(
         content='{"is_match": false, "confidence": "LOW", "verified_website": null, '
@@ -66,7 +72,9 @@ async def test_rejects_same_word_unrelated_company_match():
 
 @pytest.mark.asyncio
 async def test_accepts_genuine_high_confidence_match():
-    client = _tavily_client([{"title": "Acme", "url": "https://acme.example", "content": "Acme official site."}])
+    client = _tavily_client(
+        [{"title": "Acme", "url": "https://acme.example", "content": "Acme official site."}]
+    )
     ai_service = _ai_service(
         content='{"is_match": true, "confidence": "HIGH", "verified_website": "https://acme.example", '
         '"parent_company": null, "reason": "Official site explicitly matches candidate name."}'
@@ -135,7 +143,9 @@ async def test_falls_back_to_low_on_invalid_website_url_from_model():
 async def test_skips_ai_call_entirely_when_no_evidence_and_no_content():
     client = _tavily_client([])
     ai_service = _ai_service(content="{}")
-    candidate = CompanyCandidate(company_name="Nobody Corp", website=None, title="", content="", source_url="")
+    candidate = CompanyCandidate(
+        company_name="Nobody Corp", website=None, title="", content="", source_url=""
+    )
     adapter = AiIdentityVerificationAdapter(ai_service=ai_service, tavily_client=client)
 
     result = await adapter.verify(candidate)
@@ -165,7 +175,9 @@ async def test_defaults_to_gemini_provider_and_its_configured_model(monkeypatch)
 
     monkeypatch.setattr(module, "default_model_for_provider", lambda name: f"default-{name}")
     client = _tavily_client([{"title": "Acme", "url": "https://acme.example", "content": "x"}])
-    ai_service = _ai_service(content='{"is_match": false, "confidence": "LOW", "verified_website": null, "parent_company": null, "reason": "x"}')
+    ai_service = _ai_service(
+        content='{"is_match": false, "confidence": "LOW", "verified_website": null, "parent_company": null, "reason": "x"}'
+    )
 
     adapter = AiIdentityVerificationAdapter(ai_service=ai_service, tavily_client=client)
 
@@ -179,7 +191,9 @@ async def test_defaults_to_gemini_provider_and_its_configured_model(monkeypatch)
 @pytest.mark.asyncio
 async def test_provider_and_model_are_configurable():
     client = _tavily_client([{"title": "Acme", "url": "https://acme.example", "content": "x"}])
-    ai_service = _ai_service(content='{"is_match": false, "confidence": "LOW", "verified_website": null, "parent_company": null, "reason": "x"}')
+    ai_service = _ai_service(
+        content='{"is_match": false, "confidence": "LOW", "verified_website": null, "parent_company": null, "reason": "x"}'
+    )
 
     adapter = AiIdentityVerificationAdapter(
         ai_service=ai_service,

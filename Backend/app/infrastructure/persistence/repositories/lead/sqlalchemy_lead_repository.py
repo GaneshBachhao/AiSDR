@@ -48,16 +48,10 @@ class SqlAlchemyLeadRepository(
             )
 
         result = await self._session.execute(
-            query
-            .order_by(LeadModel.created_at.desc())
-            .offset(skip)
-            .limit(limit)
+            query.order_by(LeadModel.created_at.desc()).offset(skip).limit(limit)
         )
 
-        return [
-            self.mapper.to_domain(model)
-            for model in result.scalars().all()
-        ]
+        return [self.mapper.to_domain(model) for model in result.scalars().all()]
 
     async def search(
         self,
@@ -94,13 +88,7 @@ class SqlAlchemyLeadRepository(
             )
 
         result = await self._session.execute(
-            query
-            .order_by(LeadModel.created_at.desc())
-            .offset(skip)
-            .limit(limit)
+            query.order_by(LeadModel.created_at.desc()).offset(skip).limit(limit)
         )
 
-        return [
-            self.mapper.to_domain(model)
-            for model in result.scalars().all()
-        ]
+        return [self.mapper.to_domain(model) for model in result.scalars().all()]

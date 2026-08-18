@@ -4,109 +4,19 @@ API handler dependencies.
 Provides application handlers to FastAPI presentation layer.
 """
 
- 
 from __future__ import annotations
 
-from typing import Annotated, Any, Callable, TypeVar
+from collections.abc import Callable
+from typing import Annotated, Any, TypeVar
 
 from fastapi import Depends
-from pydantic import validator
 
 from app.application.ai.services.ai_execution_service import AIExecutionService
-from app.infrastructure.ai.composition import build_ai_execution_service, default_ai_provider
-
-from app.application.user.handlers.login_handler import LoginHandler
-from app.infrastructure.configuration.jwt_settings import JWTSettings
-from app.infrastructure.security.jwt_service import JWTService
-from app.infrastructure.security.password_hasher import PasswordHasher
-
-from app.application.company.company_mapper import (
-    CompanyMapper,
-)
-
-from app.application.company.company_validator import (
-    CompanyValidator,
-)
-
-from app.application.contact.contact_validator import (
-    ContactValidator,
-)
-
-from app.application.contact.contact_mapper import (
-    ContactMapper,
-)
-
-from app.application.discovery.discovery_mapper import (
-    DiscoveryMapper,
-)
-
-from app.application.discovery.discovery_validator import (
-    DiscoveryValidator,
-)
-
-from app.presentation.api.dependencies.persistence import (
-    get_unit_of_work,
-)
-
-from app.application.company.handlers.create_company_handler import (
-    CreateCompanyHandler,
-)
-from app.application.company.handlers.get_company_handler import (
-    GetCompanyHandler,
-)
-from app.application.company.handlers.search_company_handler import (
-    SearchCompanyHandler,
-)
-from app.application.company.handlers.list_company_handler import (
-    ListCompanyHandler,
-)
-from app.application.company.handlers.update_company_handler import (
-    UpdateCompanyHandler,
-)
-from app.application.company.handlers.delete_company_handler import (
-    DeleteCompanyHandler,
-)
-
-from app.application.contact.handlers.create_contact_handler import (
-    CreateContactHandler,
-)
-from app.application.contact.handlers.get_contact_handler import (
-    GetContactHandler,
-)
-from app.application.contact.handlers.list_contact_handler import (
-    ListContactHandler,
-)
-from app.application.contact.handlers.update_contact_handler import (
-    UpdateContactHandler,
-)
-from app.application.contact.handlers.search_contact_handler import (
-    SearchContactHandler,
-)
-from app.application.contact.handlers.delete_contact_handler import (
-    DeleteContactHandler,
-)
-
-from app.application.lead.handlers.create_lead_handler import (
-    CreateLeadHandler,
-)
-from app.application.lead.handlers.get_lead_handler import (
-    GetLeadHandler,
-)
-from app.application.lead.handlers.list_lead_handler import (
-    ListLeadHandler,
-)
-from app.application.lead.handlers.search_lead_handler import (
-    SearchLeadHandler,
-)
-from app.application.lead.handlers.update_lead_handler import (
-    UpdateLeadHandler,
-)
-from app.application.lead.handlers.delete_lead_handler import (
-    DeleteLeadHandler,
-)
-
 from app.application.assessment.handlers.create_assessment_handler import (
     CreateAssessmentHandler,
+)
+from app.application.assessment.handlers.delete_assessment_handler import (
+    DeleteAssessmentHandler,
 )
 from app.application.assessment.handlers.get_assessment_handler import (
     GetAssessmentHandler,
@@ -120,16 +30,104 @@ from app.application.assessment.handlers.start_assessment_handler import (
 from app.application.assessment.handlers.update_assessment_handler import (
     UpdateAssessmentHandler,
 )
-from app.application.assessment.handlers.delete_assessment_handler import (
-    DeleteAssessmentHandler,
-)
-
 from app.application.common.interfaces.unit_of_work import (
     UnitOfWork,
 )
-
+from app.application.company.company_mapper import (
+    CompanyMapper,
+)
+from app.application.company.company_validator import (
+    CompanyValidator,
+)
+from app.application.company.handlers.create_company_handler import (
+    CreateCompanyHandler,
+)
+from app.application.company.handlers.delete_company_handler import (
+    DeleteCompanyHandler,
+)
+from app.application.company.handlers.get_company_handler import (
+    GetCompanyHandler,
+)
+from app.application.company.handlers.list_company_handler import (
+    ListCompanyHandler,
+)
+from app.application.company.handlers.search_company_handler import (
+    SearchCompanyHandler,
+)
+from app.application.company.handlers.update_company_handler import (
+    UpdateCompanyHandler,
+)
+from app.application.contact.contact_mapper import (
+    ContactMapper,
+)
+from app.application.contact.contact_validator import (
+    ContactValidator,
+)
+from app.application.contact.handlers.create_contact_handler import (
+    CreateContactHandler,
+)
+from app.application.contact.handlers.delete_contact_handler import (
+    DeleteContactHandler,
+)
+from app.application.contact.handlers.get_contact_handler import (
+    GetContactHandler,
+)
+from app.application.contact.handlers.list_contact_handler import (
+    ListContactHandler,
+)
+from app.application.contact.handlers.search_contact_handler import (
+    SearchContactHandler,
+)
+from app.application.contact.handlers.update_contact_handler import (
+    UpdateContactHandler,
+)
+from app.application.discovery.discovery_mapper import (
+    DiscoveryMapper,
+)
+from app.application.discovery.discovery_validator import (
+    DiscoveryValidator,
+)
+from app.application.discovery.handlers.create_discovery_handler import (
+    CreateDiscoveryHandler,
+)
+from app.application.discovery.handlers.delete_discovery_handler import (
+    DeleteDiscoveryHandler,
+)
+from app.application.discovery.handlers.get_discovery_handler import (
+    GetDiscoveryHandler,
+)
+from app.application.discovery.handlers.list_discovery_handler import (
+    ListDiscoveryHandler,
+)
+from app.application.discovery.handlers.search_discovery_handler import (
+    SearchDiscoveryHandler,
+)
+from app.application.discovery.handlers.update_discovery_handler import (
+    UpdateDiscoveryHandler,
+)
+from app.application.lead.handlers.create_lead_handler import (
+    CreateLeadHandler,
+)
+from app.application.lead.handlers.delete_lead_handler import (
+    DeleteLeadHandler,
+)
+from app.application.lead.handlers.get_lead_handler import (
+    GetLeadHandler,
+)
+from app.application.lead.handlers.list_lead_handler import (
+    ListLeadHandler,
+)
+from app.application.lead.handlers.search_lead_handler import (
+    SearchLeadHandler,
+)
+from app.application.lead.handlers.update_lead_handler import (
+    UpdateLeadHandler,
+)
 from app.application.qualification.handlers.create_qualification_handler import (
     CreateQualificationHandler,
+)
+from app.application.qualification.handlers.delete_qualification_handler import (
+    DeleteQualificationHandler,
 )
 from app.application.qualification.handlers.get_qualification_handler import (
     GetQualificationHandler,
@@ -140,8 +138,17 @@ from app.application.qualification.handlers.list_qualification_handler import (
 from app.application.qualification.handlers.update_qualification_handler import (
     UpdateQualificationHandler,
 )
-from app.application.qualification.handlers.delete_qualification_handler import (
-    DeleteQualificationHandler,
+from app.application.qualification.qualification_commands import (
+    CreateQualificationCommand,
+    DeleteQualificationCommand,
+    UpdateQualificationCommand,
+)
+from app.application.qualification.qualification_queries import (
+    GetQualificationQuery,
+    ListQualificationsQuery,
+)
+from app.application.recommendation.handlers.approve_recommendation_handler import (
+    ApproveRecommendationHandler,
 )
 from app.application.recommendation.handlers.create_recommendation_handler import (
     CreateRecommendationHandler,
@@ -152,45 +159,22 @@ from app.application.recommendation.handlers.get_recommendation_handler import (
 from app.application.recommendation.handlers.list_recommendation_handler import (
     ListRecommendationHandler,
 )
-
-from app.application.discovery.handlers.create_discovery_handler import (
-    CreateDiscoveryHandler,
+from app.application.recommendation.handlers.submit_recommendation_handler import (
+    SubmitRecommendationHandler,
 )
-
-from app.application.discovery.handlers.get_discovery_handler import (
-    GetDiscoveryHandler,
+from app.application.user.handlers.login_handler import LoginHandler
+from app.infrastructure.ai.composition import build_ai_execution_service, default_ai_provider
+from app.infrastructure.configuration.jwt_settings import JWTSettings
+from app.infrastructure.security.jwt_service import JWTService
+from app.infrastructure.security.password_hasher import PasswordHasher
+from app.presentation.api.dependencies.persistence import (
+    get_unit_of_work,
 )
-
-from app.application.discovery.handlers.list_discovery_handler import (
-    ListDiscoveryHandler,
-)
-
-from app.application.discovery.handlers.search_discovery_handler import (
-    SearchDiscoveryHandler,
-)
-
-from app.application.discovery.handlers.update_discovery_handler import (
-    UpdateDiscoveryHandler,
-)
-
-from app.application.discovery.handlers.delete_discovery_handler import (
-    DeleteDiscoveryHandler,
-)
-
-from app.application.qualification.qualification_commands import (
-    CreateQualificationCommand,
-    UpdateQualificationCommand,
-    DeleteQualificationCommand,
-)
-from app.application.qualification.qualification_queries import (
-    GetQualificationQuery,
-    ListQualificationsQuery,
-)
-
 
 # -------------------------
 # Company
 # -------------------------
+
 
 def get_company_mapper() -> CompanyMapper:
     return CompanyMapper()
@@ -234,6 +218,7 @@ def get_list_company_handler(
         mapper=mapper,
     )
 
+
 def get_search_company_handler(
     uow: UnitOfWork = Depends(get_unit_of_work),
     mapper: CompanyMapper = Depends(get_company_mapper),
@@ -243,6 +228,7 @@ def get_search_company_handler(
         unit_of_work=uow,
         mapper=mapper,
     )
+
 
 def get_update_company_handler(
     uow: UnitOfWork = Depends(get_unit_of_work),
@@ -269,6 +255,7 @@ def get_delete_company_handler(
 # -------------------------
 # Contact
 # -------------------------
+
 
 def get_contact_mapper() -> ContactMapper:
     return ContactMapper()
@@ -350,6 +337,7 @@ def get_delete_contact_handler(
 # Lead
 # -------------------------
 
+
 def get_create_lead_handler(
     uow: UnitOfWork = Depends(get_unit_of_work),
 ) -> CreateLeadHandler:
@@ -376,6 +364,7 @@ def get_list_lead_handler(
         unit_of_work=uow,
     )
 
+
 def get_search_lead_handler(
     uow: UnitOfWork = Depends(get_unit_of_work),
 ) -> SearchLeadHandler:
@@ -383,6 +372,7 @@ def get_search_lead_handler(
     return SearchLeadHandler(
         unit_of_work=uow,
     )
+
 
 def get_update_lead_handler(
     uow: UnitOfWork = Depends(get_unit_of_work),
@@ -513,6 +503,7 @@ def get_delete_discovery_handler(
 # Assessment
 # -------------------------
 
+
 def get_create_assessment_handler(
     uow: UnitOfWork = Depends(get_unit_of_work),
 ) -> CreateAssessmentHandler:
@@ -539,6 +530,7 @@ def get_list_assessment_handler(
         unit_of_work=uow,
     )
 
+
 def get_start_assessment_handler(
     uow: UnitOfWork = Depends(get_unit_of_work),
 ) -> StartAssessmentHandler:
@@ -546,6 +538,7 @@ def get_start_assessment_handler(
     return StartAssessmentHandler(
         unit_of_work=uow,
     )
+
 
 def get_update_assessment_handler(
     uow: UnitOfWork = Depends(get_unit_of_work),
@@ -564,9 +557,11 @@ def get_delete_assessment_handler(
         unit_of_work=uow,
     )
 
+
 # -------------------------
 # Qualification
 # -------------------------
+
 
 def get_create_qualification_handler(
     uow: UnitOfWork = Depends(get_unit_of_work),
@@ -612,9 +607,11 @@ def get_delete_qualification_handler(
         unit_of_work=uow,
     )
 
+
 # -------------------------
 # Recommendation
 # -------------------------
+
 
 def get_ai_execution_service_for_recommendation() -> AIExecutionService:
     return build_ai_execution_service()
@@ -641,6 +638,18 @@ def get_list_recommendation_handler(
     uow: UnitOfWork = Depends(get_unit_of_work),
 ) -> ListRecommendationHandler:
     return ListRecommendationHandler(unit_of_work=uow)
+
+
+def get_submit_recommendation_handler(
+    uow: UnitOfWork = Depends(get_unit_of_work),
+) -> SubmitRecommendationHandler:
+    return SubmitRecommendationHandler(unit_of_work=uow)
+
+
+def get_approve_recommendation_handler(
+    uow: UnitOfWork = Depends(get_unit_of_work),
+) -> ApproveRecommendationHandler:
+    return ApproveRecommendationHandler(unit_of_work=uow)
 
 
 CreateCompanyHandlerDependency = Annotated[
@@ -853,6 +862,7 @@ def get_query_handler(query_type: type[TQuery]) -> Callable[..., Any]:
 
     return _dependency
 
+
 CreateDiscoveryHandlerDependency = Annotated[
     CreateDiscoveryHandler,
     Depends(get_create_discovery_handler),
@@ -895,6 +905,16 @@ GetRecommendationHandlerDependency = Annotated[
 ListRecommendationHandlerDependency = Annotated[
     ListRecommendationHandler,
     Depends(get_list_recommendation_handler),
+]
+
+SubmitRecommendationHandlerDependency = Annotated[
+    SubmitRecommendationHandler,
+    Depends(get_submit_recommendation_handler),
+]
+
+ApproveRecommendationHandlerDependency = Annotated[
+    ApproveRecommendationHandler,
+    Depends(get_approve_recommendation_handler),
 ]
 
 

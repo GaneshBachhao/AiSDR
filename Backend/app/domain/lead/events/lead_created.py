@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
-from app.domain.shared.base import DomainEvent
 from app.domain.lead.identifiers import LeadId
+from app.domain.shared.base import DomainEvent
 
 
 @dataclass(frozen=True)

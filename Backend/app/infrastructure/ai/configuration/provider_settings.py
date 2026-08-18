@@ -30,9 +30,7 @@ class ProviderSettings:
         provider = self.provider_name.strip().lower()
 
         if not provider:
-            raise ValueError(
-                "Provider name is required."
-            )
+            raise ValueError("Provider name is required.")
 
         object.__setattr__(
             self,
@@ -40,19 +38,11 @@ class ProviderSettings:
             provider,
         )
 
-        if (
-            self.enabled
-            and provider != "mock"
-            and not self.api_key
-        ):
-            raise ValueError(
-                "API key is required for enabled providers."
-            )
+        if self.enabled and provider != "mock" and not self.api_key:
+            raise ValueError("API key is required for enabled providers.")
 
     @property
     def is_mock_provider(
         self,
     ) -> bool:
-        return (
-            self.provider_name == "mock"
-        )
+        return self.provider_name == "mock"

@@ -937,6 +937,33 @@ export interface components {
             recommendation?: string | null;
         };
         /**
+         * CreateQualificationResponseDTO
+         * @description Response DTO returned after creating a qualification.
+         */
+        CreateQualificationResponseDTO: {
+            /**
+             * Qualification Id
+             * Format: uuid
+             */
+            qualification_id: string;
+            /**
+             * Lead Id
+             * Format: uuid
+             */
+            lead_id: string;
+            /**
+             * Assessment Id
+             * Format: uuid
+             */
+            assessment_id: string;
+            /** Status */
+            status: string;
+            /** Score */
+            score: number;
+            /** Recommendation */
+            recommendation: string | null;
+        };
+        /**
          * CurrentUserResponseDTO
          * @description Response DTO for the authenticated user's own profile.
          */
@@ -1097,6 +1124,33 @@ export interface components {
             /** Risks */
             risks?: string | null;
         };
+        /**
+         * GetQualificationResponseDTO
+         * @description Response DTO returned when retrieving a qualification.
+         */
+        GetQualificationResponseDTO: {
+            /**
+             * Qualification Id
+             * Format: uuid
+             */
+            qualification_id: string;
+            /**
+             * Lead Id
+             * Format: uuid
+             */
+            lead_id: string;
+            /**
+             * Assessment Id
+             * Format: uuid
+             */
+            assessment_id: string;
+            /** Status */
+            status: string;
+            /** Score */
+            score: number;
+            /** Recommendation */
+            recommendation: string | null;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -1172,6 +1226,31 @@ export interface components {
             opportunities?: string | null;
             /** Risks */
             risks?: string | null;
+        };
+        /**
+         * ListQualificationResponseDTO
+         * @description Response DTO returned when listing qualifications.
+         */
+        ListQualificationResponseDTO: {
+            /**
+             * Qualification Id
+             * Format: uuid
+             */
+            qualification_id: string;
+            /**
+             * Lead Id
+             * Format: uuid
+             */
+            lead_id: string;
+            /**
+             * Assessment Id
+             * Format: uuid
+             */
+            assessment_id: string;
+            /** Status */
+            status: string;
+            /** Score */
+            score: number;
         };
         /**
          * LoginRequestDTO
@@ -1414,6 +1493,33 @@ export interface components {
             score?: number | null;
             /** Recommendation */
             recommendation?: string | null;
+        };
+        /**
+         * UpdateQualificationResponseDTO
+         * @description Response DTO returned after updating a qualification.
+         */
+        UpdateQualificationResponseDTO: {
+            /**
+             * Qualification Id
+             * Format: uuid
+             */
+            qualification_id: string;
+            /**
+             * Lead Id
+             * Format: uuid
+             */
+            lead_id: string;
+            /**
+             * Assessment Id
+             * Format: uuid
+             */
+            assessment_id: string;
+            /** Status */
+            status: string;
+            /** Score */
+            score: number;
+            /** Recommendation */
+            recommendation: string | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -2586,7 +2692,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ListQualificationResponseDTO"][];
                 };
             };
             /** @description Validation Error */
@@ -2619,7 +2725,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CreateQualificationResponseDTO"];
                 };
             };
             /** @description Validation Error */
@@ -2650,7 +2756,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["GetQualificationResponseDTO"];
                 };
             };
             /** @description Validation Error */
@@ -2685,7 +2791,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["UpdateQualificationResponseDTO"];
                 };
             };
             /** @description Validation Error */

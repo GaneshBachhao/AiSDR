@@ -6,6 +6,7 @@ Architecture rule:
 - HTTP/application strings are converted to typed identifiers at the
   application/domain boundary.
 """
+
 from __future__ import annotations
 
 from abc import ABC
@@ -32,17 +33,13 @@ class Identifier(ABC):
             try:
                 self._value = UUID(normalized)
             except ValueError as exc:
-                raise ValueError(
-                    f"Invalid UUID identifier: {value!r}"
-                ) from exc
+                raise ValueError(f"Invalid UUID identifier: {value!r}") from exc
             return
 
-        raise TypeError(
-            "Identifier value must be a UUID, string UUID, or None."
-        )
+        raise TypeError("Identifier value must be a UUID, string UUID, or None.")
 
     @classmethod
-    def generate(cls, value: UUID | str | None = None) -> "Identifier":
+    def generate(cls, value: UUID | str | None = None) -> Identifier:
         return cls(value)
 
     @property
@@ -50,10 +47,7 @@ class Identifier(ABC):
         return self._value
 
     def __eq__(self, other: object) -> bool:
-        return (
-            isinstance(other, self.__class__)
-            and self._value == other._value
-        )
+        return isinstance(other, self.__class__) and self._value == other._value
 
     def __hash__(self) -> int:
         return hash(self._value)

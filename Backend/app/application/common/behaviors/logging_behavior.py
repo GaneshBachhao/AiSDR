@@ -15,7 +15,6 @@ from app.application.common.behaviors.behavior import (
     NextHandler,
 )
 
-
 TRequest = TypeVar("TRequest")
 
 TResponse = TypeVar("TResponse")

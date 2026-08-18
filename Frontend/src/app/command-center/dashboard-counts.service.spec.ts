@@ -20,7 +20,7 @@ describe('DashboardCountsService', () => {
     httpMock.verify();
   });
 
-  it('maps each module list endpoint to its array length, using each router\'s real pagination params', () => {
+  it("maps each module list endpoint to its array length, using each router's real pagination params", () => {
     let result: DashboardCounts | undefined;
     service.load().subscribe((counts) => (result = counts));
 

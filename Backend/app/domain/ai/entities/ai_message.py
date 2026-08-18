@@ -32,6 +32,4 @@ class AIMessage:
         self.content = self.content.strip()
 
         if not self.content:
-            raise ValueError(
-                "Message content cannot be empty."
-            )
+            raise ValueError("Message content cannot be empty.")

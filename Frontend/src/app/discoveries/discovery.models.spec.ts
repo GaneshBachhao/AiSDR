@@ -1,4 +1,8 @@
-import { DiscoveryResponseDTO, discoveryCompleteness, discoveryStatusBadgeClass } from './discovery.models';
+import {
+  DiscoveryResponseDTO,
+  discoveryCompleteness,
+  discoveryStatusBadgeClass,
+} from './discovery.models';
 
 function discovery(overrides: Partial<DiscoveryResponseDTO> = {}): DiscoveryResponseDTO {
   return {

@@ -4,10 +4,8 @@ Base Get Handler.
 
 from __future__ import annotations
 
-from abc import ABC
-from abc import abstractmethod
-from typing import Generic
-from typing import TypeVar
+from abc import ABC, abstractmethod
+from typing import Generic, TypeVar
 
 from app.application.common.handler.query_handler import (
     QueryHandler,

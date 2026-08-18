@@ -3,6 +3,7 @@ User application mapper.
 
 Maps request DTOs -> commands and domain entities -> response DTOs.
 """
+
 from __future__ import annotations
 
 from app.application.user.dto.current_user_response import CurrentUserResponseDTO

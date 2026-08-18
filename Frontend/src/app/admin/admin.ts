@@ -22,7 +22,9 @@ export class Admin implements OnInit {
         this.loading.set(false);
       },
       error: () => {
-        this.errorMessage.set('Could not load AI provider diagnostics. Check that the API is running.');
+        this.errorMessage.set(
+          'Could not load AI provider diagnostics. Check that the API is running.',
+        );
         this.loading.set(false);
       },
     });

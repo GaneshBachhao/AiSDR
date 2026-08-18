@@ -82,9 +82,7 @@ async def test_login_unknown_email_raises_unauthorized(handler, unit_of_work):
 
     unit_of_work.user_repository.find_by_email.return_value = None
     with pytest.raises(UnauthorizedException) as exc_info_missing:
-        await handler.handle(
-            LoginCommand(email="also-nobody@example.com", password="anything")
-        )
+        await handler.handle(LoginCommand(email="also-nobody@example.com", password="anything"))
 
     assert unknown_message == str(exc_info_missing.value)
 
@@ -99,15 +97,11 @@ async def test_login_wrong_password_raises_unauthorized_with_the_same_message_as
     unit_of_work.user_repository.find_by_email.return_value = user
 
     with pytest.raises(UnauthorizedException) as wrong_password_exc:
-        await handler.handle(
-            LoginCommand(email="jane@example.com", password="totally-wrong")
-        )
+        await handler.handle(LoginCommand(email="jane@example.com", password="totally-wrong"))
 
     unit_of_work.user_repository.find_by_email.return_value = None
     with pytest.raises(UnauthorizedException) as unknown_email_exc:
-        await handler.handle(
-            LoginCommand(email="nobody@example.com", password="anything")
-        )
+        await handler.handle(LoginCommand(email="nobody@example.com", password="anything"))
 
     assert str(wrong_password_exc.value) == str(unknown_email_exc.value)
 
@@ -118,9 +112,7 @@ async def test_login_inactive_user_raises_unauthorized(handler, unit_of_work, pa
     unit_of_work.user_repository.find_by_email.return_value = user
 
     with pytest.raises(UnauthorizedException):
-        await handler.handle(
-            LoginCommand(email="jane@example.com", password="correct-password")
-        )
+        await handler.handle(LoginCommand(email="jane@example.com", password="correct-password"))
 
 
 @pytest.mark.asyncio

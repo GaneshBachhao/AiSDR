@@ -73,7 +73,11 @@ def test_protected_route_with_an_overridden_valid_user_returns_200(app):
 def test_protected_route_with_an_expired_token_returns_401(app):
     now = datetime.now(UTC)
     expired_token = jwt.encode(
-        {"sub": "00000000-0000-0000-0000-000000000001", "iat": now - timedelta(hours=9), "exp": now - timedelta(minutes=1)},
+        {
+            "sub": "00000000-0000-0000-0000-000000000001",
+            "iat": now - timedelta(hours=9),
+            "exp": now - timedelta(minutes=1),
+        },
         _TEST_SECRET,
         algorithm="HS256",
     )

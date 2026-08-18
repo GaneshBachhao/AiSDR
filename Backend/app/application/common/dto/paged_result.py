@@ -34,6 +34,4 @@ class PagedResult(BaseDTO, Generic[T]):
         if self.total_items == 0:
             return 0
 
-        return (
-            self.total_items + self.page_size - 1
-        ) // self.page_size
+        return (self.total_items + self.page_size - 1) // self.page_size

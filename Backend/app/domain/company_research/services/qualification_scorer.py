@@ -45,9 +45,7 @@ class QualificationScorer:
         has_confirmed_signal = any(inputs.signals.values())
         has_evidence = inputs.evidence_count > 0 and has_confirmed_signal
 
-        business_fit = (
-            cls.BUSINESS_FIT_MATCH if inputs.services_matched else cls.BUSINESS_FIT_NO_MATCH
-        )
+        business_fit = cls.BUSINESS_FIT_MATCH if inputs.services_matched else cls.BUSINESS_FIT_NO_MATCH
         evidence_strength = cls.EVIDENCE_STRONG if has_evidence else cls.EVIDENCE_WEAK
         buying_signal = (
             cls.BUYING_SIGNAL_PRESENT

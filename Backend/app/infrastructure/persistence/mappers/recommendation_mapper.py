@@ -38,12 +38,16 @@ def _solution_from_dict(data: dict) -> Solution:
 class RecommendationMapper:
     """Map Recommendation aggregates to and from the existing table.
 
-    Note: only ``solutions`` (title/description/type/priority/
-    is_existing_offering) round-trips through persistence today --
-    ``status``/``roadmap_phases``/``submitted_at``/``approved_at`` have no
-    backing columns in ``RecommendationModel`` and are not restored on
-    ``to_domain`` (pre-existing gap, not introduced by this change; flagged
-    in docs/product_backlog.md rather than expanded here).
+    Note: ``roadmap_phases`` still has no backing column and is not
+    restored on ``to_domain`` -- no application flow populates it yet
+    (no handler ever calls ``add_roadmap_phase``), so it's left as a
+    known, smaller remaining gap rather than expanded here.
+    ``status``/``submitted_at``/``approved_at`` used to have the same gap
+    (silently defaulting every loaded Recommendation back to Draft
+    regardless of its real persisted status) -- fixed alongside wiring up
+    Submit/Approve, since the RecommendationStatus.DRAFT hardcoding here
+    is exactly why Submit/Approve appeared to work in a single request
+    but never actually stuck.
     """
 
     @staticmethod
@@ -53,22 +57,44 @@ class RecommendationMapper:
             assessment_id=domain.assessment_id.value,
             summary=domain.executive_summary or "",
             solutions=json.dumps([_solution_to_dict(s) for s in domain.solutions]),
+            status=domain.status.value,
+            submitted_at=domain.submitted_at,
+            approved_at=domain.approved_at,
             created_at=domain.created_at,
             updated_at=domain.updated_at,
         )
 
     @staticmethod
+    def update_model(
+        model: RecommendationModel,
+        domain: Recommendation,
+    ) -> RecommendationModel:
+        """
+        Update the already-persisted ORM row in place.
+
+        This avoids merging a newly-constructed ORM instance that doesn't
+        set the BaseModel audit-mixin columns (created_by/updated_by/
+        is_deleted/deleted_at), the same defensive pattern
+        CompanyMapper/AssessmentMapper/UserMapper already use.
+        """
+        model.summary = domain.executive_summary or ""
+        model.solutions = json.dumps([_solution_to_dict(s) for s in domain.solutions])
+        model.status = domain.status.value
+        model.submitted_at = domain.submitted_at
+        model.approved_at = domain.approved_at
+        return model
+
+    @staticmethod
     def to_domain(model: RecommendationModel) -> Recommendation:
-        solutions = [
-            _solution_from_dict(item)
-            for item in json.loads(model.solutions or "[]")
-        ]
+        solutions = [_solution_from_dict(item) for item in json.loads(model.solutions or "[]")]
         recommendation = Recommendation(
             id=RecommendationId(model.id),
             assessment_id=AssessmentId(model.assessment_id),
-            status=RecommendationStatus.DRAFT,
+            status=RecommendationStatus(model.status),
             executive_summary=model.summary,
             solutions=solutions,
+            submitted_at=model.submitted_at,
+            approved_at=model.approved_at,
             created_at=model.created_at,
             updated_at=model.updated_at,
         )

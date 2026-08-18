@@ -77,9 +77,7 @@ class Recommendation(AggregateRoot[RecommendationId]):
         Submit recommendation for review.
         """
         if not self.solutions:
-            raise ValueError(
-                "Recommendation must contain at least one solution."
-            )
+            raise ValueError("Recommendation must contain at least one solution.")
 
         self.status = RecommendationStatus.UNDER_REVIEW
         self.submitted_at = datetime.now(UTC)
@@ -90,9 +88,7 @@ class Recommendation(AggregateRoot[RecommendationId]):
         Approve recommendation.
         """
         if self.status != RecommendationStatus.UNDER_REVIEW:
-            raise ValueError(
-                "Recommendation must be under review before approval."
-            )
+            raise ValueError("Recommendation must be under review before approval.")
 
         self.status = RecommendationStatus.APPROVED
         self.approved_at = datetime.now(UTC)

@@ -20,9 +20,7 @@ class ReportPublicationService:
         report: Report,
     ) -> None:
 
-        self._validation_service.validate_can_submit_for_review(
-            report
-        )
+        self._validation_service.validate_can_submit_for_review(report)
 
         report.submit_for_review()
 
@@ -31,9 +29,7 @@ class ReportPublicationService:
         report: Report,
     ) -> None:
 
-        self._validation_service.validate_can_approve(
-            report
-        )
+        self._validation_service.validate_can_approve(report)
 
         report.approve()
 
@@ -43,9 +39,7 @@ class ReportPublicationService:
         version: ReportVersion,
     ) -> None:
 
-        self._validation_service.validate_can_publish(
-            report
-        )
+        self._validation_service.validate_can_publish(report)
 
         version.publish()
 
@@ -65,8 +59,6 @@ class ReportPublicationService:
     ) -> None:
 
         if not report.is_published():
-            raise ReportException(
-                "Only published reports can be archived."
-            )
+            raise ReportException("Only published reports can be archived.")
 
         report.archive()

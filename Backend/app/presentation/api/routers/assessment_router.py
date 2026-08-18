@@ -1,12 +1,12 @@
 """
 Assessment API router.
 """
+
 from __future__ import annotations
 
 from fastapi import APIRouter, Query, Response, status
 
 from app.application.assessment.assessment_commands import (
-    CreateAssessmentCommand,
     DeleteAssessmentCommand,
     StartAssessmentCommand,
 )

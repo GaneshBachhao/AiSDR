@@ -21,11 +21,7 @@ class Technology:
     def __post_init__(self) -> None:
 
         if not self.name.strip():
-            raise ValueError(
-                "Technology name cannot be empty."
-            )
+            raise ValueError("Technology name cannot be empty.")
 
         if not self.category.strip():
-            raise ValueError(
-                "Technology category cannot be empty."
-            )
+            raise ValueError("Technology category cannot be empty.")

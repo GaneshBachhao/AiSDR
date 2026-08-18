@@ -4,10 +4,8 @@ Repository abstraction.
 
 from __future__ import annotations
 
-from abc import ABC
-from abc import abstractmethod
-from typing import Generic
-from typing import TypeVar
+from abc import ABC, abstractmethod
+from typing import Generic, TypeVar
 
 TEntity = TypeVar("TEntity")
 TId = TypeVar("TId")

@@ -91,9 +91,7 @@ class TavilyEvidenceAdapter(EvidenceResearchPort):
                             str(item.get("published_date") or item.get("date") or "").strip() or None
                         ),
                         observed_date=observed_date,
-                        signal_scope=EvidenceSignalExtractor.classify_scope(
-                            f"{title} {snippet}", name
-                        ),
+                        signal_scope=EvidenceSignalExtractor.classify_scope(f"{title} {snippet}", name),
                     )
                 )
                 if len(evidence) >= max_items:

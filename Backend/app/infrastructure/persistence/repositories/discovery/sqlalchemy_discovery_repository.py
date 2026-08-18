@@ -68,10 +68,7 @@ class SqlAlchemyDiscoveryRepository(DiscoveryRepository):
 
     async def list(self, skip: int = 0, limit: int = 100) -> list[Discovery]:
         result = await self._session.execute(
-            select(DiscoveryModel)
-            .order_by(DiscoveryModel.created_at.desc())
-            .offset(skip)
-            .limit(limit)
+            select(DiscoveryModel).order_by(DiscoveryModel.created_at.desc()).offset(skip).limit(limit)
         )
         return [self.mapper.to_domain(model) for model in result.scalars().all()]
 
