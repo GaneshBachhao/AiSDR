@@ -1,3 +1,4 @@
+from app.domain.company_research.services.icp_matcher import IcpMatcher
 from app.domain.company_research.services.qualification_scorer import (
     QualificationScorer,
     ScoringInputs,
@@ -17,7 +18,7 @@ def _inputs(**overrides):
         evidence_count=0,
         website_verified=False,
         services_matched=False,
-        scale_signal="none",
+        employee_count=None,
     )
     defaults.update(overrides)
     return ScoringInputs(**defaults)
@@ -45,13 +46,15 @@ def test_buying_signal_present_for_hiring_growth_or_funding():
         assert score.buying_signal == QualificationScorer.BUYING_SIGNAL_PRESENT
 
 
-def test_ability_scales_with_scale_signal():
-    strong = QualificationScorer.score(_inputs(scale_signal="strong"))
-    moderate = QualificationScorer.score(_inputs(scale_signal="moderate"))
-    none_ = QualificationScorer.score(_inputs(scale_signal="none"))
-    assert strong.ability == QualificationScorer.ABILITY_STRONG
-    assert moderate.ability == QualificationScorer.ABILITY_MODERATE
-    assert none_.ability == QualificationScorer.ABILITY_NONE
+def test_ability_scales_with_employee_count_via_the_icp_size_score_table():
+    small = QualificationScorer.score(_inputs(employee_count=50))
+    mid = QualificationScorer.score(_inputs(employee_count=800))
+    large = QualificationScorer.score(_inputs(employee_count=5000))
+    unknown = QualificationScorer.score(_inputs(employee_count=None))
+    assert small.ability == IcpMatcher.size_score(50)
+    assert mid.ability == IcpMatcher.size_score(800)
+    assert large.ability == IcpMatcher.size_score(5000)
+    assert unknown.ability == IcpMatcher.size_score(None)
 
 
 def test_accessibility_requires_verified_website():
@@ -68,7 +71,7 @@ def test_full_strong_profile_reaches_tier_a():
             evidence_count=3,
             website_verified=True,
             services_matched=True,
-            scale_signal="strong",
+            employee_count=50,
         )
     )
     assert score.tier == "Tier A"

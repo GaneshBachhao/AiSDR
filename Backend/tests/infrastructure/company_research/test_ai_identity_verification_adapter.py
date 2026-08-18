@@ -6,9 +6,11 @@ import pytest
 
 from app.domain.ai.entities.ai_response import AIResponse
 from app.domain.company_research.entities.candidate import CompanyCandidate
+from app.infrastructure.ai.exceptions.ai_rate_limit_exception import AIRateLimitException
 from app.infrastructure.company_research.ai_identity_verification_adapter import (
     AiIdentityVerificationAdapter,
 )
+from app.integrations.tavily.exceptions import TavilyRateLimitException
 
 
 def _lathangi_candidate() -> CompanyCandidate:
@@ -167,6 +169,31 @@ async def test_never_returns_website_when_is_match_is_false_even_if_model_suppli
     result = await adapter.verify(_acme_candidate())
 
     assert result.verified_website is None
+
+
+@pytest.mark.asyncio
+async def test_propagates_ai_rate_limit_instead_of_falling_back_to_low():
+    """A rate limit means this candidate was never actually checked -- it
+    must not be indistinguishable from a genuine non-match (confidence
+    LOW), or it silently vanishes from results with no visible signal
+    that quota, not a real mismatch, is why."""
+    client = _tavily_client([{"title": "Acme", "url": "https://acme.example", "content": "x"}])
+    ai_service = _ai_service(side_effect=AIRateLimitException("Gemini rate limit / quota exceeded"))
+    adapter = AiIdentityVerificationAdapter(ai_service=ai_service, tavily_client=client)
+
+    with pytest.raises(AIRateLimitException):
+        await adapter.verify(_acme_candidate())
+
+
+@pytest.mark.asyncio
+async def test_propagates_tavily_rate_limit_instead_of_falling_back_to_low():
+    client = Mock()
+    client.search.side_effect = TavilyRateLimitException("Tavily usage limit exceeded")
+    ai_service = _ai_service(content="{}")
+    adapter = AiIdentityVerificationAdapter(ai_service=ai_service, tavily_client=client)
+
+    with pytest.raises(TavilyRateLimitException):
+        await adapter.verify(_acme_candidate())
 
 
 @pytest.mark.asyncio

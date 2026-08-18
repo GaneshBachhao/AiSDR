@@ -26,7 +26,7 @@ class DomainProfile:
     industry_keywords: dict[str, tuple[str, ...]] = field(default_factory=dict)
     negative_service_markers: tuple[str, ...] = ()
 
-    enterprise_exclusion_threshold: int = 500
+    enterprise_exclusion_threshold: int = 1000
     enterprise_exclusion_markers: tuple[str, ...] = ()
 
     evidence_scope_keywords: tuple[str, ...] = ()

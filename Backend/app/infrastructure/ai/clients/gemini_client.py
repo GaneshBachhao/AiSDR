@@ -1,17 +1,40 @@
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from ..configuration import ProviderSettings
 from ..exceptions.ai_client_exception import AIClientException
+from ..exceptions.ai_rate_limit_exception import AIRateLimitException
 from .base_ai_client import BaseAIClient
 
 try:
     from google import genai
+    from google.genai import errors as genai_errors
     from google.genai import types as genai_types
 except ImportError:  # optional integration dependency
     genai = None
+    genai_errors = None
     genai_types = None
+
+logger = logging.getLogger(__name__)
+
+
+def _retry_after_seconds(exc: genai_errors.ClientError) -> float | None:
+    """Best-effort extraction of the server-suggested retry delay from a
+    Gemini 429 error body (``{"error": {"details": [{"@type": "...RetryInfo",
+    "retryDelay": "14s"}, ...]}}``). Never raises -- an unexpected error
+    shape just means no retry hint, not a broken rate-limit detection."""
+    try:
+        details = exc.details or {}
+        error_body = details.get("error", details)
+        for entry in error_body.get("details", []):
+            delay = entry.get("retryDelay")
+            if isinstance(delay, str) and delay.endswith("s"):
+                return float(delay[:-1])
+    except Exception:
+        return None
+    return None
 
 
 class GeminiClient(BaseAIClient):
@@ -78,6 +101,21 @@ class GeminiClient(BaseAIClient):
         except AIClientException:
             raise
         except Exception as exc:
+            if (
+                genai_errors is not None
+                and isinstance(exc, genai_errors.ClientError)
+                and (exc.code == 429 or exc.status == "RESOURCE_EXHAUSTED")
+            ):
+                retry_after = _retry_after_seconds(exc)
+                logger.warning(
+                    "RATE_LIMIT gemini status=%s retry_after=%s",
+                    exc.status,
+                    retry_after,
+                )
+                raise AIRateLimitException(
+                    f"Gemini rate limit / quota exceeded: {exc}",
+                    retry_after_seconds=retry_after,
+                ) from exc
             raise AIClientException("Gemini request failed") from exc
 
     async def health_check(self) -> bool:

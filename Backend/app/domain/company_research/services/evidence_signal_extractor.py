@@ -47,14 +47,6 @@ class EvidenceSignalExtractor:
         "funding": ("funding", "investment", "raised", "series a", "series b", "grant"),
     }
 
-    # "enterprise" is deliberately NOT a strong-scale marker -- evidence
-    # describing a company as "enterprise"-scale should count against a
-    # small/mid-size ICP, not toward the highest "ability" score. It used
-    # to be here, which meant candidates whose evidence text literally
-    # said "enterprise" scored the maximum ability sub-score.
-    SCALE_STRONG_MARKERS = ("employees", "revenue", "funding", "investment", "million", "billion")
-    SCALE_MODERATE_MARKERS = ("established", "global company", "large company")
-
     @classmethod
     def extract_signals(cls, combined_text: str) -> dict[str, bool]:
         return {
@@ -72,14 +64,6 @@ class EvidenceSignalExtractor:
         if signals.get("funding"):
             events.append("funding / investment")
         return ", ".join(events) if events else None
-
-    @classmethod
-    def scale_signal(cls, combined_text: str) -> str:
-        if any(marker in combined_text for marker in cls.SCALE_STRONG_MARKERS):
-            return "strong"
-        if any(marker in combined_text for marker in cls.SCALE_MODERATE_MARKERS):
-            return "moderate"
-        return "none"
 
     @staticmethod
     def classify_scope(text: str, company_name: str) -> str:

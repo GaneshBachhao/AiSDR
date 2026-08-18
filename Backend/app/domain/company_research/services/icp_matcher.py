@@ -102,7 +102,11 @@ class IcpMatcher:
         employee_count: int | None,
         profile: DomainProfile | None = None,
     ) -> tuple[bool, str | None]:
-        threshold = profile.enterprise_exclusion_threshold if profile is not None else 500
+        # 1,000, not 500 -- matches the ICP's own company-size point table
+        # (see docs/company_search_and_prompt_tuning.md §1b), which scores
+        # 501-1,000 employees as a valid, lower-scored band (5/10), not an
+        # automatic reject. Only 1,000+ is a hard reject.
+        threshold = profile.enterprise_exclusion_threshold if profile is not None else 1000
         explicit_markers = (
             profile.enterprise_exclusion_markers
             if profile is not None and profile.enterprise_exclusion_markers
@@ -133,4 +137,33 @@ class IcpMatcher:
             return "51-200"
         if employee_count <= 500:
             return "201-500"
-        return "500+"
+        if employee_count <= 1000:
+            return "501-1,000"
+        return "1,000+"
+
+    # Points, not a boolean pass/fail -- a company just outside a requested
+    # band shouldn't score identically to one wildly oversized. Mirrors the
+    # ICP's company-size point table exactly (see
+    # docs/company_search_and_prompt_tuning.md §1b). Values above 1,000
+    # still return a real (low) score rather than raising, so this stays a
+    # faithful, general-purpose implementation of the table on its own --
+    # in the real pipeline, `enterprise_exclusion` already rejects those
+    # candidates before scoring is ever reached.
+    _SIZE_SCORE_UNKNOWN = 4
+
+    @classmethod
+    def size_score(cls, employee_count: int | None) -> int:
+        if employee_count is None:
+            # Conservative, not a guess: matches the previous scorer's
+            # lowest "no scale signal detected" tier rather than assuming
+            # an unknown-size company is well-sized.
+            return cls._SIZE_SCORE_UNKNOWN
+        if employee_count <= 100:
+            return 10
+        if employee_count <= 200:
+            return 9
+        if employee_count <= 500:
+            return 7
+        if employee_count <= 1000:
+            return 5
+        return 3

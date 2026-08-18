@@ -13,6 +13,7 @@ from app.infrastructure.company_research.tavily_discovery_adapter import (
 from app.infrastructure.configuration.company_research_settings import (
     CompanyResearchSettings,
 )
+from app.integrations.tavily.exceptions import TavilyRateLimitException
 
 
 def _client_returning(results: list[dict]) -> Mock:
@@ -40,6 +41,24 @@ async def test_discover_returns_candidate_for_a_plain_company_result():
     assert len(candidates) == 1
     assert candidates[0].company_name == "Acme Manufacturing"
     assert candidates[0].website == "https://acme.example"
+
+
+@pytest.mark.asyncio
+async def test_discover_returns_empty_pool_when_every_query_is_rate_limited(caplog):
+    """Matches what a real fully-rate-limited discovery pass looks like:
+    an empty candidate pool, same as "genuinely no results," but now
+    clearly logged (RATE_LIMIT) so it's distinguishable in practice, and
+    no exception crashes the whole search."""
+    client = Mock()
+    client.search.side_effect = TavilyRateLimitException("Tavily usage limit exceeded")
+    adapter = TavilyDiscoveryAdapter(client=client, settings=CompanyResearchSettings())
+    request = CompanyResearchRequest(geography="India", industries=["Manufacturing"], number_of_companies=2)
+
+    with caplog.at_level("WARNING"):
+        candidates = await adapter.discover(request)
+
+    assert candidates == []
+    assert "RATE_LIMIT" in caplog.text
 
 
 @pytest.mark.asyncio

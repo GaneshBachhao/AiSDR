@@ -19,28 +19,6 @@ def test_trigger_event_none_when_no_signals():
     assert EvidenceSignalExtractor.trigger_event({"hiring": False, "growth": False, "funding": False}) is None
 
 
-def test_scale_signal_strong_marker():
-    assert EvidenceSignalExtractor.scale_signal("the company reported $50 million in revenue") == "strong"
-
-
-def test_scale_signal_moderate_marker():
-    assert EvidenceSignalExtractor.scale_signal("an established global company") == "moderate"
-
-
-def test_scale_signal_none():
-    assert EvidenceSignalExtractor.scale_signal("a small local shop") == "none"
-
-
-def test_scale_signal_the_word_enterprise_alone_is_not_a_strong_marker():
-    """Regression guard: "enterprise" used to be in SCALE_STRONG_MARKERS,
-    which meant evidence describing a company as enterprise-scale scored
-    the *highest* ability sub-score -- backwards for an ICP that targets
-    5-500 employee companies and wants to reject enterprise/multinational
-    ones. Evidence containing only "enterprise" (no other strong marker)
-    must not be treated as a strong scale signal."""
-    assert EvidenceSignalExtractor.scale_signal("a leading enterprise software provider") == "none"
-
-
 def test_classify_evidence_confirmed_need_requires_company_specific_evidence():
     signals = {"hiring": True, "technology": True}
     company_specific_signals = {"hiring": True, "technology": True}

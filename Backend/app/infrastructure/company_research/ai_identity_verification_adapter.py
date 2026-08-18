@@ -45,6 +45,8 @@ from app.domain.ai.value_objects.provider_name import ProviderName
 from app.domain.ai.value_objects.temperature import Temperature
 from app.domain.company_research.entities.candidate import CompanyCandidate
 from app.infrastructure.ai.composition import default_model_for_provider
+from app.infrastructure.ai.exceptions.ai_rate_limit_exception import AIRateLimitException
+from app.integrations.tavily.exceptions import TavilyRateLimitException
 from app.integrations.tavily.tavily_client import AgneticTavilyClient
 
 logger = logging.getLogger(__name__)
@@ -87,6 +89,16 @@ class AiIdentityVerificationAdapter(IdentityVerificationPort):
             parsed = self._parse_json(response.content)
             return self._to_result(parsed)
 
+        except (AIRateLimitException, TavilyRateLimitException):
+            # Let a rate limit propagate distinctly instead of folding it
+            # into _unverified(...) -- that would make "this candidate was
+            # never actually checked because the provider was rate-limited"
+            # indistinguishable from "this candidate was checked and
+            # genuinely didn't match," silently dropping it from results
+            # with no visible signal. SearchCompaniesHandler._research_candidate
+            # already has a try/except around verify() that converts an
+            # exception into a CandidateResearchFailure the caller can see.
+            raise
         except Exception as exc:
             root_cause = exc
             while root_cause.__cause__ is not None:

@@ -2,8 +2,12 @@ from __future__ import annotations
 
 from unittest.mock import Mock
 
+import pytest
+from tavily import UsageLimitExceededError
+
 import app.integrations.tavily.tavily_client as module
 from app.infrastructure.configuration.tavily_settings import TavilySettings
+from app.integrations.tavily.exceptions import TavilyRateLimitException
 from app.integrations.tavily.tavily_client import AgneticTavilyClient
 
 
@@ -40,6 +44,28 @@ def test_tavily_client_is_unconfigured_without_key_or_explicit_settings(monkeypa
     monkeypatch.setattr(module, "TavilyClient", Mock())
     client = AgneticTavilyClient(settings=TavilySettings(tavily_api_key=""))
     assert client.client is None
+    assert client.search("test") == []
+
+
+def test_tavily_search_raises_rate_limit_exception_on_usage_limit_exceeded(monkeypatch, caplog) -> None:
+    sdk = Mock()
+    sdk.search.side_effect = UsageLimitExceededError("Usage limit exceeded")
+    monkeypatch.setattr(module, "TavilyClient", Mock(return_value=sdk))
+
+    client = AgneticTavilyClient(api_key="test-key")
+    with caplog.at_level("WARNING"):
+        with pytest.raises(TavilyRateLimitException):
+            client.search("Manufacturing companies in Pune")
+
+    assert "RATE_LIMIT" in caplog.text
+
+
+def test_tavily_search_swallows_other_errors_and_returns_empty_list(monkeypatch) -> None:
+    sdk = Mock()
+    sdk.search.side_effect = RuntimeError("network error")
+    monkeypatch.setattr(module, "TavilyClient", Mock(return_value=sdk))
+
+    client = AgneticTavilyClient(api_key="test-key")
     assert client.search("test") == []
 
 

@@ -29,6 +29,8 @@ from app.domain.company_research.entities.candidate import CompanyCandidate
 from app.infrastructure.ai.exceptions.ai_budget_exceeded_exception import (
     AIBudgetExceededException,
 )
+from app.infrastructure.ai.exceptions.ai_rate_limit_exception import AIRateLimitException
+from app.integrations.tavily.exceptions import TavilyRateLimitException
 
 
 def _candidate(name: str, website: str) -> CompanyCandidate:
@@ -742,6 +744,20 @@ class RaisingEvidenceAdapter(EvidenceResearchPort):
         raise RuntimeError("gemini quota exhausted")
 
 
+class RateLimitedIdentityAdapter(IdentityVerificationPort):
+    """Simulates a real Gemini 429 during identity verification -- distinct
+    from RaisingIdentityAdapter's generic crash, since a rate limit should
+    be tagged ``is_rate_limited=True`` rather than a plain failure."""
+
+    async def verify(self, candidate):
+        raise AIRateLimitException("Gemini rate limit / quota exceeded")
+
+
+class RateLimitedEvidenceAdapter(EvidenceResearchPort):
+    async def gather(self, candidate, identity, request):
+        raise TavilyRateLimitException("Tavily usage limit exceeded")
+
+
 @pytest.mark.asyncio
 async def test_identity_verification_crash_surfaces_as_a_tagged_failure_not_a_silent_drop():
     candidate = _candidate("Acme Manufacturing", "https://acme.example")
@@ -779,6 +795,69 @@ async def test_evidence_gathering_crash_surfaces_as_a_tagged_failure():
     assert len(batch.failures) == 1
     assert batch.failures[0].failed_step == "evidence_gathering"
     assert "gemini quota exhausted" in batch.failures[0].error_message
+
+
+@pytest.mark.asyncio
+async def test_rate_limited_identity_verification_is_tagged_distinctly_not_a_plain_failure():
+    """A Gemini/Tavily rate limit during identity verification means this
+    candidate was never actually checked at all -- distinct both from a
+    legitimate non-match (which correctly appears nowhere) and from an
+    ordinary crash (RaisingIdentityAdapter's case), so a caller can tell
+    'retry later, this will likely succeed once quota resets' apart from
+    'something is actually broken.'"""
+    candidate = _candidate("Acme Manufacturing", "https://acme.example")
+    handler = SearchCompaniesHandler(
+        ScriptedDiscoveryAdapter([candidate]),
+        RateLimitedIdentityAdapter(),
+        ScriptedEvidenceAdapter({}),
+    )
+    request = CompanyResearchRequest(geography="India")
+
+    batch = await handler.handle(request)
+
+    assert batch.results == []
+    assert len(batch.failures) == 1
+    failure = batch.failures[0]
+    assert failure.failed_step == "identity_verification"
+    assert failure.is_rate_limited is True
+    assert batch.rate_limited_count == 1
+
+
+@pytest.mark.asyncio
+async def test_rate_limited_evidence_gathering_is_also_tagged_distinctly():
+    candidate = _candidate("Acme Manufacturing", "https://acme.example")
+    handler = SearchCompaniesHandler(
+        ScriptedDiscoveryAdapter([candidate]),
+        ScriptedIdentityAdapter({"Acme Manufacturing": _verified("https://acme.example")}),
+        RateLimitedEvidenceAdapter(),
+    )
+    request = CompanyResearchRequest(geography="India")
+
+    batch = await handler.handle(request)
+
+    assert len(batch.failures) == 1
+    assert batch.failures[0].failed_step == "evidence_gathering"
+    assert batch.failures[0].is_rate_limited is True
+    assert batch.rate_limited_count == 1
+
+
+@pytest.mark.asyncio
+async def test_ordinary_crash_is_not_tagged_as_rate_limited():
+    """Regression guard: a plain RuntimeError (RaisingIdentityAdapter) must
+    not be mistaken for a rate limit -- is_rate_limited should stay False
+    and rate_limited_count should stay 0."""
+    candidate = _candidate("Acme Manufacturing", "https://acme.example")
+    handler = SearchCompaniesHandler(
+        ScriptedDiscoveryAdapter([candidate]),
+        RaisingIdentityAdapter(),
+        ScriptedEvidenceAdapter({}),
+    )
+    request = CompanyResearchRequest(geography="India")
+
+    batch = await handler.handle(request)
+
+    assert batch.failures[0].is_rate_limited is False
+    assert batch.rate_limited_count == 0
 
 
 @pytest.mark.asyncio
@@ -873,6 +952,31 @@ async def test_retry_candidate_that_fails_again_returns_another_tagged_failure()
 
     assert isinstance(retried, CandidateResearchFailure)
     assert retried.failed_step == "identity_verification"
+
+
+@pytest.mark.asyncio
+async def test_retry_candidate_preserves_is_rate_limited_when_still_rate_limited():
+    handler = SearchCompaniesHandler(
+        AsyncMock(spec=CompanyDiscoveryPort),
+        RateLimitedIdentityAdapter(),
+        ScriptedEvidenceAdapter({}),
+    )
+    request = CompanyResearchRequest(geography="India")
+    failure = CandidateResearchFailure(
+        company_name="Acme Manufacturing",
+        website="https://acme.example",
+        title="Acme Manufacturing",
+        content="x",
+        source_url="https://acme.example",
+        failed_step="identity_verification",
+        error_message="Gemini rate limit / quota exceeded",
+        is_rate_limited=True,
+    )
+
+    retried = await handler.retry_candidate(failure, request)
+
+    assert isinstance(retried, CandidateResearchFailure)
+    assert retried.is_rate_limited is True
 
 
 @pytest.mark.asyncio

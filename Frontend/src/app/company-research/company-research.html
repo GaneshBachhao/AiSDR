@@ -107,6 +107,14 @@
     <p class="error">{{ errorMessage() }}</p>
   }
 
+  @if (rateLimitedCount() > 0) {
+    <p class="rate-limit-banner">
+      ⚠ {{ rateLimitedCount() }} candidate{{ rateLimitedCount() === 1 ? '' : 's' }} could not be
+      checked because the AI provider or search provider was rate-limited, not because they don't
+      qualify. See "Rate limited" entries below — retry them once quota resets.
+    </p>
+  }
+
   @if (results().length > 0) {
     <section class="results">
       <h2>Results ({{ results().length }})</h2>
@@ -192,7 +200,11 @@
             <tr>
               <td>{{ failure.company_name }}</td>
               <td>
-                <span class="badge badge-fail">{{ failure.failed_step }}</span>
+                @if (failure.is_rate_limited) {
+                  <span class="badge badge-warn">Rate limited</span>
+                } @else {
+                  <span class="badge badge-fail">{{ failure.failed_step }}</span>
+                }
               </td>
               <td class="error-message">{{ failure.error_message }}</td>
               <td>

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from app.domain.company_research.services.icp_matcher import IcpMatcher
 from app.domain.company_research.value_objects.qualification_score import QualificationScore
 
 
@@ -13,7 +14,7 @@ class ScoringInputs:
     evidence_count: int
     website_verified: bool
     services_matched: bool
-    scale_signal: str
+    employee_count: int | None
 
 
 class QualificationScorer:
@@ -21,7 +22,8 @@ class QualificationScorer:
 
     Weights mirror the original single-provider implementation:
     business fit (23/14), evidence strength (22/7), buying signal (17/6),
-    ability-to-pay scale (12/7/4), accessibility (9/4).
+    ability-to-pay scale (10/9/7/5/3/4-unknown, see
+    ``IcpMatcher.size_score``), accessibility (9/4).
     """
 
     BUSINESS_FIT_MATCH = 23
@@ -32,10 +34,6 @@ class QualificationScorer:
 
     BUYING_SIGNAL_PRESENT = 17
     BUYING_SIGNAL_ABSENT = 6
-
-    ABILITY_STRONG = 12
-    ABILITY_MODERATE = 7
-    ABILITY_NONE = 4
 
     ACCESSIBILITY_WITH_WEBSITE = 9
     ACCESSIBILITY_WITHOUT_WEBSITE = 4
@@ -52,10 +50,14 @@ class QualificationScorer:
             if (inputs.signals.get("hiring") or inputs.signals.get("growth") or inputs.signals.get("funding"))
             else cls.BUYING_SIGNAL_ABSENT
         )
-        ability = {
-            "strong": cls.ABILITY_STRONG,
-            "moderate": cls.ABILITY_MODERATE,
-        }.get(inputs.scale_signal, cls.ABILITY_NONE)
+        # Ability-to-pay is now driven by the ICP's own company-size point
+        # table (docs/company_search_and_prompt_tuning.md §1b) applied to
+        # the actually-extracted employee count, not by whether evidence
+        # text happens to mention scale-sounding keywords ("employees",
+        # "revenue", "million"...) -- that heuristic rewarded *any*
+        # mention of scale, including describing a company as
+        # enterprise-sized, which is backwards for a 5-1,000 employee ICP.
+        ability = IcpMatcher.size_score(inputs.employee_count)
         accessibility = (
             cls.ACCESSIBILITY_WITH_WEBSITE if inputs.website_verified else cls.ACCESSIBILITY_WITHOUT_WEBSITE
         )

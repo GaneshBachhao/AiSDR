@@ -533,6 +533,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/recommendations/{recommendation_id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit Recommendation */
+        post: operations["submit_recommendation_recommendations__recommendation_id__submit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/recommendations/{recommendation_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve Recommendation */
+        post: operations["approve_recommendation_recommendations__recommendation_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -585,6 +619,11 @@ export interface components {
              * @default true
              */
             is_resumable: boolean;
+            /**
+             * Is Rate Limited
+             * @default false
+             */
+            is_rate_limited: boolean;
         };
         /**
          * CompanyResearchBatchResult
@@ -601,6 +640,11 @@ export interface components {
             results?: components["schemas"]["CompanySearchResult"][];
             /** Failures */
             failures?: components["schemas"]["CandidateResearchFailure"][];
+            /**
+             * Rate Limited Count
+             * @default 0
+             */
+            rate_limited_count: number;
         };
         /**
          * CompanyResearchRequest
@@ -2900,6 +2944,68 @@ export interface operations {
         };
     };
     get_recommendation_recommendations__recommendation_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                recommendation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecommendationDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    submit_recommendation_recommendations__recommendation_id__submit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                recommendation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecommendationDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_recommendation_recommendations__recommendation_id__approve_post: {
         parameters: {
             query?: never;
             header?: never;

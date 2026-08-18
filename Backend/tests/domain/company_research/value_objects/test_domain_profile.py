@@ -22,7 +22,7 @@ def test_defaults_are_inert():
     profile = DomainProfile(name="empty")
     assert profile.industry_keywords == {}
     assert profile.negative_service_markers == ()
-    assert profile.enterprise_exclusion_threshold == 500
+    assert profile.enterprise_exclusion_threshold == 1000
     assert profile.enterprise_exclusion_markers == ()
     assert profile.evidence_scope_keywords == ()
     assert profile.scoring_weight_overrides == {}

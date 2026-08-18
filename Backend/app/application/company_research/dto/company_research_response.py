@@ -132,6 +132,12 @@ class CandidateResearchFailure(BaseModel):
     failed_step: str
     error_message: str
     is_resumable: bool = True
+    is_rate_limited: bool = False
+    """True when ``failed_step`` happened specifically because the AI
+    provider (Gemini) or Tavily reported a rate-limit/quota error, not any
+    other kind of failure -- lets a caller distinguish "retry later, this
+    will likely succeed once quota resets" from a genuine error worth
+    investigating, without string-matching ``error_message``."""
 
 
 class CompanyResearchBatchResult(BaseModel):
@@ -146,3 +152,11 @@ class CompanyResearchBatchResult(BaseModel):
 
     results: list[CompanySearchResult] = Field(default_factory=list)
     failures: list[CandidateResearchFailure] = Field(default_factory=list)
+    rate_limited_count: int = Field(default=0, ge=0)
+    """Convenience rollup: how many entries in ``failures`` have
+    ``is_rate_limited=True``. Only covers rate limits that hit the
+    identity-verification step (the one that would otherwise silently drop
+    a candidate from the response entirely) -- a rate limit encountered
+    during discovery or evidence-gathering degrades gracefully instead
+    (fewer candidates/less evidence, not a hard failure) and is logged
+    (``RATE_LIMIT`` prefix), not counted here."""

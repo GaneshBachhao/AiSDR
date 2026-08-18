@@ -34,6 +34,7 @@ export class CompanyResearch {
   readonly errorMessage = signal<string | null>(null);
   readonly results = signal<CompanySearchResult[]>([]);
   readonly failures = signal<CandidateResearchFailure[]>([]);
+  readonly rateLimitedCount = signal(0);
   readonly retryingCompany = signal<string | null>(null);
 
   private static splitList(value: string): string[] {
@@ -57,11 +58,13 @@ export class CompanyResearch {
     this.errorMessage.set(null);
     this.results.set([]);
     this.failures.set([]);
+    this.rateLimitedCount.set(0);
 
     this.service.search(req).subscribe({
       next: (batch) => {
         this.results.set(batch.results ?? []);
         this.failures.set(batch.failures ?? []);
+        this.rateLimitedCount.set(batch.rate_limited_count ?? 0);
         this.loading.set(false);
       },
       error: (err) => {
@@ -78,10 +81,17 @@ export class CompanyResearch {
     this.service.retry(failure, this.request()).subscribe({
       next: (outcome) => {
         this.failures.update((items) => items.filter((item) => item !== failure));
+        if (failure.is_rate_limited) {
+          this.rateLimitedCount.update((count) => Math.max(0, count - 1));
+        }
         if (outcome && 'qualification_score' in outcome) {
           this.results.update((items) => [...items, outcome as CompanySearchResult]);
         } else if (outcome && 'failed_step' in outcome) {
-          this.failures.update((items) => [...items, outcome as CandidateResearchFailure]);
+          const newFailure = outcome as CandidateResearchFailure;
+          this.failures.update((items) => [...items, newFailure]);
+          if (newFailure.is_rate_limited) {
+            this.rateLimitedCount.update((count) => count + 1);
+          }
         }
         // outcome === null: candidate no longer qualifies -- correctly
         // dropped, not shown anywhere, same as a fresh search would do.

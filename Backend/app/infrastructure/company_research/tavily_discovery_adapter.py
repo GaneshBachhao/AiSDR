@@ -13,6 +13,7 @@ classification, or deep research happens here -- this port answers only
 from __future__ import annotations
 
 import asyncio
+import logging
 import re
 from datetime import UTC, datetime
 from urllib.parse import urlparse
@@ -28,7 +29,10 @@ from app.domain.company_research.services.candidate_gate import DeterministicCan
 from app.infrastructure.configuration.company_research_settings import (
     CompanyResearchSettings,
 )
+from app.integrations.tavily.exceptions import TavilyRateLimitException
 from app.integrations.tavily.tavily_client import AgneticTavilyClient
+
+logger = logging.getLogger(__name__)
 
 _GENERIC_TITLE_MARKERS = (
     "top ",
@@ -112,11 +116,22 @@ class TavilyDiscoveryAdapter(CompanyDiscoveryPort):
         )
 
         for query in queries:
-            for item in self._client.search(
-                query=query,
-                max_results=min(target_pool, 30),
-                search_depth="basic",
-            ):
+            try:
+                query_results = self._client.search(
+                    query=query,
+                    max_results=min(target_pool, 30),
+                    search_depth="basic",
+                )
+            except TavilyRateLimitException as exc:
+                # Non-fatal: this query's candidates are simply missing
+                # from the pool, same as if it had genuinely returned zero
+                # results -- but logged clearly (unlike before this
+                # exception existed) so a rate-limited discovery pass that
+                # ends up returning few/no candidates is distinguishable
+                # from "there really are no matching companies."
+                logger.warning("RATE_LIMIT tavily discovery query=%r: %s", query, exc)
+                continue
+            for item in query_results:
                 url = str(item.get("url", "")).strip()
                 title = str(item.get("title", "")).strip()
                 content = str(item.get("content", "")).strip()

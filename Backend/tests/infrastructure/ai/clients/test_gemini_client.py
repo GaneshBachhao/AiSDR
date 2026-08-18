@@ -8,6 +8,7 @@ import app.infrastructure.ai.clients.gemini_client as module
 from app.infrastructure.ai.clients.gemini_client import GeminiClient
 from app.infrastructure.ai.configuration import ProviderSettings
 from app.infrastructure.ai.exceptions.ai_client_exception import AIClientException
+from app.infrastructure.ai.exceptions.ai_rate_limit_exception import AIRateLimitException
 
 
 def _fake_response(text="Hello.", finish_reason_name="STOP", prompt_tokens=10, completion_tokens=5):
@@ -81,6 +82,49 @@ async def test_send_request_wraps_sdk_exceptions(monkeypatch):
 
     with pytest.raises(AIClientException):
         await client.send_request({"model": "gemini-2.5-pro", "contents": "hi"})
+
+
+@pytest.mark.asyncio
+async def test_send_request_raises_rate_limit_exception_on_429(monkeypatch):
+    from google.genai import errors as genai_errors
+
+    error = genai_errors.ClientError(
+        429,
+        {
+            "error": {
+                "code": 429,
+                "status": "RESOURCE_EXHAUSTED",
+                "message": "Quota exceeded",
+                "details": [
+                    {
+                        "@type": "type.googleapis.com/google.rpc.RetryInfo",
+                        "retryDelay": "14s",
+                    }
+                ],
+            }
+        },
+    )
+    _install_fake_sdk(monkeypatch, side_effect=error)
+    client = GeminiClient(ProviderSettings(provider_name="gemini", api_key="secret"))
+
+    with pytest.raises(AIRateLimitException) as exc_info:
+        await client.send_request({"model": "gemini-2.5-pro", "contents": "hi"})
+
+    assert exc_info.value.retry_after_seconds == 14.0
+
+
+@pytest.mark.asyncio
+async def test_send_request_does_not_raise_rate_limit_for_a_non_429_client_error(monkeypatch):
+    from google.genai import errors as genai_errors
+
+    error = genai_errors.ClientError(400, {"error": {"code": 400, "status": "INVALID_ARGUMENT"}})
+    _install_fake_sdk(monkeypatch, side_effect=error)
+    client = GeminiClient(ProviderSettings(provider_name="gemini", api_key="secret"))
+
+    with pytest.raises(AIClientException) as exc_info:
+        await client.send_request({"model": "gemini-2.5-pro", "contents": "hi"})
+
+    assert not isinstance(exc_info.value, AIRateLimitException)
 
 
 @pytest.mark.asyncio

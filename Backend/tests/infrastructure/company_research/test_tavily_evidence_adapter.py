@@ -17,6 +17,7 @@ from app.infrastructure.company_research.tavily_evidence_adapter import (
 from app.infrastructure.configuration.company_research_settings import (
     CompanyResearchSettings,
 )
+from app.integrations.tavily.exceptions import TavilyRateLimitException
 
 
 def _candidate() -> CompanyCandidate:
@@ -100,6 +101,27 @@ async def test_gather_skips_blocked_domains():
 
     evidence = await adapter.gather(_candidate(), _identity(), request)
     assert evidence == []
+
+
+@pytest.mark.asyncio
+async def test_gather_degrades_gracefully_when_one_query_is_rate_limited(caplog):
+    """A rate limit on one of the 2-3 evidence queries must not crash the
+    whole candidate -- fewer evidence items just means lower scoring
+    downstream, not a hard failure (unlike identity verification)."""
+    client = Mock()
+    client.search.side_effect = [
+        TavilyRateLimitException("Tavily usage limit exceeded"),
+        [{"title": "Acme funding", "url": "https://acme.example/news", "content": "Acme raised funding."}],
+    ]
+    adapter = TavilyEvidenceAdapter(client=client, settings=CompanyResearchSettings())
+    request = CompanyResearchRequest(geography="India")
+
+    with caplog.at_level("WARNING"):
+        evidence = await adapter.gather(_candidate(), _identity(), request)
+
+    assert len(evidence) == 1
+    assert evidence[0].title == "Acme funding"
+    assert "RATE_LIMIT" in caplog.text
 
 
 @pytest.mark.asyncio

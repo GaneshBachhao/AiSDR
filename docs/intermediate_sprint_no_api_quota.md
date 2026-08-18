@@ -404,6 +404,65 @@ whitespace/import-order/quote-style change plus the small set of genuine
 fixes listed above — both full test suites pass unchanged (**614** backend,
 **109** frontend) and both full builds are clean.
 
+**IS-11, 2026-08-18, zero live API calls:** the dev DB before this item
+had only 8 companies / 3 leads / 3 discoveries / 2 assessments / **0**
+qualifications / 1 recommendation — whatever had accumulated one record
+at a time while testing individual features, no variety of pipeline
+stage or status. Added `Backend/scripts/seed_demo_data.py`, following
+`create_user.py`'s exact pattern (construct domain entities directly,
+persist via `UnitOfWork`/repositories, no HTTP, no AI/search calls).
+
+Before writing it, read every entity's real constructor directly (not
+guessed) — `Company`, `Contact`, `Lead`, `Discovery`, `Assessment`,
+`Qualification`, `Recommendation`/`Solution`/`RoadmapPhase` — to avoid
+repeating this session's earlier `RoadmapPhase` field-name mistake. That
+read surfaced two genuine, already-known persistence gaps worth calling
+out explicitly rather than silently seeding around: **Assessment's
+per-dimension score breakdown and its `Finding`/`Evidence`/`Opportunity`
+entities have no backing columns at all** (`assessment_mapper.py`'s
+`to_model` never references them), and **`Recommendation.roadmap_phases`
+has no backing column either** (already flagged in that mapper's own
+docstring from IS-4). Anything set on those fields is silently dropped on
+save — so the seed script deliberately does *not* populate them, to avoid
+producing demo data that looks richer in this script than it would ever
+actually appear in the running app.
+
+Seeded 5 complete chains, each deliberately stopped at a *different*
+pipeline stage so every list/detail screen and status badge has real
+data to show, and so the two most interesting Recommendation states are
+live and clickable rather than needing a real AI-generated one:
+- **Meridian Logistics Group** — full chain, Recommendation in **Draft**
+  with 2 solutions (a "Submit for Review" button is live on this one).
+- **Brightline Financial Services** — full chain, Recommendation already
+  moved to **Under Review** via the real `recommendation.submit_for_review()`
+  domain method (not a script-only shortcut — the same invariant
+  `SubmitRecommendationHandler` enforces) — an "Approve" button is live
+  on this one.
+- **Coastal Retail Group** — stops at Qualification (`Needs Nurturing`,
+  score 38) — no Recommendation yet, a realistic "not a good fit right
+  now" outcome.
+- **Fenwick Manufacturing Co.** — stops mid-Discovery (`IN_PROGRESS`) —
+  no Assessment started yet.
+- **Northgate Consulting Partners** — a bare new Lead, nothing else —
+  freshest possible top-of-funnel record.
+
+Idempotent per company: each seeder checks `CompanyRepository.find_by_name`
+first and skips its entire chain if that company already exists, so
+re-running the script is always safe — verified by running it twice in a
+row (`Seeded: ...` ×5, then `Already exists, skipped: ...` ×5 with no row
+count change). **Live-verified against the real running backend** (not
+just raw SQLite): logged in as the standing verification user, listed
+`/companies` (all 5 present), `/recommendations` (confirmed Meridian
+shows `Draft` with 2 solutions, Brightline shows `Under Review` with 1
+solution — matching the design exactly), `/qualifications` (`Needs
+Nurturing`/`Qualified`/`Qualified` — the real variety), and `/discoveries`
+(`IN_PROGRESS`/`COMPLETED`/`CREATED` mixed). Deliberately did **not**
+drive Meridian/Brightline through Submit/Approve via curl here, since
+that would consume the exact live-clickable demo states the script was
+built to leave available for hands-on verification in the browser.
+Backend suite: still **614 passing**, zero regressions; `ruff check`/
+`ruff format --check` clean on the new file.
+
 ---
 
 ## Definition of Done (same discipline as both existing plans)
@@ -430,13 +489,15 @@ fixes listed above — both full test suites pass unchanged (**614** backend,
 | `[x]` Done | IS-8 | Frontend | Recommendation detail screen gains real Submit/Approve actions | S | Depends on IS-4; still no AI call — these two actions don't generate anything |
 | `[x]` Done (audit only) | IS-9 | Backend | Audit + document (or normalize) the per-router pagination/search param inconsistency (`skip`/`limit` vs `page`/`page_size`; `query`/`search_text`/`keyword` as three different search-param names) — flagged repeatedly across the frontend sprint history as a recurring "check each one, don't assume" friction point | M–L | Pure routing/query-param code across existing CRUD routers |
 | `[x]` Done | IS-10 | Dev experience | CI + lint/pre-commit setup for both `Backend/` and `Frontend/` (neither has one today) | M | Tooling only |
-| `[ ]` Optional | IS-11 | Dev experience | Richer seed-data script (extends `Backend/scripts/create_user.py`'s pattern) so demo/dev data doesn't require a live Tavily/Gemini research run to populate | S–M | Seeds directly via repositories, same as `create_user.py` already does |
+| `[x]` Done | IS-11 | Dev experience | Richer seed-data script (extends `Backend/scripts/create_user.py`'s pattern) so demo/dev data doesn't require a live Tavily/Gemini research run to populate | S–M | Seeds directly via repositories, same as `create_user.py` already does |
 
 **Total core scope (IS-1 through IS-8):** small-to-medium, roughly a
 half-to-one normal backend sprint's worth of points, all independently
-shippable and independently live-verifiable. IS-9/IS-10/IS-11 are marked
-optional/stretch — pull in only if the core list finishes with room to
-spare.
+shippable and independently live-verifiable. IS-9/IS-10/IS-11 were marked
+optional/stretch, pulled in only once the core list finished with room to
+spare — all three are now also done (IS-9 as a documented audit rather
+than a normalization, per its own "audit + document (or normalize)"
+framing). **All 11 items in this sprint are complete.**
 
 ---
 

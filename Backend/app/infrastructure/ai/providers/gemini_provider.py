@@ -6,6 +6,7 @@ from app.domain.ai.value_objects.token_usage import TokenUsage
 from ..clients.gemini_client import GeminiClient
 from ..configuration import ProviderSettings
 from ..exceptions.ai_provider_exception import AIProviderException
+from ..exceptions.ai_rate_limit_exception import AIRateLimitException
 from .base_provider import BaseAIProvider
 
 _FINISH_REASON_MAP = {
@@ -61,6 +62,12 @@ class GeminiProvider(BaseAIProvider):
                 ),
             )
 
+        except AIRateLimitException:
+            # Preserve the specific type -- callers that want to react
+            # differently to "rate limited" vs. any other provider failure
+            # (e.g. AiIdentityVerificationAdapter) need it to survive this
+            # layer, not be flattened into a generic AIProviderException.
+            raise
         except Exception as exc:
             raise AIProviderException("Gemini provider execution failed") from exc
 

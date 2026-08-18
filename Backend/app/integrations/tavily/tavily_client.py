@@ -10,11 +10,13 @@ from __future__ import annotations
 import logging
 
 try:
-    from tavily import TavilyClient
+    from tavily import TavilyClient, UsageLimitExceededError
 except ImportError:  # optional integration dependency
     TavilyClient = None
+    UsageLimitExceededError = None
 
 from app.infrastructure.configuration.tavily_settings import TavilySettings
+from app.integrations.tavily.exceptions import TavilyRateLimitException
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +68,9 @@ class AgneticTavilyClient:
             results: list[dict[str, object]] = response.get("results", [])
             logger.info("Tavily returned %d results", len(results))
             return results
-        except Exception:
+        except Exception as exc:
+            if UsageLimitExceededError is not None and isinstance(exc, UsageLimitExceededError):
+                logger.warning("RATE_LIMIT tavily query=%r: %s", query, exc)
+                raise TavilyRateLimitException(str(exc)) from exc
             logger.exception("Tavily search failed")
             return []

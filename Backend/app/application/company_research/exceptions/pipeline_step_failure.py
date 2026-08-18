@@ -12,6 +12,7 @@ from app.domain.company_research.value_objects.pipeline_step import PipelineStep
 
 
 class PipelineStepFailure(Exception):
-    def __init__(self, step: PipelineStep, message: str) -> None:
+    def __init__(self, step: PipelineStep, message: str, is_rate_limited: bool = False) -> None:
         self.step = step
+        self.is_rate_limited = is_rate_limited
         super().__init__(message)

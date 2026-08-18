@@ -9,6 +9,7 @@ funding, requested-service-specific activity) for the verified company.
 from __future__ import annotations
 
 import asyncio
+import logging
 from datetime import UTC, datetime
 from urllib.parse import urlparse
 
@@ -30,7 +31,10 @@ from app.domain.company_research.services.evidence_signal_extractor import (
 from app.infrastructure.configuration.company_research_settings import (
     CompanyResearchSettings,
 )
+from app.integrations.tavily.exceptions import TavilyRateLimitException
 from app.integrations.tavily.tavily_client import AgneticTavilyClient
+
+logger = logging.getLogger(__name__)
 
 
 class TavilyEvidenceAdapter(EvidenceResearchPort):
@@ -73,7 +77,23 @@ class TavilyEvidenceAdapter(EvidenceResearchPort):
         observed_date = datetime.now(UTC).date().isoformat()
 
         for query in queries:
-            for item in self._client.search(query=query, max_results=5, search_depth="advanced"):
+            try:
+                query_results = self._client.search(query=query, max_results=5, search_depth="advanced")
+            except TavilyRateLimitException as exc:
+                # Non-fatal: fewer evidence items just lowers scoring for
+                # this candidate rather than invalidating it outright --
+                # unlike identity verification, partial evidence is still
+                # usable. Still logged clearly so a burst of these across a
+                # batch is visible, not silently absorbed into "no evidence
+                # found" the way it looked before this exception existed.
+                logger.warning(
+                    "RATE_LIMIT tavily evidence_gathering company=%r query=%r: %s",
+                    name,
+                    query,
+                    exc,
+                )
+                continue
+            for item in query_results:
                 url = str(item.get("url", "")).strip()
                 title = str(item.get("title", "")).strip()
                 snippet = str(item.get("content", "")).strip()

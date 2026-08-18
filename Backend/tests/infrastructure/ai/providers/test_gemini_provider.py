@@ -13,6 +13,7 @@ from app.domain.ai.value_objects.provider_name import ProviderName
 from app.domain.ai.value_objects.temperature import Temperature
 from app.infrastructure.ai.configuration import ProviderSettings
 from app.infrastructure.ai.exceptions.ai_provider_exception import AIProviderException
+from app.infrastructure.ai.exceptions.ai_rate_limit_exception import AIRateLimitException
 from app.infrastructure.ai.providers.gemini_provider import GeminiProvider
 
 
@@ -87,6 +88,16 @@ async def test_execute_wraps_client_exceptions():
     provider = GeminiProvider(client, ProviderSettings(provider_name="gemini", api_key="secret"))
 
     with pytest.raises(AIProviderException):
+        await provider.execute(_request())
+
+
+@pytest.mark.asyncio
+async def test_execute_preserves_rate_limit_exception_type_instead_of_wrapping_it():
+    client = AsyncMock()
+    client.send_request.side_effect = AIRateLimitException("Gemini rate limit / quota exceeded")
+    provider = GeminiProvider(client, ProviderSettings(provider_name="gemini", api_key="secret"))
+
+    with pytest.raises(AIRateLimitException):
         await provider.execute(_request())
 
 

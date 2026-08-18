@@ -72,25 +72,40 @@ def test_enterprise_exclusion_extracts_parent_company_without_excluding():
 def test_company_size_label_bands():
     assert IcpMatcher.company_size_label(None) is None
     assert IcpMatcher.company_size_label(10) == "Startup / Micro"
-    assert IcpMatcher.company_size_label(600) == "500+"
+    assert IcpMatcher.company_size_label(600) == "501-1,000"
+    assert IcpMatcher.company_size_label(1200) == "1,000+"
 
 
 def test_enterprise_exclusion_default_behavior_unchanged_when_no_profile_passed():
     """Regression guard: omitting ``profile`` must behave exactly as before
     Domain Profiles existed."""
-    with_default = IcpMatcher.enterprise_exclusion("", 501)
-    explicit_none = IcpMatcher.enterprise_exclusion("", 501, profile=None)
+    with_default = IcpMatcher.enterprise_exclusion("", 1001)
+    explicit_none = IcpMatcher.enterprise_exclusion("", 1001, profile=None)
     assert with_default == explicit_none == (True, None)
 
 
 def test_enterprise_exclusion_profile_can_raise_the_threshold():
     profile = DomainProfile(name="custom", enterprise_exclusion_threshold=2000)
-    # 501 employees would exclude under the default (500) threshold...
-    excluded, _ = IcpMatcher.enterprise_exclusion("", 501)
+    # 1001 employees would exclude under the default (1000) threshold...
+    excluded, _ = IcpMatcher.enterprise_exclusion("", 1001)
     assert excluded is True
     # ...but not under a profile that raises the threshold.
-    excluded, _ = IcpMatcher.enterprise_exclusion("", 501, profile=profile)
+    excluded, _ = IcpMatcher.enterprise_exclusion("", 1001, profile=profile)
     assert excluded is False
+
+
+def test_size_score_matches_the_icp_point_table():
+    # docs/company_search_and_prompt_tuning.md §1b
+    assert IcpMatcher.size_score(5) == 10
+    assert IcpMatcher.size_score(100) == 10
+    assert IcpMatcher.size_score(150) == 9
+    assert IcpMatcher.size_score(500) == 7
+    assert IcpMatcher.size_score(1000) == 5
+    assert IcpMatcher.size_score(1500) == 3
+
+
+def test_size_score_unknown_employee_count_is_conservative_not_a_guess():
+    assert IcpMatcher.size_score(None) == 4
 
 
 def test_enterprise_exclusion_profile_can_replace_explicit_markers():

@@ -70,6 +70,10 @@ from app.domain.company_research.value_objects.pipeline_step import PipelineStep
 from app.domain.recommendation.value_objects.solution_catalog_entry import (
     SolutionCatalogEntry,
 )
+from app.infrastructure.ai.exceptions.ai_rate_limit_exception import AIRateLimitException
+from app.integrations.tavily.exceptions import TavilyRateLimitException
+
+_RATE_LIMIT_ERRORS = (AIRateLimitException, TavilyRateLimitException)
 
 logger = logging.getLogger(__name__)
 
@@ -141,12 +145,13 @@ class SearchCompaniesHandler:
                     return await self._research_candidate(candidate, request)
                 except PipelineStepFailure as exc:
                     logger.warning(
-                        "Research step '%s' failed for candidate %s: %s",
+                        "%sResearch step '%s' failed for candidate %s: %s",
+                        "RATE_LIMIT " if exc.is_rate_limited else "",
                         exc.step,
                         candidate.company_name,
                         exc,
                     )
-                    return self._to_failure(candidate, exc.step, str(exc))
+                    return self._to_failure(candidate, exc.step, str(exc), exc.is_rate_limited)
                 except Exception as exc:
                     logger.exception("Research failed for candidate %s", candidate.company_name)
                     return self._to_failure(candidate, PipelineStep.UNKNOWN, str(exc))
@@ -166,7 +171,19 @@ class SearchCompaniesHandler:
         if request.persist_as_companies and self._candidate_promoter is not None:
             final_results = await self._promote_results(final_results)
 
-        return CompanyResearchBatchResult(results=final_results, failures=failures)
+        rate_limited_count = sum(1 for item in failures if item.is_rate_limited)
+        if rate_limited_count:
+            logger.warning(
+                "RATE_LIMIT %d of %d candidate failures this batch were rate-limited",
+                rate_limited_count,
+                len(failures),
+            )
+
+        return CompanyResearchBatchResult(
+            results=final_results,
+            failures=failures,
+            rate_limited_count=rate_limited_count,
+        )
 
     async def retry_candidate(
         self,
@@ -192,14 +209,17 @@ class SearchCompaniesHandler:
         try:
             return await self._research_candidate(candidate, request)
         except PipelineStepFailure as exc:
-            return self._to_failure(candidate, exc.step, str(exc))
+            return self._to_failure(candidate, exc.step, str(exc), exc.is_rate_limited)
         except Exception as exc:
             logger.exception("Retry failed for candidate %s", candidate.company_name)
             return self._to_failure(candidate, PipelineStep.UNKNOWN, str(exc))
 
     @staticmethod
     def _to_failure(
-        candidate: CompanyCandidate, step: PipelineStep, message: str
+        candidate: CompanyCandidate,
+        step: PipelineStep,
+        message: str,
+        is_rate_limited: bool = False,
     ) -> CandidateResearchFailure:
         return CandidateResearchFailure(
             company_name=candidate.company_name,
@@ -210,6 +230,7 @@ class SearchCompaniesHandler:
             discovery_metadata=candidate.discovery_metadata,
             failed_step=step.value,
             error_message=message,
+            is_rate_limited=is_rate_limited,
         )
 
     async def _promote_results(self, results: list[CompanySearchResult]) -> list[CompanySearchResult]:
@@ -286,6 +307,10 @@ class SearchCompaniesHandler:
     ) -> CompanySearchResult | None:
         try:
             identity = await self._identity_port.verify(candidate)
+        except _RATE_LIMIT_ERRORS as exc:
+            raise PipelineStepFailure(
+                PipelineStep.IDENTITY_VERIFICATION, str(exc), is_rate_limited=True
+            ) from exc
         except Exception as exc:
             raise PipelineStepFailure(PipelineStep.IDENTITY_VERIFICATION, str(exc)) from exc
 
@@ -295,6 +320,10 @@ class SearchCompaniesHandler:
 
         try:
             evidence = await self._evidence_port.gather(candidate, identity, request)
+        except _RATE_LIMIT_ERRORS as exc:
+            raise PipelineStepFailure(
+                PipelineStep.EVIDENCE_GATHERING, str(exc), is_rate_limited=True
+            ) from exc
         except Exception as exc:
             raise PipelineStepFailure(PipelineStep.EVIDENCE_GATHERING, str(exc)) from exc
 
@@ -335,8 +364,6 @@ class SearchCompaniesHandler:
             company_specific_signals=company_specific_signals,
             company_specific_evidence_count=len(company_specific_evidence),
         )
-        scale_signal = EvidenceSignalExtractor.scale_signal(combined)
-
         _, recommended_services = OpportunityMapper.map_signals(signals, self._solution_catalog)
         services_matched = OpportunityMapper.any_service_matches(recommended_services, request.services)
 
@@ -346,7 +373,7 @@ class SearchCompaniesHandler:
                 evidence_count=len(evidence),
                 website_verified=identity.verified_website is not None,
                 services_matched=services_matched,
-                scale_signal=scale_signal,
+                employee_count=employee_count,
             )
         )
 

@@ -1,6 +1,6 @@
 # Company Search & Prompt Fine-Tuning Plan
 
-Originally planning-only; §6 step 1 has since been implemented (see
+Originally planning-only; §6 steps 1-2 have since been implemented (see
 status note below). Grounded throughout in a full read of the actual
 current code (exact files/lines cited), not assumptions about what the
 logic probably does.
@@ -19,15 +19,60 @@ logic probably does.
   plus `test_scale_signal_the_word_enterprise_alone_is_not_a_strong_marker`
   in `tests/domain/company_research/services/test_evidence_signal_extractor.py`)
   — all confirmed to fail against the pre-fix code and pass after. Full
-  backend suite: 535 passing (up from 532), no regressions. **Not yet
-  live-verified against a real `/company-research/search` call** — that's
-  the one step in this plan that costs real Tavily/Gemini quota, still
-  pending whenever you're ready to spend it.
-- **`[ ]` Not started:** §1b (continuous `size_score` curve), §1a's new
-  job-posting/freelance-marketplace/anonymous-buyer rejects, §1a's
-  UN/government-procurement language detection, §2's `DomainProfile`
-  wiring, §3 (discovery query tuning), §4 (identity-prompt enrichment),
-  §1d (tier tagging), §5 (recommendation-prompt review).
+  backend suite: 535 passing (up from 532), no regressions.
+- **`[x]` Done (2026-08-18), zero live API calls:** §6 step 3 — §1b's
+  continuous `size_score` curve. Added `IcpMatcher.size_score(employee_count)`
+  implementing the exact point table (≤100→10, ≤200→9, ≤500→7, ≤1,000→5,
+  >1,000→3, unknown→4), wired into `QualificationScorer.score()` as the
+  `ability` sub-score, replacing `EvidenceSignalExtractor.scale_signal`'s
+  keyword-presence heuristic entirely (now deleted, along with
+  `SCALE_STRONG_MARKERS`/`SCALE_MODERATE_MARKERS` — no longer used
+  anywhere). Also corrected a real mismatch this surfaced:
+  `enterprise_exclusion`'s default threshold was `500`, silently hard-rejecting
+  the entire 501-1,000 band the table itself scores as valid (5/10) —
+  raised to `1000` in both `IcpMatcher` and `DomainProfile`'s default, so
+  that band is actually reachable. `company_size_label` gained a matching
+  "501-1,000"/"1,000+" split (was a single "500+" bucket). Backend suite:
+  625 passing.
+- **`[x]` Done (2026-08-18), zero live API calls — related but out-of-plan:**
+  Gemini/Tavily rate-limit observability. Live-testing this plan's pending
+  final verification step (below) surfaced that a real Gemini `429
+  RESOURCE_EXHAUSTED` during identity verification was being silently
+  swallowed — `AiIdentityVerificationAdapter.verify()` caught every
+  exception (a real rate limit included) and returned
+  `confidence="LOW"`, making a rate-limited candidate indistinguishable
+  from one that was genuinely checked and didn't match; it just vanished
+  from the response with no visible signal. Same problem existed for
+  Tavily (`AgneticTavilyClient.search()` caught everything, including its
+  own SDK's `UsageLimitExceededError`, and returned `[]`). Fixed by adding
+  `AIRateLimitException`/`TavilyRateLimitException` (both distinguishable
+  via the real SDKs' own exception types — `google.genai.errors.ClientError`
+  with `.code == 429`, `tavily.UsageLimitExceededError` — no guessing)
+  and threading them through: identity-verification rate limits now
+  propagate as a real `CandidateResearchFailure` with a new
+  `is_rate_limited: bool` field (visible in the API response's `failures`
+  list, not silently dropped), rolled up into a new
+  `CompanyResearchBatchResult.rate_limited_count`; discovery/evidence-gathering
+  rate limits degrade gracefully (as before) but are now always logged
+  with a greppable `RATE_LIMIT` prefix. Frontend: a rate-limited failure
+  gets a distinct "Rate limited" badge instead of the generic failure
+  badge, plus a banner when `rate_limited_count > 0`. 13 new backend tests
+  (against the real SDK exception shapes, not stand-ins) — backend suite:
+  **625 passing**. Full detail in this session's own record; not
+  duplicated here.
+- **`[ ]` Not started:** §1a's new job-posting/freelance-marketplace/
+  anonymous-buyer rejects, §1a's UN/government-procurement language
+  detection, §2's `DomainProfile` wiring, §3 (discovery query tuning), §4
+  (identity-prompt enrichment), §1d (tier tagging), §5
+  (recommendation-prompt review).
+- **Still pending, costs real quota:** a real `/company-research/search`
+  call to confirm §6 steps 1-3 behave correctly against real Tavily/Gemini
+  results — attempted 2026-08-18 but blocked by the app's own internal
+  daily Gemini budget (20/day, already spent down to 1 remaining by
+  earlier live-testing that same day) and, before that, by the
+  free-tier per-minute rate limit. Whenever you're ready to spend it
+  again (after the daily reset), keep `number_of_companies` low (2-3) to
+  fit inside the free-tier per-minute limit.
 
 ## Context: why giant companies show up in results today
 
