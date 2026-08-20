@@ -20,13 +20,29 @@
     </header>
 
     <section class="details">
-      <div class="detail-row">
-        <span class="detail-label">Executive summary</span>
+      <div class="detail-block">
+        <span class="detail-block-label">Executive summary</span>
         @if (r.executive_summary) {
-          <span>{{ r.executive_summary }}</span>
+          <p class="detail-block-value">{{ r.executive_summary }}</p>
         } @else {
-          <span class="not-captured">Not yet captured</span>
+          <p class="detail-block-value not-captured">Not yet captured</p>
         }
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Submitted</span>
+        <span>{{ r.submitted_at ? (r.submitted_at | date: 'medium') : '—' }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Approved</span>
+        <span>{{ r.approved_at ? (r.approved_at | date: 'medium') : '—' }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Created</span>
+        <span>{{ r.created_at | date: 'medium' }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Last updated</span>
+        <span>{{ r.updated_at | date: 'medium' }}</span>
       </div>
     </section>
 

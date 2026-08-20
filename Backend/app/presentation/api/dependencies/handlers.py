@@ -12,6 +12,9 @@ from typing import Annotated, Any, TypeVar
 from fastapi import Depends
 
 from app.application.ai.services.ai_execution_service import AIExecutionService
+from app.application.assessment.handlers.complete_assessment_handler import (
+    CompleteAssessmentHandler,
+)
 from app.application.assessment.handlers.create_assessment_handler import (
     CreateAssessmentHandler,
 )
@@ -185,6 +188,9 @@ from app.application.recommendation.handlers.get_recommendation_handler import (
 )
 from app.application.recommendation.handlers.list_recommendation_handler import (
     ListRecommendationHandler,
+)
+from app.application.recommendation.handlers.reject_recommendation_handler import (
+    RejectRecommendationHandler,
 )
 from app.application.recommendation.handlers.submit_recommendation_handler import (
     SubmitRecommendationHandler,
@@ -642,6 +648,15 @@ def get_start_assessment_handler(
     )
 
 
+def get_complete_assessment_handler(
+    uow: UnitOfWork = Depends(get_unit_of_work),
+) -> CompleteAssessmentHandler:
+
+    return CompleteAssessmentHandler(
+        unit_of_work=uow,
+    )
+
+
 def get_update_assessment_handler(
     uow: UnitOfWork = Depends(get_unit_of_work),
 ) -> UpdateAssessmentHandler:
@@ -752,6 +767,12 @@ def get_approve_recommendation_handler(
     uow: UnitOfWork = Depends(get_unit_of_work),
 ) -> ApproveRecommendationHandler:
     return ApproveRecommendationHandler(unit_of_work=uow)
+
+
+def get_reject_recommendation_handler(
+    uow: UnitOfWork = Depends(get_unit_of_work),
+) -> RejectRecommendationHandler:
+    return RejectRecommendationHandler(unit_of_work=uow)
 
 
 CreateCompanyHandlerDependency = Annotated[
@@ -892,6 +913,11 @@ GetAssessmentHandlerDependency = Annotated[
 ListAssessmentHandlerDependency = Annotated[
     ListAssessmentHandler,
     Depends(get_list_assessment_handler),
+]
+
+CompleteAssessmentHandlerDependency = Annotated[
+    CompleteAssessmentHandler,
+    Depends(get_complete_assessment_handler),
 ]
 
 StartAssessmentHandlerDependency = Annotated[
@@ -1041,6 +1067,11 @@ SubmitRecommendationHandlerDependency = Annotated[
 ApproveRecommendationHandlerDependency = Annotated[
     ApproveRecommendationHandler,
     Depends(get_approve_recommendation_handler),
+]
+
+RejectRecommendationHandlerDependency = Annotated[
+    RejectRecommendationHandler,
+    Depends(get_reject_recommendation_handler),
 ]
 
 

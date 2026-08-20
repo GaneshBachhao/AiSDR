@@ -358,6 +358,33 @@ tbody tr:last-child td {
   color: var(--color-ink-soft);
 }
 
+/** For genuinely long prose fields (problem statements, summaries,
+ * rationale text) -- label stacked above a full-width paragraph, instead
+ * of squeezed into .detail-row's label-left/value-right flex layout. */
+.detail-block {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.detail-block:last-child {
+  border-bottom: none;
+}
+
+.detail-block-label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-ink-soft);
+  margin-bottom: 6px;
+}
+
+.detail-block-value {
+  font-size: 14.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
 /** A field that's genuinely optional and simply hasn't been filled in
  * yet -- distinct from an empty string, which would look like a rendering
  * bug. Used by any entity with honestly-optional fields (Discovery's

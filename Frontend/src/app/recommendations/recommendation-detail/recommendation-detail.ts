@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AssessmentDisplayService } from '../../assessments/assessment-display.service';
 import { RecommendationService } from '../recommendation.service';
@@ -10,7 +11,7 @@ import {
 @Component({
   selector: 'app-recommendation-detail',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, DatePipe],
   templateUrl: './recommendation-detail.html',
   styleUrl: './recommendation-detail.scss',
 })

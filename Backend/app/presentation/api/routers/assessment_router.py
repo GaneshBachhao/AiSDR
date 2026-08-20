@@ -7,6 +7,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Query, Response, status
 
 from app.application.assessment.assessment_commands import (
+    CompleteAssessmentCommand,
     DeleteAssessmentCommand,
     StartAssessmentCommand,
 )
@@ -16,6 +17,7 @@ from app.application.assessment.assessment_queries import (
     ListAssessmentsQuery,
 )
 from app.application.assessment.dto.assessment_request import (
+    CompleteAssessmentRequestDTO,
     CreateAssessmentRequestDTO,
     UpdateAssessmentRequestDTO,
 )
@@ -26,6 +28,7 @@ from app.application.assessment.dto.assessment_response import (
     UpdateAssessmentResponseDTO,
 )
 from app.presentation.api.dependencies.handlers import (
+    CompleteAssessmentHandlerDependency,
     CreateAssessmentHandlerDependency,
     DeleteAssessmentHandlerDependency,
     GetAssessmentHandlerDependency,
@@ -89,6 +92,20 @@ async def start_assessment(
 ) -> GetAssessmentResponseDTO:
     return await handler.handle(
         StartAssessmentCommand(assessment_id=assessment_id),
+    )
+
+
+@router.post(
+    "/{assessment_id}/complete",
+    response_model=GetAssessmentResponseDTO,
+)
+async def complete_assessment(
+    assessment_id: str,
+    handler: CompleteAssessmentHandlerDependency,
+    request: CompleteAssessmentRequestDTO | None = None,
+) -> GetAssessmentResponseDTO:
+    return await handler.handle(
+        CompleteAssessmentCommand(assessment_id=assessment_id, summary=request.summary if request else None),
     )
 
 

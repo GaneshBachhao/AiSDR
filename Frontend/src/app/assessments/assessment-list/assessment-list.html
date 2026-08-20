@@ -22,6 +22,7 @@
       <thead>
         <tr>
           <th>Discovery</th>
+          <th>Summary</th>
           <th>Maturity level</th>
           <th>Readiness</th>
           <th>Status</th>
@@ -31,6 +32,7 @@
         @for (display of assessments(); track display.assessment.assessment_id) {
           <tr [routerLink]="[display.assessment.assessment_id]" class="row-link">
             <td class="discovery-label">{{ display.discoveryLabel }}</td>
+            <td class="summary-preview">{{ display.assessment.summary ?? '—' }}</td>
             <td>{{ display.assessment.maturity_level }}</td>
             <td class="score">{{ display.assessment.readiness_score }}</td>
             <td>

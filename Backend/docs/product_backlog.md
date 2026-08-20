@@ -941,11 +941,36 @@ need (see architecture doc §14 for full rationale):
 
 ## Parking Lot — unscoped cleanup candidates (found during delivery, not yet estimated)
 
-- **`recommendation` module "Universe B" cleanup** (found Sprint 7) — an entire
-  parallel, unreachable set of handlers/commands/validators/mappers
-  (`__init__.py`-inlined duplicates + standalone orphans, built against a
-  domain-layer `RecommendationRepository` with no concrete implementation).
-  Needs its own scoping pass before touching — likely 8-13 points on its own.
+- ~~**`recommendation` module "Universe B" cleanup**~~ **Resolved 2026-08-20**
+  — scoping pass done (Explore agent this session), confirmed **zero real
+  callers anywhere** for all of it, deleted outright: the `__init__.py`-
+  inlined duplicates (5 files), 8 never-wired feature handlers/commands/
+  validators (add_business_benefit, add_dependency, add_implementation_risk,
+  add_roadmap_phase, add_solution, update_cost_estimate, update_roadmap,
+  update_roi), 2 orphan validators for otherwise-real features that the real
+  handlers never called (`approve_recommendation_validator.py`,
+  `submit_recommendation_validator.py`), 2 orphan mappers, 2 orphan DTOs, and
+  the dead domain-layer `RecommendationRepository` ABC (a second,
+  unimplemented interface distinct from the real application contract
+  actually wired via `UnitOfWork`) — **~38 files, ~1,811 lines** total. The
+  one test fixture targeting the dead ABC
+  (`fake_recommendation_repository.py`) was itself never imported by any
+  test, confirming nothing validated this code as working. Direct precedent
+  already existed for this exact cleanup (`create_recommendation_handler.py`'s
+  own docstring documents a prior, identical `GenerateRecommendationHandler`
+  removal). **While scoping this, found a real, un-flagged gap in the same
+  module**: `Recommendation.reject()` was a working domain method with no
+  handler/route at all (unlike `approve`/`submit`) — the empty
+  `test_reject_recommendation_handler.py` was the fossil of someone having
+  started this and not finished. Fixed alongside the cleanup:
+  `RejectRecommendationCommand` + `RejectRecommendationHandler` +
+  `POST /recommendations/{id}/reject`, mirroring `approve`'s shape exactly.
+  `reject()` has no status guard in the domain (callable from any status,
+  unlike `approve()`) -- wired as-is, not adding validation that doesn't
+  exist. Live-verified against a real seeded Recommendation (Draft status):
+  rejected successfully, confirmed 404 for an unknown ID. Test count
+  unchanged by the deletion (834 → 834, confirming nothing real was lost),
+  then 834 → **839 passing** from the new reject handler/API tests.
 - **`ContactDiscoveryService` generalization** (found before Sprint 7,
   resolved for Sprint 8) — an unimplemented contact-discovery contract sits
   in `app/application/contracts/services/`. Decided (2026-08-15, confirmed
@@ -954,19 +979,34 @@ need (see architecture doc §14 for full rationale):
   pattern. The shared contract remains unimplemented; revisit only if
   another module (not just company_research) actually needs contact
   discovery -- don't generalize speculatively.
-- **`complete_assessment_handler.py`** (found before Sprint 7) — completely empty
-  file, no `/complete` route wired; assessment "completion" today only happens
-  indirectly via the generic update endpoint.
-- **`app/domain/workflow` cleanup** (found Sprint 10) — a complete-looking
-  `Workflow`/`WorkflowStep`/`WorkflowExecution` domain module with validation
-  and execution services, but entirely unwired (no application layer, no
-  persistence, no router, zero tests, zero references anywhere else in the
-  codebase) and internally inconsistent (two duplicate `WorkflowId` classes
-  in different subpackages of the same unused module). `WorkflowRepository`
-  is also a synchronous ABC, inconsistent with every other repository in
-  this async-throughout codebase. EPIC-08 was originally planned to reuse it;
-  built purpose-fit tracking instead (see EPIC-08 notes above). Needs its own
-  scoping pass (fix-and-adopt vs. delete) before anything else touches it.
+- ~~**`complete_assessment_handler.py`**~~ **Resolved 2026-08-20** — was a
+  completely empty file, no `/complete` route wired; assessment "completion"
+  only happened indirectly via the generic update endpoint (which never
+  called the domain's own `Assessment.complete()`, so never correctly
+  stamped `completed_at`). The domain method already existed and was already
+  correctly handled by `AssessmentMapper.update_model()` -- just needed the
+  same handler/command/route shape as the sibling `start_assessment_handler.py`
+  it sat next to unused. Shipped `CompleteAssessmentHandler` +
+  `CompleteAssessmentCommand` + `POST /assessments/{id}/complete`, tests at
+  both the handler and API layer (neither existed for `start_assessment_
+  handler.py` either, which this didn't touch). Backend suite: **834 passing**
+  (up from 828).
+- ~~**`app/domain/workflow` cleanup**~~ **Resolved 2026-08-20** — scoping
+  pass done, confirmed zero references anywhere in `app/` or `tests/` outside
+  its own directory (every "workflow" grep hit elsewhere was either the
+  generic English word in an unrelated docstring, or a different concept
+  like `RecommendationType.WORKFLOW`). EPIC-08 already solved the actual
+  problem this module was meant for with a narrow, purpose-fit `PipelineStep`
+  enum instead of adopting a generic workflow engine. No adoption case: the
+  module was internally inconsistent even on its own terms (two independently
+  -defined `WorkflowId` classes; a synchronous `WorkflowRepository` ABC,
+  inconsistent with every other repository in this async-throughout
+  codebase), and git history confirmed it had only ever been touched by a
+  repo-wide mechanical linter sweep (Sprint 10), never genuinely engaged
+  with. Adopting it later would have meant an async rewrite plus building an
+  entire application/persistence/presentation layer that doesn't exist --
+  effectively a new epic, not a reuse. Deleted the entire
+  `app/domain/workflow/` directory outright (32 files, 894 lines).
 
 ---
 

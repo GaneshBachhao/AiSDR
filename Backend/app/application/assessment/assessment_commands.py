@@ -22,6 +22,13 @@ class StartAssessmentCommand(Command):
     assessment_id: str
 
 
+class CompleteAssessmentCommand(Command):
+    """Command to complete an assessment."""
+
+    assessment_id: str
+    summary: str | None = None
+
+
 class UpdateAssessmentCommand(Command):
     """Command to update an existing assessment."""
 

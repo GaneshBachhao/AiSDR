@@ -1,13 +1,13 @@
 """
-Tests for POST /recommendations/{id}/submit and POST /recommendations/{id}/approve.
+Tests for POST /recommendations/{id}/submit, /approve, and /reject.
 
-Regression guard: both endpoints are new -- the handlers behind them
-existed as real code but were never reachable from any router before
-this. register_exception_handlers is wired in here (unlike some of the
-older isolated-router tests) specifically to prove the new
-ConflictException path (submit with no solutions / approve while still
-Draft) produces the app's real structured error body, not an unhandled
-exception.
+Regression guard: all three endpoints are new -- the handlers behind them
+existed as real code (or, for reject, didn't exist at all until now) but
+were never reachable from any router before this. register_exception_handlers
+is wired in here (unlike some of the older isolated-router tests)
+specifically to prove the new ConflictException path (submit with no
+solutions / approve while still Draft) produces the app's real structured
+error body, not an unhandled exception.
 """
 
 from __future__ import annotations
@@ -25,11 +25,15 @@ from app.application.recommendation.dto.recommendation_dto import Recommendation
 from app.application.recommendation.handlers.approve_recommendation_handler import (
     ApproveRecommendationHandler,
 )
+from app.application.recommendation.handlers.reject_recommendation_handler import (
+    RejectRecommendationHandler,
+)
 from app.application.recommendation.handlers.submit_recommendation_handler import (
     SubmitRecommendationHandler,
 )
 from app.presentation.api.dependencies.handlers import (
     get_approve_recommendation_handler,
+    get_reject_recommendation_handler,
     get_submit_recommendation_handler,
 )
 from app.presentation.api.exception_handlers import register_exception_handlers
@@ -126,3 +130,24 @@ def test_approve_while_still_draft_returns_409(app, client):
     response = client.post(f"/recommendations/{_RECOMMENDATION_ID}/approve")
 
     assert response.status_code == 409
+
+
+def test_reject_success_returns_200_with_rejected_status(app, client):
+    handler = AsyncMock(spec=RejectRecommendationHandler)
+    handler.handle.return_value = _dto("Rejected")
+    app.dependency_overrides[get_reject_recommendation_handler] = lambda: handler
+
+    response = client.post(f"/recommendations/{_RECOMMENDATION_ID}/reject")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "Rejected"
+
+
+def test_reject_not_found_returns_404(app, client):
+    handler = AsyncMock(spec=RejectRecommendationHandler)
+    handler.handle.side_effect = NotFoundException(message="Recommendation not found.")
+    app.dependency_overrides[get_reject_recommendation_handler] = lambda: handler
+
+    response = client.post(f"/recommendations/{_RECOMMENDATION_ID}/reject")
+
+    assert response.status_code == 404

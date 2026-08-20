@@ -24,37 +24,45 @@
     </header>
 
     <section class="details">
-      <div class="detail-row">
-        <span class="detail-label">Problem statement</span>
+      <div class="detail-block">
+        <span class="detail-block-label">Problem statement</span>
         @if (d.problem_statement) {
-          <span>{{ d.problem_statement }}</span>
+          <p class="detail-block-value">{{ d.problem_statement }}</p>
         } @else {
-          <span class="not-captured">Not yet captured</span>
+          <p class="detail-block-value not-captured">Not yet captured</p>
         }
       </div>
-      <div class="detail-row">
-        <span class="detail-label">Current solution</span>
+      <div class="detail-block">
+        <span class="detail-block-label">Current solution</span>
         @if (d.current_solution) {
-          <span>{{ d.current_solution }}</span>
+          <p class="detail-block-value">{{ d.current_solution }}</p>
         } @else {
-          <span class="not-captured">Not yet captured</span>
+          <p class="detail-block-value not-captured">Not yet captured</p>
         }
       </div>
-      <div class="detail-row">
-        <span class="detail-label">Business impact</span>
+      <div class="detail-block">
+        <span class="detail-block-label">Business impact</span>
         @if (d.business_impact) {
-          <span>{{ d.business_impact }}</span>
+          <p class="detail-block-value">{{ d.business_impact }}</p>
         } @else {
-          <span class="not-captured">Not yet captured</span>
+          <p class="detail-block-value not-captured">Not yet captured</p>
+        }
+      </div>
+      <div class="detail-block">
+        <span class="detail-block-label">Success criteria</span>
+        @if (d.success_criteria) {
+          <p class="detail-block-value">{{ d.success_criteria }}</p>
+        } @else {
+          <p class="detail-block-value not-captured">Not yet captured</p>
         }
       </div>
       <div class="detail-row">
-        <span class="detail-label">Success criteria</span>
-        @if (d.success_criteria) {
-          <span>{{ d.success_criteria }}</span>
-        } @else {
-          <span class="not-captured">Not yet captured</span>
-        }
+        <span class="detail-label">Created</span>
+        <span>{{ d.created_at | date: 'medium' }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Last updated</span>
+        <span>{{ d.updated_at | date: 'medium' }}</span>
       </div>
     </section>
 

@@ -16,6 +16,12 @@ class CreateAssessmentRequestDTO(BaseModel):
     discovery_id: str = Field(..., min_length=1)
 
 
+class CompleteAssessmentRequestDTO(BaseModel):
+    """Request DTO to complete an assessment."""
+
+    summary: str | None = None
+
+
 class UpdateAssessmentRequestDTO(BaseModel):
     """Request DTO to update an assessment."""
 

@@ -8,6 +8,7 @@ from fastapi import APIRouter, Query, status
 
 from app.application.recommendation.commands.approve_recommendation import ApproveRecommendationCommand
 from app.application.recommendation.commands.create_recommendation import CreateRecommendationCommand
+from app.application.recommendation.commands.reject_recommendation import RejectRecommendationCommand
 from app.application.recommendation.commands.submit_recommendation import SubmitRecommendationCommand
 from app.application.recommendation.dto.recommendation_dto import RecommendationDTO
 from app.application.recommendation.queries.get_recommendation_by_id import GetRecommendationByIdQuery
@@ -17,6 +18,7 @@ from app.presentation.api.dependencies.handlers import (
     CreateRecommendationHandlerDependency,
     GetRecommendationHandlerDependency,
     ListRecommendationHandlerDependency,
+    RejectRecommendationHandlerDependency,
     SubmitRecommendationHandlerDependency,
 )
 from app.presentation.schemas.requests.recommendation_request import GenerateRecommendationRequest
@@ -88,4 +90,17 @@ async def approve_recommendation(
 ) -> RecommendationDTO:
     return await handler.handle(
         ApproveRecommendationCommand(recommendation_id=UUID(recommendation_id)),
+    )
+
+
+@router.post(
+    "/{recommendation_id}/reject",
+    response_model=RecommendationDTO,
+)
+async def reject_recommendation(
+    recommendation_id: str,
+    handler: RejectRecommendationHandlerDependency,
+) -> RecommendationDTO:
+    return await handler.handle(
+        RejectRecommendationCommand(recommendation_id=UUID(recommendation_id)),
     )

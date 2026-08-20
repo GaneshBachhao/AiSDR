@@ -32,12 +32,12 @@
         <span class="detail-label">Score</span>
         <span class="score">{{ q.score }}</span>
       </div>
-      <div class="detail-row">
-        <span class="detail-label">Recommendation</span>
+      <div class="detail-block">
+        <span class="detail-block-label">Recommendation</span>
         @if (q.recommendation) {
-          <span>{{ q.recommendation }}</span>
+          <p class="detail-block-value">{{ q.recommendation }}</p>
         } @else {
-          <span class="not-captured">Not yet captured</span>
+          <p class="detail-block-value not-captured">Not yet captured</p>
         }
       </div>
     </section>

@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AssessmentService } from '../../assessments/assessment.service';
 import {
@@ -21,7 +22,7 @@ import {
 @Component({
   selector: 'app-discovery-detail',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, DatePipe],
   templateUrl: './discovery-detail.html',
   styleUrl: './discovery-detail.scss',
 })

@@ -22,6 +22,7 @@
       <thead>
         <tr>
           <th>Assessment</th>
+          <th>Executive summary</th>
           <th>Solutions</th>
           <th>Status</th>
         </tr>
@@ -30,6 +31,7 @@
         @for (row of rows(); track row.recommendation.id) {
           <tr [routerLink]="[row.recommendation.id]" class="row-link">
             <td class="discovery-label">{{ row.assessmentLabel }}</td>
+            <td class="summary-preview">{{ row.recommendation.executive_summary ?? '—' }}</td>
             <td>{{ (row.recommendation.solutions ?? []).length }}</td>
             <td>
               <span class="badge {{ recommendationStatusBadgeClass(row.recommendation.status) }}">{{
