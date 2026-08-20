@@ -97,6 +97,11 @@ class CompanySearchResult(BaseModel):
     discovered_contacts: list[DiscoveredContact] = Field(default_factory=list)
     discovery_metadata: list[DiscoverySourceMetadata] = Field(default_factory=list)
     qualification_score: int = Field(ge=0, le=100)
+    # Buying-signal categories detected during research (EPIC-12) -- the
+    # same dict QualificationScorer.score() consumed to help produce
+    # qualification_score above, surfaced here so a persisted Lead can
+    # carry it forward instead of the breakdown being discarded.
+    evidence_signals: dict[str, bool] = Field(default_factory=dict)
     priority_tier: str
     recommended_outreach_angle: str
     suggested_first_message: str

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, call
 
 import pytest
 
@@ -202,3 +202,43 @@ async def test_execute_does_not_retry_the_primary_provider_as_its_own_fallback()
         await provider.execute(create_request())
 
     gemini.execute.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_execute_without_a_rate_limiter_is_unaffected():
+    """Regression guard: omitting rate_limiter must behave exactly as
+    before it existed."""
+    provider, infra = create_provider()
+    await provider.execute(create_request())
+    infra.execute.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_execute_acquires_the_rate_limiter_before_the_primary_call():
+    infra = AsyncMock()
+    infra.execute.return_value = create_response()
+    rate_limiter = AsyncMock()
+
+    provider = ApplicationAIProvider(providers={"gemini": infra}, rate_limiter=rate_limiter)
+    await provider.execute(create_request())
+
+    rate_limiter.acquire.assert_awaited_once_with("gemini")
+
+
+@pytest.mark.asyncio
+async def test_execute_acquires_the_rate_limiter_before_the_fallback_call():
+    gemini = AsyncMock()
+    gemini.execute.side_effect = AIProviderException("gemini down")
+    openai = AsyncMock()
+    openai.execute.return_value = create_response()
+    rate_limiter = AsyncMock()
+
+    provider = ApplicationAIProvider(
+        providers={"gemini": gemini, "openai": openai},
+        fallback_order=["openai"],
+        default_models={"openai": "gpt-4.1"},
+        rate_limiter=rate_limiter,
+    )
+    await provider.execute(create_request())
+
+    assert rate_limiter.acquire.await_args_list == [call("gemini"), call("openai")]

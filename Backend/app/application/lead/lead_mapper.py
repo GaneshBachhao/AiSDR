@@ -71,6 +71,7 @@ class LeadMapper:
             source=LeadSource(command.source),
             score=LeadScore(command.score),
             notes=command.notes,
+            evidence_signals=command.evidence_signals,
         )
 
     @staticmethod
@@ -110,6 +111,11 @@ class LeadMapper:
             is_qualified=lead.is_qualified,
             created_at=lead.created_at,
             updated_at=lead.updated_at,
+            review_status=lead.review_status,
+            review_submitted_at=lead.review_submitted_at,
+            review_decided_at=lead.review_decided_at,
+            review_notes=lead.review_notes,
+            evidence_signals=lead.evidence_signals,
         )
 
     @staticmethod

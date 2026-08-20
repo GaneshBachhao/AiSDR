@@ -28,3 +28,10 @@ class UpdateLeadRequestDTO:
     status: LeadStatus | None = None
     score: int | None = None
     notes: str | None = None
+
+
+@dataclass(slots=True)
+class LeadReviewDecisionRequestDTO:
+    """Optional body for approve/reject -- a reviewer's note on the decision."""
+
+    notes: str | None = None

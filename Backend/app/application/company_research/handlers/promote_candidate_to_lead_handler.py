@@ -83,6 +83,7 @@ class PromoteCandidateToLeadHandler:
                 source=LeadSource.AI_RESEARCH.value,
                 score=result.qualification_score,
                 notes=self._build_notes(result),
+                evidence_signals=result.evidence_signals or None,
             )
         )
         return LeadPromotionOutcome(contact_id=contact_id, lead_id=lead_response.id)

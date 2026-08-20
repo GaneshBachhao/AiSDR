@@ -75,3 +75,58 @@ def test_full_strong_profile_reaches_tier_a():
         )
     )
     assert score.tier == "Tier A"
+
+
+def test_none_weight_overrides_preserves_default_output():
+    without_overrides = QualificationScorer.score(_inputs(services_matched=True))
+    with_none = QualificationScorer.score(_inputs(services_matched=True), weight_overrides=None)
+    assert with_none == without_overrides
+
+
+def test_empty_weight_overrides_preserves_default_output():
+    without_overrides = QualificationScorer.score(_inputs(services_matched=True))
+    with_empty = QualificationScorer.score(_inputs(services_matched=True), weight_overrides={})
+    assert with_empty == without_overrides
+
+
+def test_weight_overrides_can_replace_a_single_constant():
+    score = QualificationScorer.score(
+        _inputs(services_matched=True),
+        weight_overrides={"business_fit_match": 30},
+    )
+    assert score.business_fit == 30
+    assert score.accessibility == QualificationScorer.ACCESSIBILITY_WITHOUT_WEBSITE
+
+
+def test_weight_overrides_can_replace_every_constant():
+    score = QualificationScorer.score(
+        _inputs(
+            signals={"hiring": True},
+            evidence_count=2,
+            website_verified=True,
+            services_matched=True,
+            employee_count=50,
+        ),
+        weight_overrides={
+            "business_fit_match": 30,
+            "business_fit_no_match": 10,
+            "evidence_strong": 25,
+            "evidence_weak": 5,
+            "buying_signal_present": 20,
+            "buying_signal_absent": 5,
+            "accessibility_with_website": 12,
+            "accessibility_without_website": 2,
+        },
+    )
+    assert score.business_fit == 30
+    assert score.evidence_strength == 25
+    assert score.buying_signal == 20
+    assert score.accessibility == 12
+
+
+def test_weight_overrides_rounds_float_values_to_int_points():
+    score = QualificationScorer.score(
+        _inputs(services_matched=True),
+        weight_overrides={"business_fit_match": 30.6},
+    )
+    assert score.business_fit == 31

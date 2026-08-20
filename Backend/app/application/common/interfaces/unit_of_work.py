@@ -30,11 +30,20 @@ from app.application.contracts.repositories.discovery_repository import (
 from app.application.contracts.repositories.lead_repository import (
     LeadRepository,
 )
+from app.application.contracts.repositories.outcome_repository import (
+    OutcomeRepository,
+)
 from app.application.contracts.repositories.qualification_repository import (
     QualificationRepository,
 )
 from app.application.contracts.repositories.recommendation_repository import (
     RecommendationRepository,
+)
+from app.application.contracts.repositories.sequence_repository import (
+    SequenceRepository,
+)
+from app.application.contracts.repositories.suppression_repository import (
+    SuppressionRepository,
 )
 from app.application.contracts.repositories.user_repository import (
     UserRepository,
@@ -160,6 +169,21 @@ class UnitOfWork(ABC):
     @property
     def user_repository(self) -> UserRepository:
         """User repository; optional for legacy UoW implementations."""
+        raise NotImplementedError
+
+    @property
+    def suppression_repository(self) -> SuppressionRepository:
+        """Suppression repository; optional for legacy UoW implementations."""
+        raise NotImplementedError
+
+    @property
+    def outcome_repository(self) -> OutcomeRepository:
+        """Outcome repository; optional for legacy UoW implementations."""
+        raise NotImplementedError
+
+    @property
+    def sequence_repository(self) -> SequenceRepository:
+        """Sequence repository; optional for legacy UoW implementations."""
         raise NotImplementedError
 
     # ==========================================================

@@ -41,23 +41,25 @@ low-effort/independent epics bundled into one sprint (e.g. Sprint 1 below).
 | `[x]` Done | 8 | **Started early: Aug 15, 2026** (planned Oct 5–9) | EPIC-05 | 8 | Qualified candidates get contact discovery, gated correctly |
 | `[x]` Done | 9 | **Started early: Aug 15, 2026** (planned Oct 12–16) | EPIC-06 | 8 | **Milestone C** — full Company → Contact → Lead pipeline live end-to-end (mechanism live; Lead creation dormant until EPIC-17 adds a real email source — see notes) |
 | `[x]` Done | 10 | **Started early: Aug 15, 2026** (planned Oct 19–23) | EPIC-08 | 8 | The full chain is observable and resumable, not silently swallowing failures |
-| `[ ]` Planned | 11 | Oct 26 – Oct 30, 2026 | EPIC-17 | 8 | **Milestone D** — enrichment waterfall live; junk-candidate rate measurably down |
-| `[ ]` Planned | 12 | Nov 2 – Nov 6, 2026 | EPIC-16 | 13 | Nothing sends autonomously; every Lead has an inspectable evidence trail and a review gate |
-| `[ ]` Planned | 13 | Nov 9 – Nov 13, 2026 | EPIC-09 (part 1) | 11 | `Sequence` aggregate + first channel adapter |
+| `[x]` Done | 11 | **Completed early: Aug 20, 2026** (planned Oct 26 – Oct 30) | EPIC-17 | 8 | **Milestone D** ⚙ Mechanism shipped — known-bad candidates now rejected pre-research; third-tier extensibility seam added, no real paid vendor integrated (see gate note below) |
+| `[x]` Done | 12 | **Completed early: Aug 19, 2026** (planned Nov 2 – Nov 6) | EPIC-16 | 13 | Nothing sends autonomously; every Lead has an inspectable evidence trail and a review gate |
+| `[>]` In Progress | 13 | **Sequence aggregate completed early: Aug 20, 2026** (planned Nov 9 – Nov 13) | EPIC-09 (part 1) | 11 | `Sequence` aggregate (8 pts) `[x]` done -- picked out of order, zero-quota; first channel adapter (story 9.3, real SMTP/LinkedIn credentials needed) still Backlog, see Sprint 13 notes below |
 | `[ ]` Planned | 14 | Nov 16 – Nov 20, 2026 | EPIC-09 (part 2) | 10 | Multi-touch variation + remaining channel adapter(s) complete |
 | `[ ]` Planned | 15 | Nov 23 – Nov 27, 2026 | EPIC-10 | 13 | Replies are classified; meeting booking works for "interested" |
-| `[ ]` Planned | 16 | Nov 30 – Dec 4, 2026 | EPIC-11 | 13 | **Milestone E** — suppression list, bounce handling, jurisdiction rules live; safe to run real outbound volume |
-| `[ ]` Planned | 17 | Dec 7 – Dec 11, 2026 | EPIC-12 | 13 | **Milestone F** — outcome events captured; recalibration job built (see gate note below) |
+| `[x]` Done | 16 | **Completed early: Aug 19, 2026** (planned Nov 30 – Dec 4) | EPIC-11 | 13 | **Milestone E** — suppression list, bounce handling, jurisdiction rules live; safe to run real outbound volume |
+| `[x]` Done | 17 | **Completed early: Aug 19, 2026** (planned Dec 7 – Dec 11) | EPIC-12 | 13 | **Milestone F** — outcome events captured; recalibration job built (calendar gate on real data still open, see gate note below) |
 
 **Total:** 17 sprints, ~183 points, Aug 17 → Dec 11, 2026 (~17 weeks / ~4 months) as
 originally planned. Sprint 1 actually started Aug 12 (see §5) — sprints 2–17 keep
 their original dates for now rather than shifting the whole plan on one data point;
 revisit after Sprint 2–3 actuals per the recalibration policy below.
 
-**EPIC-12 gate:** Sprint 17 ships the *code* for outcome capture and recalibration.
-The recalibration itself needs 2–4 weeks of live pipeline usage generating real
-`OutcomeEvent`s before it produces a meaningful weight adjustment — track that as a
-calendar milestone after Sprint 17, not additional sprint capacity.
+**EPIC-12 gate:** Sprint 17 shipped the *code* for outcome capture and
+recalibration (completed early, Aug 19). The recalibration itself still needs
+2–4 weeks of live pipeline usage generating real `OutcomeEvent`s before it
+produces a meaningful weight adjustment — confirmed live on Aug 19: 0 Leads have
+captured `evidence_signals` yet. Track that as a calendar milestone after
+Sprint 17, not additional sprint capacity.
 
 Parking Lot (Track 6 — multi-tenancy, retention policy, audit logging) is
 deliberately **not** in this schedule. Pull items in only when triggered by a real
@@ -81,9 +83,9 @@ Aug 17 ────────────────────────�
 | **A — Resilience Baseline** ✅ | Reached Aug 12 (planned Aug 28) | AI provider fallback, quota governance, config diagnostics — the platform stops silently breaking on provider issues |
 | **B — Trusted Research Core** ✅ | Reached Aug 13 (planned Sep 11) | Domain Profile + Evidence v2 — company_research's own output quality improves, independent of anything downstream |
 | **C — Company Universe MVP** ⚙ Mechanism shipped | Code shipped Aug 15 (planned Oct 16) | A qualified research candidate becomes a real Company + Contact + Lead, end-to-end, for the first time -- the code path is real, tested, and live-verified, but Contact/Lead creation is dormant until EPIC-17 adds a real email source (see Sprint 9 notes). Full-milestone claim held back deliberately rather than declared reached on a technicality. |
-| **D — Orchestrated & Enriched** | Sprint 11 (Oct 30) | The pipeline is observable/resumable, and less prone to junk candidates |
+| **D — Orchestrated & Enriched** ✅ | Reached Aug 20 (planned Oct 30) | The pipeline is observable/resumable (Sprint 10) and less prone to junk candidates (Sprint 11) -- both true today. Note this milestone's claim never depended on a real paid-enrichment vendor, unlike EPIC-06/EPIC-17's separate email-enrichment thread (still open, see Sprint 11 notes) -- so this one is a clean, full reach, not a partial like C/F. |
 | **E — Trusted Engagement Launch** | Sprint 16 (Dec 4) | First real multi-touch outbound campaigns can run safely (review gate + compliance both live) |
-| **F — Self-Improving Loop** | Sprint 17 (Dec 11) + 2–4 wks | Real outcomes start recalibrating scoring, not just being recorded |
+| **F — Self-Improving Loop** ⚙ Mechanism shipped | Code shipped Aug 19 (planned Dec 11) + 2–4 wks | `OutcomeEvent` capture, `evidence_signals` on `Lead`, and the recalibration script are real, tested, and live-verified -- but the *outcome* (scoring actually being recalibrated from real data) is still gated on 2–4 weeks of live pipeline usage (confirmed live: 0 Leads have captured signals yet). Full-milestone claim held back deliberately, same as Milestone C. |
 
 ---
 
@@ -125,6 +127,11 @@ form:
 | 8 | 8 | 8 | Also completed Aug 15, same day as Sprint 7. First sprint with a real, previously-flagged decision gate resolved before writing code (company_research-specific port vs. shared contract). See Sprint 8 notes below. |
 | 9 | 8 | 8 | Also completed Aug 15. Second decision gate in a row, this one discovered mid-sprint rather than flagged in advance: a mandatory-schema-field gap (no email source exists) that shapes whether the epic's output is live or dormant. See Sprint 9 notes below. |
 | 10 | 8 | 8 | Also completed Aug 15. Third decision gate in a row: the domain module the story named to reuse turned out to be unused, untested, and internally inconsistent scaffolding -- built purpose-fit tracking instead. Also a public API contract change (response envelope), made deliberately and documented, not incidentally. See Sprint 10 notes below. |
+| 12 | 13 | 13 | Completed **Aug 19** -- picked deliberately out of order, ahead of Sprint 11 (EPIC-17), because it's a zero-AI/Tavily-quota epic (pure CRUD/state-machine) that could ship without spending scarce Gemini daily budget, unlike Sprint 11's enrichment work. See Sprint 12 notes below. |
+| 16 | 13 | 13 | Completed **Aug 19**, same day as Sprint 12 -- also picked out of order for the same zero-quota reason (EPIC-11 is pure CRUD/domain logic, no AI/Tavily calls). Sprint 16 now precedes Sprints 13-15 in actual completion order even though it's numbered after them -- see Sprint 16 notes below. |
+| 17 | 13 | 13 | Completed **Aug 19**, same day as Sprints 12 and 16 -- picked out of order for the same zero-quota reason (EPIC-12's dev work is CRUD + pure statistics, no AI/Tavily calls). Formally depends on EPIC-10 (still Backlog) and EPIC-11 (Done); only the EPIC-11 half was actually needed for this sprint's scope. See Sprint 17 notes below -- the calendar-gate portion of Story 12.2 remains open regardless of dev completion. |
+| 11 | 8 | 8 | Completed **Aug 20** -- the same epic Sprint 12's notes had deferred as needing real paid-API spend turned out, on rereading the code, to be only half true: EPIC-02 already shipped the cheap→Tavily fallback, so the only remaining zero-quota-buildable piece was the candidate-gate fix (17.2) plus an extensibility seam for a future paid tier (17.1), not a real vendor integration. See Sprint 11 notes below. |
+| 13 | 11 | 8 (partial) | **Sequence aggregate completed Aug 20** -- only story 9.1 (8 pts); story 9.3's channel adapter (part of the remaining 3 pts mapped to this sprint) needs real SMTP/LinkedIn credentials this project doesn't have, so it stays Backlog. First genuinely partial sprint completion this session -- see Sprint 13 notes below. |
 
 Fill in "Actual" as sprints complete. After Sprint 3: compute a real average
 velocity, compare to the 10 pt/week assumption, and re-run the remaining-sprint
@@ -480,6 +487,139 @@ scaffolding.
   deprecation distinct from the daily-quota exhaustion tracked in Sprints
   8-9. Flagged to the user directly and added to the Risk Register; not
   fixed here.
+
+**Sprint 12 notes (2026-08-19):** All three EPIC-16 stories shipped, picked
+deliberately out of order ahead of Sprint 11 (EPIC-17) -- it's the first
+formal-roadmap sprint completed after a separate, cross-cutting
+zero-AI-quota effort (see `docs/intermediate_sprint_no_api_quota.md` and
+`docs/company_search_and_prompt_tuning.md`, both completed earlier this
+same day) established the pattern of front-loading quota-free work while
+Gemini's daily budget was scarce. EPIC-16 is pure CRUD/state-machine --
+no AI, no Tavily -- unlike Sprint 11's enrichment-source work.
+
+Full detail (scope calls, the persistence bug found and fixed, exact
+shipped surface, live-verification steps) is in `product_backlog.md`'s
+EPIC-16 section rather than duplicated here -- same cross-referencing
+discipline as every other sprint. Headline points: `Sequence` doesn't
+exist yet (EPIC-09 still Backlog), so the review gate landed on `Lead`
+only; found and fixed a real pre-existing persistence bug
+(`SqlAlchemyLeadRepository` had no `update()` override, silently
+clobbering audit columns on every save -- same bug class already fixed
+for `Recommendation`); live-verified against two real seeded Leads
+(one with a full Discovery → Assessment → Recommendation chain, one
+freshly-created) through the full `submit-for-review → approve` and
+`submit-for-review → reject → submit-for-review` paths, plus a clean
+`409` on an illegal transition. Backend suite: **662 passing** (up from
+639).
+
+**Sprint 16 notes (2026-08-19):** All three EPIC-11 stories shipped, same
+day as Sprint 12, also picked deliberately out of order (ahead of Sprints
+11 and 13-15) for the same zero-AI-quota reason. Full detail is in
+`product_backlog.md`'s EPIC-11 section rather than duplicated here.
+Headline points: same "no send path exists yet" gap EPIC-16 already
+found (`EmailSender` is unused, EPIC-09 still Backlog) applies to 11.1
+too -- resolved the same honest way, plus a real integration into
+EPIC-16's own `GET /leads/{id}/review` (`contact_email_suppressed`), so
+the suppression list is genuinely useful the moment it ships rather than
+purely forward-looking. This app's first webhook endpoint
+(`POST /webhooks/email-events`), with its own new shared-secret auth
+mechanism (fails closed on an unconfigured secret) since JWT/
+`get_current_user` doesn't fit a third-party caller. Jurisdiction
+resolution deliberately uses only `Company.country` (the one geography
+source that's actually persisted/authoritative at send time), not
+`CompanyResearchRequest.geography` (request-time-only, gone by send
+time) -- an explicit design call, not an oversight, documented in
+`product_backlog.md`. Live-verified against a real seeded Lead
+(Meridian Logistics Group): suppressed and lifted its real Contact's
+email, confirmed the review-chain flag flipped both ways; posted a real
+bounce webhook with correct/wrong/missing secrets; resolved its real
+`Company.country: "US"` to the CAN-SPAM ruleset. Backend suite:
+**710 passing** (up from 662).
+
+**Sprint 17 notes (2026-08-19):** Both EPIC-12 stories shipped, same day as
+Sprints 12 and 16, picked out of order for the same zero-AI-quota reason --
+`OutcomeEvent` persistence and the recalibration mechanism are CRUD + pure
+statistics, no AI/Tavily calls. Formally depends on EPIC-10 (still Backlog)
+and EPIC-11 (Done); only EPIC-11 mattered for this sprint's actual scope.
+Full detail is in `product_backlog.md`'s EPIC-12 section rather than
+duplicated here. Headline points: found and fixed the same shape of gap
+EPIC-16 found for Lead persistence -- `QualificationScorer` already computed
+a 6-category `evidence_signals` dict (hiring/growth/technology/ai/process/
+funding) but discarded it before it ever reached a Lead row; `Lead` now
+carries it (6 flat nullable `Boolean` columns -- this codebase has no JSON-
+column precedent, and the signal set is small and fixed, so flat columns
+matched its own convention better than inventing one). Also wired the
+previously-dead `DomainProfile.scoring_weight_overrides` field into
+`QualificationScorer.score()` for the first time (optional
+`weight_overrides` param, default `None` preserves every existing caller's
+behavior exactly) -- explicitly did **not** additionally wire
+`DomainProfile` selection into `search_companies_handler.py` itself, since
+that's a separate, larger, pre-existing gap unrelated to outcome feedback.
+The recalibration pass (`SignalCorrelationAnalyzer` +
+`scripts/recalibrate_qualification_weights.py`, following the
+`create_user.py` offline-script precedent -- this codebase has no
+scheduler/cron infrastructure) deliberately stops at reporting correlation,
+not auto-computing new weights; that's a human call. Live-verified against
+the real running backend: `POST /outcomes` against a real seeded Lead,
+listed, deleted, and a fabricated `lead_id` correctly 404'd; ran the
+recalibration script for real and it honestly reported "Insufficient data:
+0 Lead(s) with captured evidence signals" -- the correct answer, since no
+Lead has been through a live `search_companies` → `promote` run yet (that
+would cost real quota). The `evidence_signals` flatten/unflatten logic
+itself is proven by a real-database repository round-trip test instead.
+Backend suite: **746 passing** (up from 710).
+
+**Sprint 11 notes (2026-08-20):** Both EPIC-17 stories shipped, the day after
+Sprints 12/16/17. Full detail is in `product_backlog.md`'s EPIC-17 section
+rather than duplicated here. Headline points: re-read
+`SearchCompaniesHandler` before assuming this epic still needed real paid-API
+spend (the reason it had been deferred past Sprints 12/16/17) and found that
+assumption only half true -- the cheap-tier→Tavily fallback (17.1's literal
+first half) was already shipped in EPIC-02/Sprint 5; the only genuinely new
+part of 17.1 is "room for" a future paid tier, which the AC itself only asks
+for as extensibility, not an actual vendor integration. Shipped that as one
+new optional constructor parameter (`paid_directory_port`, defaulting to
+`None`, provably a no-op when omitted -- not just tested-equal, unreachable
+by construction) rather than fabricating an adapter against a vendor with no
+real account, matching this project's established never-fabricate discipline
+(same reasoning as EPIC-07's "Won't-now" and `ContactDiscoveryPort`'s
+contract). 17.2 found a real, previously-unfixed gap: the two known-bad
+candidates from live testing ("Company search", "Browse by size: 51-200
+employees") did not trip any existing `DeterministicCandidateGate` rule --
+added `blocked_name_markers` to catch nav/filter-UI text scraped as a
+company name, plus the first-ever dedicated test file for that gate class
+(previously only incidental coverage existed). Milestone D ("Orchestrated &
+Enriched") is now a clean, full reach -- unlike Milestones C and F, its
+demoable claim never depended on the still-missing real paid-enrichment
+vendor. That vendor gap (EPIC-06's dormant Lead creation) remains open,
+stated explicitly rather than claimed resolved. Zero live Tavily/Gemini
+calls this sprint -- confirmed the app still imports and wires cleanly (all
+64 routes) as a smoke check, did not spend a real call to prove the
+waterfall end-to-end. Backend suite: **761 passing** (up from 746).
+
+**Sprint 13 notes (2026-08-20):** Only story 9.1 (`Sequence` aggregate, 8 pts)
+shipped -- the first genuinely partial sprint completion this session. Full
+detail is in `product_backlog.md`'s EPIC-09 section rather than duplicated
+here. Headline points: shipped as a full vertical slice (domain + persistence
++ application + API), not just domain classes, since a Sequence plan (ordered
+touches against a real Lead) is fully definable and useful without AI content
+(9.2) or real channel credentials (9.3) -- matches the honest-scoping
+discipline used all session, just now applied *within* a single story instead
+of across a whole epic. `StartSequenceHandler` is the first real caller of
+EPIC-16's review gate (`Lead.review_status == Approved` required before a
+cadence can start), closing a loop EPIC-16's own Risk Register note had left
+open. Found and fixed a real gap in this codebase's persistence layer: no
+existing precedent for an owned, immutable, ordered list of value objects on
+an aggregate -- built a proper child table (`sequence_touches`) instead of
+reaching for JSON or a sibling-aggregate relationship, and along the way hit
+(then fixed, switching `lazy="joined"` to `lazy="selectin"`) a real SQLAlchemy
+footgun where joined eager-loading against a collection duplicates parent rows
+per child row. Live-verified against the real running backend: a Sequence's
+`start()` correctly 409'd against a not-yet-approved Lead, succeeded once
+approved via the real EPIC-16 endpoints, advanced through natural completion,
+and separately exercised both the reply and bounce branches on fresh
+sequences. Zero live Tavily/Gemini calls. Backend suite: **828 passing** (up
+from 761).
 
 ---
 

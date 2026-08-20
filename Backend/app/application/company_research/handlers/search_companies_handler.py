@@ -98,6 +98,7 @@ class SearchCompaniesHandler:
         solution_catalog: list[SolutionCatalogEntry] | None = None,
         contact_port: ContactDiscoveryPort | None = None,
         lead_promoter: PromoteCandidateToLeadHandler | None = None,
+        paid_directory_port: CompanyDirectoryPort | None = None,
     ) -> None:
         self._discovery_port = discovery_port
         self._identity_port = identity_port
@@ -112,6 +113,7 @@ class SearchCompaniesHandler:
         self._solution_catalog = solution_catalog
         self._contact_port = contact_port
         self._lead_promoter = lead_promoter
+        self._paid_directory_port = paid_directory_port
 
     async def handle(self, request: CompanyResearchRequest) -> CompanyResearchBatchResult:
         candidates = await self._discover_candidates(request)
@@ -273,10 +275,11 @@ class SearchCompaniesHandler:
         )
 
     async def _discover_candidates(self, request: CompanyResearchRequest) -> list[CompanyCandidate]:
-        """Cheap tier first (if configured), expensive tier only to fill the
-        remainder of the pool -- see docs/pamacore_aisdr_summary.md §4.
-        Deduplication happens downstream in ``DiscoveryFunnel.gate_candidates``,
-        so cheap- and expensive-tier results can simply be concatenated here.
+        """Cheap tier first (if configured), expensive tier to fill the
+        remainder, then an optional third paid-enrichment tier (EPIC-17) if
+        still short -- see docs/pamacore_aisdr_summary.md §4. Deduplication
+        happens downstream in ``DiscoveryFunnel.gate_candidates``, so tier
+        results can simply be concatenated here.
         """
         if self._directory_port is None:
             return await self._discovery_port.discover(request)
@@ -298,7 +301,19 @@ class SearchCompaniesHandler:
             request.number_of_companies,
         )
         expensive = await self._discovery_port.discover(request)
-        return cheap + expensive
+        combined = cheap + expensive
+
+        if len(combined) >= request.number_of_companies or self._paid_directory_port is None:
+            return combined
+
+        logger.info(
+            "Cheap+expensive discovery returned %d candidates (< requested %d); "
+            "falling back to paid enrichment tier to fill the remainder",
+            len(combined),
+            request.number_of_companies,
+        )
+        paid = await self._paid_directory_port.discover(request)
+        return combined + paid
 
     async def _research_candidate(
         self,

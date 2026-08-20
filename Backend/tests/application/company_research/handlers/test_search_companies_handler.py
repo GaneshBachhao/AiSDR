@@ -453,6 +453,98 @@ async def test_falls_back_to_expensive_tier_when_cheap_tier_is_insufficient():
 
 
 @pytest.mark.asyncio
+async def test_omitting_paid_directory_port_changes_nothing():
+    """Regression guard (EPIC-17): the new optional third tier must be a
+    no-op when unset, same discipline as the directory_port regression
+    guard above."""
+    cheap_candidate = _candidate("Acme A", "https://a.example")
+    expensive_candidate = _candidate("Acme B", "https://b.example")
+
+    directory = AsyncMock()
+    directory.discover.return_value = [cheap_candidate]
+    discovery = AsyncMock(spec=CompanyDiscoveryPort)
+    discovery.discover.return_value = [expensive_candidate]
+
+    handler = SearchCompaniesHandler(
+        discovery,
+        ScriptedIdentityAdapter(
+            {"Acme A": _verified("https://a.example"), "Acme B": _verified("https://b.example")}
+        ),
+        ScriptedEvidenceAdapter({}),
+        directory_port=directory,
+        # no paid_directory_port
+    )
+    request = CompanyResearchRequest(geography="India", number_of_companies=5)
+    results = (await handler.handle(request)).results
+
+    assert {r.company_name for r in results} == {"Acme A", "Acme B"}
+
+
+@pytest.mark.asyncio
+async def test_falls_back_to_paid_tier_when_cheap_and_expensive_are_still_insufficient():
+    cheap_candidate = _candidate("Acme A", "https://a.example")
+    expensive_candidate = _candidate("Acme B", "https://b.example")
+    paid_candidate = _candidate("Acme C", "https://c.example")
+
+    directory = AsyncMock()
+    directory.discover.return_value = [cheap_candidate]
+    discovery = AsyncMock(spec=CompanyDiscoveryPort)
+    discovery.discover.return_value = [expensive_candidate]
+    paid_directory = AsyncMock()
+    paid_directory.discover.return_value = [paid_candidate]
+
+    handler = SearchCompaniesHandler(
+        discovery,
+        ScriptedIdentityAdapter(
+            {
+                "Acme A": _verified("https://a.example"),
+                "Acme B": _verified("https://b.example"),
+                "Acme C": _verified("https://c.example"),
+            }
+        ),
+        ScriptedEvidenceAdapter({}),
+        directory_port=directory,
+        paid_directory_port=paid_directory,
+    )
+    # Requesting more companies than cheap+expensive alone can supply.
+    request = CompanyResearchRequest(geography="India", number_of_companies=5)
+    results = (await handler.handle(request)).results
+
+    directory.discover.assert_awaited_once_with(request)
+    discovery.discover.assert_awaited_once_with(request)
+    paid_directory.discover.assert_awaited_once_with(request)
+    assert {r.company_name for r in results} == {"Acme A", "Acme B", "Acme C"}
+
+
+@pytest.mark.asyncio
+async def test_paid_tier_is_never_invoked_when_earlier_tiers_already_fill_the_pool():
+    candidates = [
+        _candidate("Acme A", "https://a.example"),
+        _candidate("Acme B", "https://b.example"),
+    ]
+    directory = AsyncMock()
+    directory.discover.return_value = candidates
+    discovery = AsyncMock(spec=CompanyDiscoveryPort)
+    paid_directory = AsyncMock()
+
+    handler = SearchCompaniesHandler(
+        discovery,
+        ScriptedIdentityAdapter(
+            {"Acme A": _verified("https://a.example"), "Acme B": _verified("https://b.example")}
+        ),
+        ScriptedEvidenceAdapter({}),
+        directory_port=directory,
+        paid_directory_port=paid_directory,
+    )
+    request = CompanyResearchRequest(geography="India", number_of_companies=2)
+    await handler.handle(request)
+
+    directory.discover.assert_awaited_once_with(request)
+    discovery.discover.assert_not_awaited()
+    paid_directory.discover.assert_not_awaited()
+
+
+@pytest.mark.asyncio
 async def test_persist_as_companies_false_never_calls_the_promoter():
     candidate = _candidate("Acme Manufacturing", "https://acme.example")
     promoter = AsyncMock()

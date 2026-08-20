@@ -21,7 +21,7 @@ _EXISTING_CONTACT_ID = str(uuid4())
 _RESOLVED_CONTACT_ID = str(uuid4())
 
 
-def _result(**contacts_kwargs) -> CompanySearchResult:
+def _result(evidence_signals=None, **contacts_kwargs) -> CompanySearchResult:
     contacts = (
         [DiscoveredContact(name="Jane Doe", role_title="COO", **contacts_kwargs)] if contacts_kwargs else []
     )
@@ -36,6 +36,7 @@ def _result(**contacts_kwargs) -> CompanySearchResult:
         expected_business_impact="x",
         trigger_event="expansion",
         qualification_score=74,
+        evidence_signals=evidence_signals or {},
         priority_tier="Tier B",
         recommended_outreach_angle="x",
         suggested_first_message="x",
@@ -112,6 +113,26 @@ async def test_creates_contact_and_lead_when_a_verified_email_is_present():
     assert create_lead_command.score == 74
     assert "manual workflows" in create_lead_command.notes
     assert "hiring signals" in create_lead_command.notes
+    assert create_lead_command.evidence_signals is None
+
+
+@pytest.mark.asyncio
+async def test_threads_evidence_signals_from_the_research_result_into_the_create_lead_command():
+    result = _result(
+        email="jane.doe@acme.example",
+        evidence_signals={"hiring": True, "growth": False},
+    )
+    uow = _uow_with()
+    create_contact_handler = AsyncMock()
+    create_contact_handler.handle.return_value = MagicMock(id=_CONTACT_ID)
+    create_lead_handler = AsyncMock()
+    create_lead_handler.handle.return_value = MagicMock(id="lead-1")
+    handler = _handler(uow, create_contact_handler, create_lead_handler)
+
+    await handler.handle(result, company_id=_COMPANY_ID)
+
+    create_lead_command = create_lead_handler.handle.call_args.args[0]
+    assert create_lead_command.evidence_signals == {"hiring": True, "growth": False}
 
 
 @pytest.mark.asyncio

@@ -1,0 +1,9 @@
+{
+  "jurisdiction_code": "US",
+  "regime_name": "CAN-SPAM",
+  "consent_model": "opt-out",
+  "requires_unsubscribe_link": true,
+  "requires_physical_address": true,
+  "cooldown_days": null,
+  "notes": "US CAN-SPAM Act: opt-out consent is permissible, but every message must include a working unsubscribe mechanism honored promptly and a valid physical postal address. Platform default, not legal advice."
+}

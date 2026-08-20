@@ -32,11 +32,23 @@ from app.infrastructure.persistence.models.discovery_model import (
 from app.infrastructure.persistence.models.lead_model import (
     LeadModel,
 )
+from app.infrastructure.persistence.models.outcome_event_model import (
+    OutcomeEventModel,
+)
 from app.infrastructure.persistence.models.qualification_model import (
     QualificationModel,
 )
 from app.infrastructure.persistence.models.recommendation_model import (
     RecommendationModel,
+)
+from app.infrastructure.persistence.models.sequence_model import (
+    SequenceModel,
+)
+from app.infrastructure.persistence.models.sequence_touch_model import (
+    SequenceTouchModel,
+)
+from app.infrastructure.persistence.models.suppression_entry_model import (
+    SuppressionEntryModel,
 )
 from app.infrastructure.persistence.models.user_model import (
     UserModel,

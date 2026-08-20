@@ -1,0 +1,9 @@
+{
+  "jurisdiction_code": "DEFAULT",
+  "regime_name": "Unclassified",
+  "consent_model": "opt-in",
+  "requires_unsubscribe_link": true,
+  "requires_physical_address": false,
+  "cooldown_days": null,
+  "notes": "No jurisdiction could be resolved from the available geography data -- defaults to the strictest known regime (opt-in) rather than assuming a permissive one."
+}

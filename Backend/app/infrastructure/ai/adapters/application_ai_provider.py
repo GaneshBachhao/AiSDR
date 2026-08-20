@@ -19,6 +19,7 @@ from app.infrastructure.ai.exceptions.ai_provider_exception import (
 from app.infrastructure.ai.providers.base_provider import (
     BaseAIProvider,
 )
+from app.infrastructure.ai.usage.ai_rate_limiter import AIRateLimiter
 
 _RECOVERABLE_ERRORS = (
     AIProviderException,
@@ -35,6 +36,13 @@ class ApplicationAIProvider(AIProvider):
     model, an exhausted quota) -- so one provider's outage doesn't fail
     an entire batch. Fallback is a no-op unless both ``fallback_order``
     and ``default_models`` are supplied.
+
+    Optionally throttles calls per concrete provider via ``rate_limiter``
+    (a requests-per-minute gate, distinct from AIBudgetGuard's daily
+    total) -- each of the up to two outbound calls per ``execute()``
+    (primary, then one fallback) is gated by the provider actually being
+    called, so a fallback to a different provider is never throttled
+    against the primary's bucket.
     """
 
     def __init__(
@@ -42,11 +50,13 @@ class ApplicationAIProvider(AIProvider):
         providers: dict[str, BaseAIProvider],
         fallback_order: list[str] | None = None,
         default_models: dict[str, str] | None = None,
+        rate_limiter: AIRateLimiter | None = None,
     ) -> None:
 
         self._providers = providers
         self._fallback_order = [name.lower() for name in (fallback_order or [])]
         self._default_models = default_models or {}
+        self._rate_limiter = rate_limiter
 
     async def execute(
         self,
@@ -70,6 +80,8 @@ class ApplicationAIProvider(AIProvider):
         attempted = {provider_name}
 
         try:
+            if self._rate_limiter is not None:
+                await self._rate_limiter.acquire(provider_name)
             return await provider.execute(request)
         except _RECOVERABLE_ERRORS as primary_error:
             last_error = primary_error
@@ -95,6 +107,8 @@ class ApplicationAIProvider(AIProvider):
             )
 
             try:
+                if self._rate_limiter is not None:
+                    await self._rate_limiter.acquire(fallback_name)
                 return await fallback_provider.execute(fallback_request)
             except _RECOVERABLE_ERRORS as fallback_error:
                 last_error = fallback_error

@@ -106,3 +106,20 @@ def test_to_response_message_includes_company_name():
     result = CompanyResearchMapper.to_response(_outcome(), _request())
     assert "Acme Manufacturing" in result.suggested_first_message
     assert result.suggested_first_message.startswith("Subject:")
+
+
+def test_to_response_surfaces_evidence_signals():
+    """
+    EPIC-12: the signals dict was already computed and used for scoring
+    but previously discarded before reaching CompanySearchResult -- it
+    must now survive into the response so a persisted Lead can carry it.
+    """
+    result = CompanyResearchMapper.to_response(_outcome(), _request())
+    assert result.evidence_signals == {
+        "hiring": True,
+        "growth": True,
+        "technology": False,
+        "ai": False,
+        "process": False,
+        "funding": False,
+    }

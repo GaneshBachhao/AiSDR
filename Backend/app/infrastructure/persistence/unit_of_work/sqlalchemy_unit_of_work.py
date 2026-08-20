@@ -37,11 +37,20 @@ from app.application.contracts.repositories.discovery_repository import (
 from app.application.contracts.repositories.lead_repository import (
     LeadRepository,
 )
+from app.application.contracts.repositories.outcome_repository import (
+    OutcomeRepository,
+)
 from app.application.contracts.repositories.qualification_repository import (
     QualificationRepository,
 )
 from app.application.contracts.repositories.recommendation_repository import (
     RecommendationRepository,
+)
+from app.application.contracts.repositories.sequence_repository import (
+    SequenceRepository,
+)
+from app.application.contracts.repositories.suppression_repository import (
+    SuppressionRepository,
 )
 from app.application.contracts.repositories.user_repository import (
     UserRepository,
@@ -61,11 +70,20 @@ from app.infrastructure.persistence.repositories.discovery.sqlalchemy_discovery_
 from app.infrastructure.persistence.repositories.lead.sqlalchemy_lead_repository import (
     SqlAlchemyLeadRepository,
 )
+from app.infrastructure.persistence.repositories.outcome.sqlalchemy_outcome_repository import (
+    SqlAlchemyOutcomeRepository,
+)
 from app.infrastructure.persistence.repositories.qualification.sqlalchemy_qualification_repository import (
     SQLAlchemyQualificationRepository,
 )
 from app.infrastructure.persistence.repositories.recommendation.sqlalchemy_recommendation_repository import (
     SqlAlchemyRecommendationRepository,
+)
+from app.infrastructure.persistence.repositories.sequence.sqlalchemy_sequence_repository import (
+    SqlAlchemySequenceRepository,
+)
+from app.infrastructure.persistence.repositories.suppression.sqlalchemy_suppression_repository import (
+    SqlAlchemySuppressionRepository,
 )
 from app.infrastructure.persistence.repositories.user.sqlalchemy_user_repository import (
     SqlAlchemyUserRepository,
@@ -127,6 +145,15 @@ class SqlAlchemyUnitOfWork(UnitOfWork):
         self._user_repository = SqlAlchemyUserRepository(
             session=session,
         )
+        self._suppression_repository = SqlAlchemySuppressionRepository(
+            session=session,
+        )
+        self._outcome_repository = SqlAlchemyOutcomeRepository(
+            session=session,
+        )
+        self._sequence_repository = SqlAlchemySequenceRepository(
+            session=session,
+        )
 
     # ==========================================================
     # Canonical repository properties
@@ -179,6 +206,24 @@ class SqlAlchemyUnitOfWork(UnitOfWork):
         self,
     ) -> UserRepository:
         return self._user_repository
+
+    @property
+    def suppression_repository(
+        self,
+    ) -> SuppressionRepository:
+        return self._suppression_repository
+
+    @property
+    def outcome_repository(
+        self,
+    ) -> OutcomeRepository:
+        return self._outcome_repository
+
+    @property
+    def sequence_repository(
+        self,
+    ) -> SequenceRepository:
+        return self._sequence_repository
 
     # ==========================================================
     # Backward-compatible aliases

@@ -57,6 +57,12 @@ from app.application.company.handlers.search_company_handler import (
 from app.application.company.handlers.update_company_handler import (
     UpdateCompanyHandler,
 )
+from app.application.compliance.handlers.get_lead_compliance_ruleset_handler import (
+    GetLeadComplianceRulesetHandler,
+)
+from app.application.compliance.handlers.list_compliance_rulesets_handler import (
+    ListComplianceRulesetsHandler,
+)
 from app.application.contact.contact_mapper import (
     ContactMapper,
 )
@@ -105,6 +111,9 @@ from app.application.discovery.handlers.search_discovery_handler import (
 from app.application.discovery.handlers.update_discovery_handler import (
     UpdateDiscoveryHandler,
 )
+from app.application.lead.handlers.approve_lead_handler import (
+    ApproveLeadHandler,
+)
 from app.application.lead.handlers.create_lead_handler import (
     CreateLeadHandler,
 )
@@ -114,14 +123,32 @@ from app.application.lead.handlers.delete_lead_handler import (
 from app.application.lead.handlers.get_lead_handler import (
     GetLeadHandler,
 )
+from app.application.lead.handlers.get_lead_review_chain_handler import (
+    GetLeadReviewChainHandler,
+)
 from app.application.lead.handlers.list_lead_handler import (
     ListLeadHandler,
+)
+from app.application.lead.handlers.reject_lead_handler import (
+    RejectLeadHandler,
 )
 from app.application.lead.handlers.search_lead_handler import (
     SearchLeadHandler,
 )
+from app.application.lead.handlers.submit_lead_for_review_handler import (
+    SubmitLeadForReviewHandler,
+)
 from app.application.lead.handlers.update_lead_handler import (
     UpdateLeadHandler,
+)
+from app.application.outcome.handlers.create_outcome_event_handler import (
+    CreateOutcomeEventHandler,
+)
+from app.application.outcome.handlers.delete_outcome_event_handler import (
+    DeleteOutcomeEventHandler,
+)
+from app.application.outcome.handlers.list_outcome_events_handler import (
+    ListOutcomeEventsHandler,
 )
 from app.application.qualification.handlers.create_qualification_handler import (
     CreateQualificationHandler,
@@ -162,8 +189,47 @@ from app.application.recommendation.handlers.list_recommendation_handler import 
 from app.application.recommendation.handlers.submit_recommendation_handler import (
     SubmitRecommendationHandler,
 )
+from app.application.sequence.handlers.advance_sequence_handler import (
+    AdvanceSequenceHandler,
+)
+from app.application.sequence.handlers.create_sequence_handler import (
+    CreateSequenceHandler,
+)
+from app.application.sequence.handlers.get_sequence_handler import (
+    GetSequenceHandler,
+)
+from app.application.sequence.handlers.list_sequences_handler import (
+    ListSequencesHandler,
+)
+from app.application.sequence.handlers.record_sequence_bounce_handler import (
+    RecordSequenceBounceHandler,
+)
+from app.application.sequence.handlers.record_sequence_reply_handler import (
+    RecordSequenceReplyHandler,
+)
+from app.application.sequence.handlers.start_sequence_handler import (
+    StartSequenceHandler,
+)
+from app.application.suppression.handlers.check_suppression_handler import (
+    CheckSuppressionHandler,
+)
+from app.application.suppression.handlers.create_suppression_handler import (
+    CreateSuppressionHandler,
+)
+from app.application.suppression.handlers.delete_suppression_handler import (
+    DeleteSuppressionHandler,
+)
+from app.application.suppression.handlers.list_suppressions_handler import (
+    ListSuppressionsHandler,
+)
+from app.application.suppression.handlers.record_email_event_handler import (
+    RecordEmailEventHandler,
+)
 from app.application.user.handlers.login_handler import LoginHandler
+from app.domain.compliance.services.jurisdiction_resolver import JurisdictionResolver
+from app.domain.compliance.value_objects.compliance_ruleset import ComplianceRuleset
 from app.infrastructure.ai.composition import build_ai_execution_service, default_ai_provider
+from app.infrastructure.configuration.compliance_rulesets import load_all_compliance_rulesets
 from app.infrastructure.configuration.jwt_settings import JWTSettings
 from app.infrastructure.security.jwt_service import JWTService
 from app.infrastructure.security.password_hasher import PasswordHasher
@@ -388,6 +454,42 @@ def get_delete_lead_handler(
 ) -> DeleteLeadHandler:
 
     return DeleteLeadHandler(
+        unit_of_work=uow,
+    )
+
+
+def get_submit_lead_for_review_handler(
+    uow: UnitOfWork = Depends(get_unit_of_work),
+) -> SubmitLeadForReviewHandler:
+
+    return SubmitLeadForReviewHandler(
+        unit_of_work=uow,
+    )
+
+
+def get_approve_lead_handler(
+    uow: UnitOfWork = Depends(get_unit_of_work),
+) -> ApproveLeadHandler:
+
+    return ApproveLeadHandler(
+        unit_of_work=uow,
+    )
+
+
+def get_reject_lead_handler(
+    uow: UnitOfWork = Depends(get_unit_of_work),
+) -> RejectLeadHandler:
+
+    return RejectLeadHandler(
+        unit_of_work=uow,
+    )
+
+
+def get_lead_review_chain_handler(
+    uow: UnitOfWork = Depends(get_unit_of_work),
+) -> GetLeadReviewChainHandler:
+
+    return GetLeadReviewChainHandler(
         unit_of_work=uow,
     )
 
@@ -751,6 +853,30 @@ DeleteLeadHandlerDependency = Annotated[
 ]
 
 
+SubmitLeadForReviewHandlerDependency = Annotated[
+    SubmitLeadForReviewHandler,
+    Depends(get_submit_lead_for_review_handler),
+]
+
+
+ApproveLeadHandlerDependency = Annotated[
+    ApproveLeadHandler,
+    Depends(get_approve_lead_handler),
+]
+
+
+RejectLeadHandlerDependency = Annotated[
+    RejectLeadHandler,
+    Depends(get_reject_lead_handler),
+]
+
+
+GetLeadReviewChainHandlerDependency = Annotated[
+    GetLeadReviewChainHandler,
+    Depends(get_lead_review_chain_handler),
+]
+
+
 CreateAssessmentHandlerDependency = Annotated[
     CreateAssessmentHandler,
     Depends(get_create_assessment_handler),
@@ -942,4 +1068,256 @@ def get_login_handler(
 LoginHandlerDependency = Annotated[
     LoginHandler,
     Depends(get_login_handler),
+]
+
+
+# -------------------------
+# Suppression (EPIC-11)
+# -------------------------
+
+
+def get_create_suppression_handler(
+    uow: UnitOfWork = Depends(get_unit_of_work),
+) -> CreateSuppressionHandler:
+
+    return CreateSuppressionHandler(unit_of_work=uow)
+
+
+def get_delete_suppression_handler(
+    uow: UnitOfWork = Depends(get_unit_of_work),
+) -> DeleteSuppressionHandler:
+
+    return DeleteSuppressionHandler(unit_of_work=uow)
+
+
+def get_list_suppressions_handler(
+    uow: UnitOfWork = Depends(get_unit_of_work),
+) -> ListSuppressionsHandler:
+
+    return ListSuppressionsHandler(unit_of_work=uow)
+
+
+def get_check_suppression_handler(
+    uow: UnitOfWork = Depends(get_unit_of_work),
+) -> CheckSuppressionHandler:
+
+    return CheckSuppressionHandler(unit_of_work=uow)
+
+
+def get_record_email_event_handler(
+    uow: UnitOfWork = Depends(get_unit_of_work),
+) -> RecordEmailEventHandler:
+
+    return RecordEmailEventHandler(unit_of_work=uow)
+
+
+CreateSuppressionHandlerDependency = Annotated[
+    CreateSuppressionHandler,
+    Depends(get_create_suppression_handler),
+]
+
+DeleteSuppressionHandlerDependency = Annotated[
+    DeleteSuppressionHandler,
+    Depends(get_delete_suppression_handler),
+]
+
+ListSuppressionsHandlerDependency = Annotated[
+    ListSuppressionsHandler,
+    Depends(get_list_suppressions_handler),
+]
+
+CheckSuppressionHandlerDependency = Annotated[
+    CheckSuppressionHandler,
+    Depends(get_check_suppression_handler),
+]
+
+RecordEmailEventHandlerDependency = Annotated[
+    RecordEmailEventHandler,
+    Depends(get_record_email_event_handler),
+]
+
+
+# -------------------------
+# Compliance (EPIC-11)
+# -------------------------
+
+# Loaded once, at process scope, same singleton pattern as
+# get_directory_adapter (app/presentation/api/dependencies/company_research.py)
+# -- the ruleset files never change at runtime, so re-reading them from
+# disk on every request would be pure waste.
+_compliance_rulesets: dict[str, ComplianceRuleset] | None = None
+
+
+def get_compliance_rulesets() -> dict[str, ComplianceRuleset]:
+    global _compliance_rulesets
+    if _compliance_rulesets is None:
+        _compliance_rulesets = load_all_compliance_rulesets()
+    return _compliance_rulesets
+
+
+def get_jurisdiction_resolver(
+    rulesets: dict[str, ComplianceRuleset] = Depends(get_compliance_rulesets),
+) -> JurisdictionResolver:
+
+    return JurisdictionResolver(rulesets)
+
+
+def get_lead_compliance_ruleset_handler(
+    uow: UnitOfWork = Depends(get_unit_of_work),
+    jurisdiction_resolver: JurisdictionResolver = Depends(get_jurisdiction_resolver),
+) -> GetLeadComplianceRulesetHandler:
+
+    return GetLeadComplianceRulesetHandler(
+        unit_of_work=uow,
+        jurisdiction_resolver=jurisdiction_resolver,
+    )
+
+
+def get_list_compliance_rulesets_handler(
+    rulesets: dict[str, ComplianceRuleset] = Depends(get_compliance_rulesets),
+) -> ListComplianceRulesetsHandler:
+
+    return ListComplianceRulesetsHandler(rulesets)
+
+
+GetLeadComplianceRulesetHandlerDependency = Annotated[
+    GetLeadComplianceRulesetHandler,
+    Depends(get_lead_compliance_ruleset_handler),
+]
+
+ListComplianceRulesetsHandlerDependency = Annotated[
+    ListComplianceRulesetsHandler,
+    Depends(get_list_compliance_rulesets_handler),
+]
+
+
+# -------------------------
+# Outcome (EPIC-12)
+# -------------------------
+
+
+def get_create_outcome_event_handler(
+    uow: UnitOfWork = Depends(get_unit_of_work),
+) -> CreateOutcomeEventHandler:
+
+    return CreateOutcomeEventHandler(unit_of_work=uow)
+
+
+def get_delete_outcome_event_handler(
+    uow: UnitOfWork = Depends(get_unit_of_work),
+) -> DeleteOutcomeEventHandler:
+
+    return DeleteOutcomeEventHandler(unit_of_work=uow)
+
+
+def get_list_outcome_events_handler(
+    uow: UnitOfWork = Depends(get_unit_of_work),
+) -> ListOutcomeEventsHandler:
+
+    return ListOutcomeEventsHandler(unit_of_work=uow)
+
+
+CreateOutcomeEventHandlerDependency = Annotated[
+    CreateOutcomeEventHandler,
+    Depends(get_create_outcome_event_handler),
+]
+
+DeleteOutcomeEventHandlerDependency = Annotated[
+    DeleteOutcomeEventHandler,
+    Depends(get_delete_outcome_event_handler),
+]
+
+ListOutcomeEventsHandlerDependency = Annotated[
+    ListOutcomeEventsHandler,
+    Depends(get_list_outcome_events_handler),
+]
+
+
+# -------------------------
+# Sequence (EPIC-09.1)
+# -------------------------
+
+
+def get_create_sequence_handler(
+    uow: UnitOfWork = Depends(get_unit_of_work),
+) -> CreateSequenceHandler:
+
+    return CreateSequenceHandler(unit_of_work=uow)
+
+
+def get_start_sequence_handler(
+    uow: UnitOfWork = Depends(get_unit_of_work),
+) -> StartSequenceHandler:
+
+    return StartSequenceHandler(unit_of_work=uow)
+
+
+def get_advance_sequence_handler(
+    uow: UnitOfWork = Depends(get_unit_of_work),
+) -> AdvanceSequenceHandler:
+
+    return AdvanceSequenceHandler(unit_of_work=uow)
+
+
+def get_record_sequence_reply_handler(
+    uow: UnitOfWork = Depends(get_unit_of_work),
+) -> RecordSequenceReplyHandler:
+
+    return RecordSequenceReplyHandler(unit_of_work=uow)
+
+
+def get_record_sequence_bounce_handler(
+    uow: UnitOfWork = Depends(get_unit_of_work),
+) -> RecordSequenceBounceHandler:
+
+    return RecordSequenceBounceHandler(unit_of_work=uow)
+
+
+def get_sequence_handler(
+    uow: UnitOfWork = Depends(get_unit_of_work),
+) -> GetSequenceHandler:
+
+    return GetSequenceHandler(unit_of_work=uow)
+
+
+def get_list_sequences_handler(
+    uow: UnitOfWork = Depends(get_unit_of_work),
+) -> ListSequencesHandler:
+
+    return ListSequencesHandler(unit_of_work=uow)
+
+
+CreateSequenceHandlerDependency = Annotated[
+    CreateSequenceHandler,
+    Depends(get_create_sequence_handler),
+]
+
+StartSequenceHandlerDependency = Annotated[
+    StartSequenceHandler,
+    Depends(get_start_sequence_handler),
+]
+
+AdvanceSequenceHandlerDependency = Annotated[
+    AdvanceSequenceHandler,
+    Depends(get_advance_sequence_handler),
+]
+
+RecordSequenceReplyHandlerDependency = Annotated[
+    RecordSequenceReplyHandler,
+    Depends(get_record_sequence_reply_handler),
+]
+
+RecordSequenceBounceHandlerDependency = Annotated[
+    RecordSequenceBounceHandler,
+    Depends(get_record_sequence_bounce_handler),
+]
+
+GetSequenceHandlerDependency = Annotated[
+    GetSequenceHandler,
+    Depends(get_sequence_handler),
+]
+
+ListSequencesHandlerDependency = Annotated[
+    ListSequencesHandler,
+    Depends(get_list_sequences_handler),
 ]

@@ -47,12 +47,12 @@ Fibonacci (1, 2, 3, 5, 8, 13, 21). Priority uses MoSCoW (**M**ust / **S**hould /
 | `[x]` Done | EPIC-05 | 1 | Contact Discovery | 8 | **M** | EPIC-03, EPIC-04 |
 | `[x]` Done | EPIC-06 | 1 | Lead creation bridge | 8 | **M** | EPIC-05 |
 | `[x]` Done | EPIC-08 | 1 | Workflow orchestration | 8 | **S** | EPIC-06 |
-| `[ ]` Backlog | EPIC-17 | 5 | Enrichment waterfall | 8 | **S** | EPIC-02, EPIC-03 |
-| `[ ]` Backlog | EPIC-16 | 4 | Human-in-the-loop review queue & explainability | 13 | **M** | EPIC-06 |
-| `[ ]` Backlog | EPIC-09 | 2 | Multichannel sequencing engine | 21 | **M** | EPIC-16 |
+| `[x]` Done | EPIC-17 | 5 | Enrichment waterfall | 8 | **S** | EPIC-02, EPIC-03 |
+| `[x]` Done | EPIC-16 | 4 | Human-in-the-loop review queue & explainability | 13 | **M** | EPIC-06 |
+| `[>]` In Progress | EPIC-09 | 2 | Multichannel sequencing engine | 21 | **M** | EPIC-16 |
 | `[ ]` Backlog | EPIC-10 | 2 | Reply intelligence & meeting booking | 13 | **M** | EPIC-09 |
-| `[ ]` Backlog | EPIC-11 | 2 | Deliverability & compliance | 13 | **M** | EPIC-09 |
-| `[ ]` Backlog | EPIC-12 | 3 | Outcome feedback loop | 13 | **S** | EPIC-10, EPIC-11 |
+| `[x]` Done | EPIC-11 | 2 | Deliverability & compliance | 13 | **M** | EPIC-09 |
+| `[x]` Done | EPIC-12 | 3 | Outcome feedback loop | 13 | **S** | EPIC-10, EPIC-11 |
 | `[ ]` Won't-now | EPIC-07 | 1 | Outreach (thin placeholder) | — | **Won't-now** | superseded by EPIC-09–11, see note |
 | `[ ]` Parked | PARK-T6 | 6 | Multi-tenancy / retention / audit logging | — | **C** | as-needed, see Parking Lot |
 
@@ -590,34 +590,162 @@ and added to the Risk Register below, since every future sprint needing a
 live Gemini call will hit this until `.env`'s `GEMINI_MODEL` is updated to a
 currently-supported model.
 
-### EPIC-17 — Enrichment waterfall (8 pts) · Track 5
+### EPIC-17 — Enrichment waterfall (8 pts) · Track 5 · `[x]` Done — Sprint 11
 
-| ID | Story | Acceptance Criteria | Pts |
-|---|---|---|---|
-| 17.1 | As the platform, I want a fallback order behind the discovery/enrichment ports | Cheap structured source (EPIC-02) → Tavily → room for a future paid enrichment API, same port contract | 5 |
-| 17.2 | As a QA reviewer, I want measurably fewer junk candidates | Regression test set using known-bad candidates from live testing ("Company search", "Browse by size...") — all rejected pre-research | 3 |
+| ID | Story | Acceptance Criteria | Pts | Status |
+|---|---|---|---|---|
+| 17.1 | As the platform, I want a fallback order behind the discovery/enrichment ports | Cheap structured source (EPIC-02) → Tavily → room for a future paid enrichment API, same port contract | 5 | `[x]` Done — see scope note below |
+| 17.2 | As a QA reviewer, I want measurably fewer junk candidates | Regression test set using known-bad candidates from live testing ("Company search", "Browse by size...") — all rejected pre-research | 3 | `[x]` Done |
 
-**Load-bearing for EPIC-06, not just discovery quality:** whatever real
-paid enrichment source story 17.1 adds should also be checked for whether it
-can populate `DiscoveredContact.email` (added in Sprint 9, currently always
-`None`) -- that's the one missing piece keeping `PromoteCandidateToLeadHandler`
-dormant in live use. See the Risk Register entry and EPIC-06's notes above.
+**Reassessed and re-scoped after re-reading the code, not assumed:** Sprint 12's
+notes originally deferred this epic past Sprint 12/16/17 because it looked like
+"enrichment work" requiring real paid-API spend. Reading `SearchCompaniesHandler`
+directly this pass found that's only half true:
 
-### EPIC-16 — Human-in-the-loop review queue & explainability (13 pts) · Track 4
+- **17.1's "cheap tier → Tavily" fallback was already fully shipped in EPIC-02**
+  (Sprint 5) — `_discover_candidates()` already tries `CompanyDirectoryPort`
+  first, falls back to `CompanyDiscoveryPort` only if short. Both tiers call the
+  same Tavily client today (confirmed in `docs/pamacore_aisdr_summary.md`: "the
+  only data source for both discovery and enrichment"). So 17.1's real remaining
+  gap is narrower than it first looked: not "add a Tavily fallback" (done), just
+  the literal AC wording -- **"room for" a future paid tier**, i.e. extensibility,
+  not the integration itself.
+- **No real paid enrichment vendor is integrated, configured, or even stubbed
+  anywhere in this repo**, and none was added here. Building a fake adapter
+  against a vendor with no real account/API key would be exactly the kind of
+  speculative, can't-verify-for-real integration this project's discipline
+  avoids (see EPIC-07's "Won't-now" reasoning, and `ContactDiscoveryPort`'s own
+  never-fabricate contract). **Shipped instead:** one new optional constructor
+  parameter on `SearchCompaniesHandler`, `paid_directory_port:
+  CompanyDirectoryPort | None = None` (reuses the existing port type -- "same
+  port contract" literally), with `_discover_candidates()` extended to try it
+  only if cheap+expensive tiers are still short. Defaults to `None` everywhere
+  today (`app/presentation/api/dependencies/company_research.py` needed no
+  changes) -- behavior is provably identical to before when omitted, not just
+  tested-equal. This is the honest, concrete meaning of "room for": the seam
+  exists, nothing fake is registered through it.
+- **Consequence, stated explicitly, not silently dropped:** `DiscoveredContact.
+  email` remains always-`None` and `PromoteCandidateToLeadHandler` remains
+  dormant. Load-bearing for EPIC-06 is **not** resolved by this pass -- that
+  needs an actual paid-vendor decision + API key, a business/procurement call
+  outside what this pass could resolve on its own.
+- **17.2 found a real, fixable gap, not just a missing test.** The two known-bad
+  candidates from live testing ("Company search", "Browse by size: 51-200
+  employees" -- garbled directory-row parses of nav/filter UI text) did **not**
+  trip any existing `DeterministicCandidateGate` rule (title markers and a
+  name-length check only). Added `DEFAULT_BLOCKED_NAME_MARKERS` (`"company
+  search"`, `"browse by"`, `"search results"`, `"filter by"`, `"sort by"`,
+  `"view all"`, `"see all"`) and a matching check in `evaluate()`. Also found
+  **no dedicated test file existed for this gate at all** -- only incidental
+  coverage inside `test_discovery_funnel.py` -- and added one
+  (`tests/domain/company_research/services/test_candidate_gate.py`), closing
+  that coverage gap for the whole class, not just the new rule. Rejecting these
+  earlier also directly helps the ongoing Gemini-quota-scarcity constraint:
+  every junk candidate caught here never reaches the paid identity-verification/
+  evidence stages downstream.
 
-| ID | Story | Acceptance Criteria | Pts |
-|---|---|---|---|
-| 16.1 | As a sales rep, I want to see the full evidence → hypothesis → recommendation → message chain before anything sends | New review state on `Lead`/`Sequence`: `pending_review → approved → sent`; API/UI surface for the chain | 8 |
-| 16.2 | As a sales rep, I want to approve, edit, or reject before send | Edit/reject actions persisted (feeds EPIC-12 later) | 3 |
-| 16.3 | As the platform, I want nothing auto-sent while this gate is active | Enforcement test: no Track 2 send path can bypass `pending_review` | 2 |
+**Zero live Tavily/Gemini calls for this epic** -- the gate fix is pure
+deterministic string logic (tested with synthetic fixtures), and the waterfall
+extension's correctness is provable by fakes plus the fact that the new branch
+is unreachable when the parameter is omitted. Confirmed the app still imports
+and wires cleanly (`main.py` loads all 64 routes) as a wiring smoke check, but
+did not spend a real Tavily/Gemini call to prove it end-to-end -- consistent
+with this session's ongoing zero-quota discipline. Backend suite:
+**761 passing** (up from 746).
 
-### EPIC-09 — Multichannel sequencing engine (21 pts) · Track 2
+### EPIC-16 — Human-in-the-loop review queue & explainability (13 pts) · Track 4 · `[x]` Done — Sprint 12
 
-| ID | Story | Acceptance Criteria | Pts |
-|---|---|---|---|
-| 9.1 | As the platform, I want a `Sequence` aggregate | New `app/domain/sequence`: ordered touches (email/LinkedIn/call-task), wait-time rules, branch on reply/no-reply/bounce | 8 |
-| 9.2 | As a sales rep, I want each touch to say something different, not repeat itself | Touch generation varies angle per step (signal-led opener → different proof point → breakup message), grounded in Lead evidence | 8 |
-| 9.3 | As the platform, I want channel adapters | Email adapter (SMTP/provider API) at minimum; LinkedIn/call-task per the "engagement channels" decision in the architecture doc | 5 |
+| ID | Story | Acceptance Criteria | Pts | Status |
+|---|---|---|---|---|
+| 16.1 | As a sales rep, I want to see the full evidence → hypothesis → recommendation → message chain before anything sends | New review state on `Lead`/`Sequence`: `pending_review → approved → sent`; API/UI surface for the chain | 8 | `[x]` Done — see finding below |
+| 16.2 | As a sales rep, I want to approve, edit, or reject before send | Edit/reject actions persisted (feeds EPIC-12 later) | 3 | `[x]` Done — see scope note below |
+| 16.3 | As the platform, I want nothing auto-sent while this gate is active | Enforcement test: no Track 2 send path can bypass `pending_review` | 2 | `[x]` Done — see finding below |
+
+**Two things about today's codebase shaped the honest scope, verified by reading the code directly before writing anything:**
+
+- **`Sequence` doesn't exist yet** — EPIC-09 (its own dependency on this epic) is still Backlog. The review gate lands on `Lead` only; `Sequence` is a placeholder for whenever EPIC-09 actually builds it.
+- **No send/outreach/message mechanism exists anywhere in `app/`** — confirmed by grep (`send|outreach|sequence|campaign|engagement`, excluding the already-known-unused `app/domain/workflow`). The only "send" abstraction, `EmailSender`
+  (`app/application/common/interfaces/email_sender.py`), is an unused port with zero implementations and zero callers. So 16.3's "enforcement test" can't guard a real call site — there isn't one yet. Shipped as forward-looking infrastructure instead: exhaustive state-machine guard tests on `Lead` itself (every legal/illegal transition), proving nothing can reach `APPROVED` through any bypass — ready for whenever EPIC-09 adds a real sender that must check it.
+
+**Scope calls made explicit, not assumed:**
+1. `SENT` was **not** added as a reachable state — no code exists that could ever set it, and guessing its shape before EPIC-09 exists would be speculative. `LeadReviewStatus` stops at `NOT_SUBMITTED`/`PENDING_REVIEW`/`APPROVED`/`REJECTED`.
+2. 16.2's "edit" shipped as **an optional note attached to an approve/reject decision** (`review_notes`), not a content-editing feature — there's no message content to edit yet. A real edit surface (message drafting) is downstream of EPIC-09.
+3. This is a **separate, orthogonal state** from `Lead`'s existing CRM lifecycle (`LeadStatus`) — a new `LeadReviewStatus` field, not a repurposing of `status`. A `Qualified` lead can still be `Not Submitted` for review; the two axes are independent.
+4. A rejected Lead can be resubmitted (`REJECTED → PENDING_REVIEW` allowed) — matches how a reviewer would actually use this (fix the issue, try again), not a dead end.
+
+**Real, pre-existing persistence bug found and fixed along the way:** `SqlAlchemyLeadRepository` had no `update()` override — it fell through to the generic base (`session.merge(mapper.to_model(entity))`), which merges a freshly-constructed model that never sets the `BaseModel` audit-mixin columns (`created_by`/`updated_by`/`is_deleted`/`deleted_at`), silently clobbering them back to their Python defaults on every `PUT /leads/{id}`. `LeadMapper.update_model()` already existed in the infra mapper specifically to avoid this but was never called by anything — dead code. Same bug class already found and fixed for `Recommendation` (Sprint 10 follow-up work); fixed here too since new review-state columns were about to be added onto the same save path.
+
+**Shipped:** `LeadReviewStatus` enum + 4 new `Lead` fields (`review_status`, `review_submitted_at`, `review_decided_at`, `review_notes`) + 3 domain methods (`submit_for_review()`/`approve()`/`reject()`, guard clauses raise plain `ValueError` — matches the actually-exercised `Recommendation.submit_for_review()`/`.approve()` pattern, not its unused `InvalidRecommendationState`/domain-event scaffolding). Four new endpoints: `POST /leads/{id}/submit-for-review`, `/approve`, `/reject`, and `GET /leads/{id}/review` — the last one assembles Lead + Discovery + Assessment + Recommendation into one response (each `None` if that stage hasn't been reached yet), reusing three already-existing repository lookups (`DiscoveryRepository.get_by_lead`, `AssessmentRepository.get_by_lead_id`, `RecommendationRepository.get_by_assessment_id`) and their existing mappers — no new repository methods needed. New Alembic migration (`65518a830f29`) backfills existing rows to `"Not Submitted"`.
+
+**Live-verified against the real running backend** (zero AI/Tavily calls — this whole epic is pure CRUD/state-machine): walked a real seeded Lead (Meridian Logistics Group, full Discovery → Assessment → Recommendation chain) through `submit-for-review → approve`, confirmed a fresh `GET` showed the persisted state (proving the repository fix actually works, not just an in-memory transition); walked a second real Lead (Northgate, no downstream stages yet) through `submit-for-review → reject → submit-for-review` again, confirming resubmission works; confirmed `GET /leads/{id}/review` returns the full chain for Meridian and all-`None` downstream fields for Northgate; confirmed re-approving an already-approved Lead returns a clean `409` (`{"error_code": "CONFLICT", ...}`), not a raw 500. Backend suite: **662 passing** (up from 639).
+
+### EPIC-09 — Multichannel sequencing engine (21 pts) · Track 2 · `[>]` In Progress
+
+| ID | Story | Acceptance Criteria | Pts | Status |
+|---|---|---|---|---|
+| 9.1 | As the platform, I want a `Sequence` aggregate | New `app/domain/sequence`: ordered touches (email/LinkedIn/call-task), wait-time rules, branch on reply/no-reply/bounce | 8 | `[x]` Done — see scope note below |
+| 9.2 | As a sales rep, I want each touch to say something different, not repeat itself | Touch generation varies angle per step (signal-led opener → different proof point → breakup message), grounded in Lead evidence | 8 | `[ ]` Backlog — needs live AI generation |
+| 9.3 | As the platform, I want channel adapters | Email adapter (SMTP/provider API) at minimum; LinkedIn/call-task per the "engagement channels" decision in the architecture doc | 5 | `[ ]` Backlog — needs real channel credentials |
+
+**Only 9.1 was in scope this pass, deliberately** — 9.2 needs live Gemini calls
+to generate varied touch content and 9.3 needs real third-party channel
+credentials (SMTP/LinkedIn API) this project doesn't have configured. Same
+honest-scoping discipline as EPIC-12/EPIC-17: ship the real, useful piece that's
+buildable now, document what's still gated and why, rather than a placeholder.
+
+**Why 9.1 is a full vertical slice (domain + persistence + application + API),
+not just domain classes:** a `Sequence` is fully definable today without AI
+content or channel adapters — "3-touch plan: email now, LinkedIn in 3 days,
+email in 7 days" against a real Lead is real and useful now. Matches this
+session's established pattern (EPIC-11/EPIC-12) of shipping full, tested
+vertical slices even when nothing downstream can trigger them automatically
+yet.
+
+**A real, non-speculative connection to already-shipped work, not assumed:**
+EPIC-16's own Risk Register note said *"EPIC-09 must check `review_status ==
+APPROVED` when it builds a real send path."* `StartSequenceHandler` is that
+check, live now — **the first real caller of EPIC-16's review gate**. Loads
+the `Sequence`'s `Lead` and requires `review_status == Approved` before
+`Sequence.start()` can run; `ConflictException` otherwise, naming the exact
+gap. This lives at the application layer (both repositories are reachable via
+`UnitOfWork`), not inside `Sequence`'s own domain layer, which has no business
+depending on `Lead`'s enums.
+
+**A real persistence design gap found and solved, not glossed over:** this
+codebase had no existing precedent for persisting an *owned, immutable,
+ordered list* of value objects on an aggregate (`Assessment.evidence: list
+[Evidence]` isn't persisted as a column at all). `Lead → Discovery` looked
+similar but is the wrong shape (a sibling aggregate with its own identity/
+repository, not owned data). Shipped a proper child table (`sequence_touches`,
+ordered by a `position` column, `cascade="all, delete-orphan"`), owned
+entirely by `SequenceMapper` -- no separate `Touch` repository, since touches
+are set once at creation and never mutated afterward. Also hit and fixed a
+real SQLAlchemy footgun along the way: `lazy="joined"` against a collection
+relationship duplicates the parent row once per child row, requiring
+`Result.unique()` everywhere it's queried; switched to `lazy="selectin"`
+instead, which sidesteps it entirely (a separate `WHERE ... IN (...)` query)
+while still eager-loading (required for async).
+
+**Scope calls made explicit:** `advance()`/`record_reply()`/`record_bounce()`
+have no automated caller yet -- no real send mechanism (9.3) and no reply-
+classification pipeline (EPIC-10) exist -- so they're operator/test-triggered
+via the API today, the same transparency EPIC-16's own gate methods had before
+anything called them automatically. "No-reply" is not a third branch alongside
+reply/bounce -- it's the default `advance()` progression; a sequence
+completing naturally (no reply within any touch's window) *is* the no-reply
+branch the AC asks for.
+
+Live-verified against the real running backend (zero AI/Tavily calls): created
+a `Sequence` against a real seeded, not-yet-approved Lead; `start()` correctly
+returned 409 (`"Lead must be approved via the review gate before starting a
+Sequence."`); submitted and approved the Lead via the existing EPIC-16
+endpoints; `start()` then succeeded; drove the sequence through `advance()`
+three times to natural completion (`Draft → Active → ... → Completed`);
+separately created and started two fresh sequences against an
+already-approved Lead and confirmed both `record_reply()` (→ `Stopped`/
+`"replied"`) and `record_bounce()` (→ `Stopped`/`"bounced"`) branches;
+confirmed `GET /sequences?lead_id=` lists them. Backend suite:
+**828 passing** (up from 775).
 
 ### EPIC-10 — Reply intelligence & meeting booking (13 pts) · Track 2
 
@@ -627,21 +755,176 @@ dormant in live use. See the Risk Register entry and EPIC-06's notes above.
 | 10.2 | As a prospect, I want a fast, correct scheduling reply when I say yes | On "interested": suggest meeting times (calendar integration) + draft scheduling reply | 5 |
 | 10.3 | As the platform, I want Lead status to reflect real engagement | `Lead.status`/`LeadScore` updated from classified replies, not only internal qualification | 3 |
 
-### EPIC-11 — Deliverability & compliance (13 pts) · Track 2
+### EPIC-11 — Deliverability & compliance (13 pts) · Track 2 · `[x]` Done — Sprint 16
 
-| ID | Story | Acceptance Criteria | Pts |
-|---|---|---|---|
-| 11.1 | As the platform, I want a persisted do-not-contact list checked before every send | New suppression list; every send path checks it first | 5 |
-| 11.2 | As the platform, I want bounce/complaint handling | Auto-suppress on bounce/complaint webhook | 3 |
-| 11.3 | As the platform, I want jurisdiction-aware consent rules | Compliance ruleset keyed off `CompanyResearchRequest.geography`/Lead's company geography (CAN-SPAM/GDPR/TCPA variants) | 5 |
+| ID | Story | Acceptance Criteria | Pts | Status |
+|---|---|---|---|---|
+| 11.1 | As the platform, I want a persisted do-not-contact list checked before every send | New suppression list; every send path checks it first | 5 | `[x]` Done — see finding below |
+| 11.2 | As the platform, I want bounce/complaint handling | Auto-suppress on bounce/complaint webhook | 3 | `[x]` Done |
+| 11.3 | As the platform, I want jurisdiction-aware consent rules | Compliance ruleset keyed off `CompanyResearchRequest.geography`/Lead's company geography (CAN-SPAM/GDPR/TCPA variants) | 5 | `[x]` Done — see scope note below |
 
-### EPIC-12 — Outcome feedback loop (13 pts) · Track 3
+**Same verified fact EPIC-16 already established, re-confirmed fresh:**
+no send/outreach mechanism exists anywhere in this codebase (`EmailSender`
+is an unused port, zero implementations, zero callers; EPIC-09 is still
+Backlog). So 11.1's "checked before every send" has no real call site to
+hook into yet. Resolved the same honest way EPIC-16.3 was: built the real,
+working suppression list end-to-end (domain aggregate, persistence, API),
+documented the gap explicitly, and additionally wired it into a screen
+that *does* exist today — EPIC-16's `GET /leads/{id}/review` now also
+returns `contact_email_suppressed: bool`, so a reviewer approving a Lead
+can see whether its contact is already on the do-not-contact list, before
+any send path exists to enforce it automatically.
 
-| ID | Story | Acceptance Criteria | Pts |
-|---|---|---|---|
-| 12.1 | As the platform, I want outcomes persisted against the originating Lead | New `OutcomeEvent` (meeting_booked / won / lost / no_response) | 5 |
-| 12.2 | As an operator, I want a periodic recalibration pass | Offline job reviewing which evidence types correlated with booked meetings, feeding back into `QualificationScorer` weights per Domain Profile | 8 |
-| **—** | **Milestone gate, not dev effort** | This epic's dev work can complete in Sprint 17, but Story 12.2 needs 2–4 weeks of live pipeline usage generating real outcomes before recalibration produces anything meaningful. Track as a calendar gate, not sprint capacity. | — |
+**11.3 scope note:** the AC names two geography sources
+(`CompanyResearchRequest.geography` and "Lead's company geography").
+`CompanyResearchRequest.geography` is a request-time-only string with no
+persisted counterpart — gone by the time a Lead is actually contacted.
+Only `Company.country` (reached via `Lead.company_id`) can be
+authoritative at send time, so that's what `GET
+/leads/{id}/compliance-ruleset` resolves against. `Company.country` is
+unvalidated free text (no ISO codes) — resolution is an explicit,
+maintainable string-lookup table (`JurisdictionResolver`), not fuzzy
+matching, and an unrecognized/missing country conservatively falls back
+to the strictest known ruleset (opt-in), never a permissive guess.
+Rulesets themselves are the platform's own guardrail defaults, not legal
+advice — same "data-driven config, not hardcoded logic" pattern as Track
+1's `DomainProfile` (`app/infrastructure/configuration/compliance_rulesets/`,
+mirroring `domain_profiles/`'s exact loader shape).
+
+**Shipped:** new bounded context `app/domain/suppression/`
+(`SuppressionEntry` aggregate, create-only — no lifecycle transitions to
+guard) + `app/domain/compliance/` (`ComplianceRuleset` value object,
+`JurisdictionResolver` service). New `suppression_entries` table
+(migration `d532a1622ed8`), `SuppressionRepository`/`suppression_repository`
+wired onto `UnitOfWork` as a non-abstract property (matching the
+`recommendation_repository`/`user_repository` precedent, not the original
+six's hard-`@abstractmethod` pattern). Endpoints: `POST /suppressions`
+(idempotent — re-suppressing an already-suppressed email returns the
+existing record, not a 409, since it's a no-op-success not a conflict),
+`GET /suppressions`, `GET /suppressions/check?email=...`, `DELETE
+/suppressions/{id}` (lift); `GET /leads/{id}/compliance-ruleset`; `GET
+/compliance/rulesets` (a visibility/debug listing, same spirit as `GET
+/admin/ai-config`).
+
+**This app's first webhook endpoint** (`POST /webhooks/email-events`) —
+genuinely new infrastructure, no prior pattern existed. A third-party
+caller can't carry a JWT bearer token, so it's mounted un-gated at the
+composition root (like `/auth/login`/`/health`) but verifies its own
+shared secret instead (`X-Webhook-Secret` header, constant-time
+comparison via `hmac.compare_digest`, new `WebhookSettings`/
+`EMAIL_WEBHOOK_SECRET`). **Fails closed**: an unconfigured (blank) secret
+rejects every request rather than accepting everything. Payload is
+deliberately provider-agnostic (`{email, event_type, reason,
+occurred_at}`) rather than shaped after one specific ESP's real webhook
+schema, since this app doesn't integrate a real one yet.
+
+**Live-verified against the real running backend** (zero AI/Tavily
+calls): manually suppressed a real seeded Contact's email (Meridian
+Logistics Group) and confirmed `GET /leads/{id}/review` correctly flipped
+`contact_email_suppressed` to `true`, then lifted it and confirmed it
+reverted to `false`; confirmed re-suppressing the same email is
+idempotent (returns the same entry, no duplicate); posted a real bounce
+webhook with the correct shared secret (200, entry created) and with a
+wrong/missing secret (clean 401s, handler never invoked); resolved
+`/leads/{id}/compliance-ruleset` for the same real Lead (`Company.country:
+"US"`) and confirmed it returned the CAN-SPAM ruleset; confirmed `GET
+/compliance/rulesets` lists all three loaded rulesets (US/EU/DEFAULT).
+Backend suite: **710 passing** (up from 662).
+
+### EPIC-12 — Outcome feedback loop (13 pts) · Track 3 · `[x]` Done — Sprint 17
+
+| ID | Story | Acceptance Criteria | Pts | Status |
+|---|---|---|---|---|
+| 12.1 | As the platform, I want outcomes persisted against the originating Lead | New `OutcomeEvent` (meeting_booked / won / lost / no_response) | 5 | `[x]` Done |
+| 12.2 | As an operator, I want a periodic recalibration pass | Offline job reviewing which evidence types correlated with booked meetings, feeding back into `QualificationScorer` weights per Domain Profile | 8 | `[x]` Done — see scope note below |
+| **—** | **Milestone gate, not dev effort** | This epic's dev work can complete in Sprint 17, but Story 12.2 needs 2–4 weeks of live pipeline usage generating real outcomes before recalibration produces anything meaningful. Track as a calendar gate, not sprint capacity. | — | Gate still open — see below |
+
+The formally-listed dependencies (EPIC-10, EPIC-11) were not both met: EPIC-11 is
+Done, but EPIC-10 (reply intelligence) is still Backlog. This epic was pulled
+forward out of order for the same zero-AI-quota reason as Sprints 12 and 16 --
+`OutcomeEvent` persistence and the recalibration mechanism don't need reply
+classification to exist, only a Lead to record an outcome against.
+
+**Two things about today's codebase shaped the honest scope, verified by reading
+the code directly before writing anything:**
+
+- **"Evidence types" that could correlate with outcomes were not persisted
+  anywhere against a Lead.** `QualificationScorer.score()` already consumed a
+  `signals: dict[str, bool]` (6 fixed categories: hiring/growth/technology/ai/
+  process/funding, from `EvidenceSignalExtractor`) to help compute
+  `qualification_score`, but that dict was discarded before reaching
+  `CompanySearchResult`, and `PromoteCandidateToLeadHandler` only ever threaded
+  the flat score/free-text notes into `CreateLeadCommand`. **Fixed as part of
+  12.2**, the same way EPIC-16 found and fixed a real pre-existing persistence
+  gap: `CompanySearchResult` now carries `evidence_signals`, `Lead` gained a
+  matching `evidence_signals: dict[str, bool] | None` field (six flat nullable
+  `Boolean` columns at the persistence layer -- this codebase has no JSON-column
+  precedent anywhere, and the signal set is small and fixed, so flat columns fit
+  its existing convention better than introducing one), and
+  `PromoteCandidateToLeadHandler` threads it through. `NULL` across all six means
+  "not captured" (e.g. a manually-created Lead), distinct from `False`.
+- **`DomainProfile.scoring_weight_overrides: dict[str, float]` already existed
+  as a field** (loaded from every seed JSON) but was never read by anything.
+  `QualificationScorer.score()` now accepts an optional `weight_overrides` dict
+  (default `None` -- every existing caller behaves identically), making the
+  field consumable for the first time. **Deliberately out of scope**: nothing
+  in `search_companies_handler.py` resolves/passes a `DomainProfile` at all
+  today (confirmed zero references) -- wiring profile-selection into the live
+  search flow is a separate, larger, pre-existing gap unrelated to outcome
+  feedback, stated explicitly rather than silently absorbed into this epic.
+
+**Scope calls made explicit, not assumed:**
+1. `OutcomeEvent` is append-only, not a single flag like `SuppressionEntry` --
+   the same Lead can accumulate several events over time (`No Response` today,
+   `Meeting Booked` next month), so there is no uniqueness/idempotency guard,
+   only `list_by_lead` and `list`.
+2. The recalibration pass (`app/domain/outcome/services/
+   signal_correlation_analyzer.py` + `scripts/recalibrate_qualification_weights.py`,
+   the offline-job precedent already used for `create_user.py`/
+   `seed_demo_data.py` -- this codebase has no scheduler/cron infrastructure
+   anywhere) deliberately **stops at reporting correlation**, not auto-computing
+   new weight values. Turning "hiring signal correlates with 20% more meetings"
+   into a specific weight delta is a human judgment call, not a formula this
+   system should invent silently.
+3. The recalibration pass also refuses to report anything below a minimum
+   sample size (default 20), honoring the backlog's own "calendar gate, not
+   sprint capacity" framing rather than presenting noise as signal.
+
+**Live-verified** (zero AI/Tavily calls) against the real running backend:
+`POST /outcomes` against a real seeded Lead, confirmed via `GET /outcomes?
+lead_id=`, removed via `DELETE` (204), and a fabricated `lead_id` correctly
+returned 404. Ran `scripts/recalibrate_qualification_weights.py` against real
+data -- it honestly reported "Insufficient data: 0 Lead(s) with captured
+evidence signals, need at least 20," which is the *correct* result: no Lead in
+this database has gone through a live `search_companies` → `promote` run yet
+(that would cost real Tavily/Gemini quota), so the milestone gate the backlog
+already flags is still open. The `evidence_signals` flatten/unflatten logic
+itself (the new, real risk area this sprint) is proven by a real-database
+repository round-trip test instead of a live curl, for the same reason.
+Backend suite: **746 passing** (up from 710).
+
+**Addendum (2026-08-20, user-authorized live spend):** ran one real
+`POST /company-research/search` (2 companies, `persist_as_companies: true`,
+industries `["Manufacturing"]`, geography `"India"`) -- this session's first
+live Gemini/Tavily call, explicitly capped at 2 candidates. Confirmed
+`evidence_signals` now genuinely appears on the API response for real
+candidates (e.g. Hitchiner: `{hiring: true, growth: true, technology: true,
+ai: true, process: true, funding: true}`, qualification_score 67, Tier B,
+"Confirmed Need"), closing the `CompanySearchResult`-level half of this
+epic's previously-flagged gap. **Still not fully closed**: neither of the 2
+real candidates had a `DiscoveredContact.email`, so no Lead was created
+(`lead_creation_skipped_reason: "no_verified_email_found"` on both) -- the
+same well-documented EPIC-06/EPIC-17 limitation, not a new problem. The
+Lead-level `evidence_signals` persistence therefore still rests on the
+repository round-trip test rather than a live curl; a live Lead-level
+confirmation needs a real candidate with a verified email, which stays rare
+by design absent a real paid-enrichment vendor (EPIC-17's still-open gap).
+
+**The milestone gate is still open**: 12.2's dev work (the mechanism) is done,
+but a *meaningful* recalibration still needs 2-4 weeks of live pipeline usage
+generating real `evidence_signals` + `OutcomeEvent` data, exactly as the
+backlog originally flagged. This is a calendar gate, not remaining sprint
+capacity.
 
 ---
 
@@ -694,11 +977,12 @@ need (see architecture doc §14 for full rationale):
 | AI provider model deprecation breaks a live batch (already happened twice this session) | High | Medium | Health checks + fallback | EPIC-13 |
 | AI quota/billing exhaustion mid-batch (already happened this session) | ~~High~~ Mitigated | Medium | Budget tracking + pre-flight check — `[x]` shipped Sprint 2, live-verified | EPIC-14 |
 | Config drift (stale env var shadowing `.env` — already happened this session) | Medium | Low-Medium | Diagnostics endpoint | EPIC-15 |
-| Autonomous outreach sends something wrong/off-brand | Medium | High | Review queue gate before EPIC-09 | EPIC-16 |
-| Compliance violation (CAN-SPAM/GDPR/TCPA) from real outbound volume | Low-Medium | High (legal) | Suppression list + jurisdiction rules before real volume | EPIC-11 |
-| Discovery precision ceiling (junk candidates observed in live testing; reconfirmed Sprint 5 with a garbled directory-row name) | High | Low-Medium | Cheap tier `[x]` shipped Sprint 5; row-parsing quality still needs EPIC-17 | EPIC-02, EPIC-17 |
-| **New (Sprint 3):** Gemini per-minute rate limit (5 RPM free tier) distinct from the daily budget — concurrent fan-out can burst past it | High | Medium | Not yet mitigated — daily `AIBudgetGuard` doesn't cover RPM; needs a token-bucket/RPM limiter | Unscheduled — candidate for a Track 4 fast-follow |
-| **New (Sprint 9):** Lead creation bridge (EPIC-06) is fully shipped and tested but produces zero live Leads until a real email-enrichment source exists -- public LinkedIn discovery (EPIC-05) never surfaces an email, and `PromoteCandidateToLeadHandler` deliberately never guesses one | High (today) | Low (by design -- honest gap, not a bug) | Mitigated once EPIC-17 (Enrichment waterfall) adds a real email source; `lead_creation_skipped_reason` makes the gap visible via the API rather than silent | EPIC-17 |
-| **New (Sprint 10):** Configured Gemini model (`gemini-2.5-flash`) now returns `404 NOT_FOUND: ... no longer available to new users` on every real call -- a model deprecation, not the previously-tracked daily-quota/RPM limits | High | High (blocks every live AI call, not just a batch) | Not yet mitigated -- needs `.env`'s `GEMINI_MODEL` updated to a currently-supported model | Unscheduled — candidate for an urgent Track 4 fast-follow |
+| Autonomous outreach sends something wrong/off-brand | Medium | High (mitigation shipped) | Review queue gate — `[x]` shipped Sprint 12 on `Lead`; `Sequence.start()` (EPIC-09.1) now checks `review_status == APPROVED` before a cadence can begin -- the first real caller. Still no real send mechanism (9.3) downstream of that gate | EPIC-16, EPIC-09 |
+| Compliance violation (CAN-SPAM/GDPR/TCPA) from real outbound volume | Low-Medium | High (legal, mitigation shipped) | Suppression list + jurisdiction rules — `[x]` shipped Sprint 16 (`Company.country`-based resolution). `Sequence`-level send-path enforcement is still EPIC-09.3's job once a real sender exists | EPIC-11 |
+| Discovery precision ceiling (junk candidates observed in live testing; reconfirmed Sprint 5 with a garbled directory-row name) | ~~High~~ Lower | Low-Medium | Cheap tier `[x]` shipped Sprint 5; known-bad candidates ("Company search", "Browse by size...") now rejected pre-research — `[x]` shipped Sprint 11 (`DeterministicCandidateGate.blocked_name_markers`) | EPIC-02, EPIC-17 |
+| Gemini per-minute rate limit (5 RPM free tier) distinct from the daily budget — concurrent fan-out can burst past it (flagged Sprint 3) | ~~High~~ Mitigated | Medium | Per-provider sliding-window `AIRateLimiter` — `[x]` shipped **Aug 20, 2026** (unscheduled fast-follow, not tied to a sprint number). Gates each concrete provider call in `ApplicationAIProvider.execute()` (both primary and fallback, each keyed by the provider actually being called) via a shared in-process singleton (`get_ai_rate_limiter()`); throttles by waiting rather than failing, so `SearchCompaniesHandler`'s bounded concurrent fan-out is naturally paced instead of bursting. `AI_RATE_LIMIT_RPM_<PROVIDER>` env vars (`0` = unlimited), Gemini defaults to 5. Zero live Tavily/Gemini calls needed — proven with an injectable fake clock/sleep, same discipline as `AIBudgetGuard`'s own tests. Backend suite: **775 passing** (up from 761) | Unscheduled — Track 4 fast-follow |
+| **New (Sprint 9):** Lead creation bridge (EPIC-06) is fully shipped and tested but produces zero live Leads until a real email-enrichment source exists -- public LinkedIn discovery (EPIC-05) never surfaces an email, and `PromoteCandidateToLeadHandler` deliberately never guesses one | High (today) | Low (by design -- honest gap, not a bug) | **Not yet mitigated** -- EPIC-17 shipped Sprint 11 but deliberately did *not* add a real paid-enrichment vendor (none exists in this project; fabricating one would violate the never-guess discipline). It did add the extensibility seam (`paid_directory_port`) a real vendor would plug into. Still needs an actual vendor decision + API key -- a business/procurement call, not a code gap. `lead_creation_skipped_reason` keeps the gap visible via the API rather than silent | EPIC-17 |
+| Configured Gemini model (`gemini-2.5-flash`) returned `404 NOT_FOUND: ... no longer available to new users` on every real call -- a model deprecation, not the previously-tracked daily-quota/RPM limits (flagged Sprint 10) | ~~High~~ Mitigated | High (blocks every live AI call, not just a batch) | `[x]` Mitigated **2026-08-18** -- `.env`'s `GEMINI_MODEL` updated to `gemini-3.5-flash` (currently-supported). Live constraint going forward is just the 5 RPM free-tier rate limit, itself now mitigated -- see the `AIRateLimiter` row above | Unscheduled — Track 4 fast-follow |
+| **New (Sprint 17):** `QualificationScorer` weights are static and were never validated against real outcomes -- a bad weight could silently mis-rank Leads for a long time before anyone noticed | Medium | Medium | Mechanism shipped -- `OutcomeEvent` capture + `evidence_signals` on `Lead` + `SignalCorrelationAnalyzer` + `weight_overrides` support all exist and are tested. **Gate still open**: needs 2-4 weeks of live pipeline usage before the recalibration script has enough data to say anything (confirmed live: 0 Leads with captured signals today) | EPIC-12 |
 | Solo+AI velocity estimate is wrong | Medium | Medium (schedule slip, not scope loss) | Recalibrate after Sprint 2–3 actuals (see sprint plan) | — |
 | Scope creep beyond committed 17 epics | Medium | Medium | MoSCoW priority + Parking Lot boundary enforced | — |

@@ -18,6 +18,10 @@ class CreateLeadCommand(Command):
     source: str = "Other"
     score: int = 0
     notes: str | None = None
+    # AI-research-derived buying signals (EPIC-12). Not settable through
+    # CreateLeadRequestDTO / the public API -- only PromoteCandidateToLead
+    # Handler passes this, threading it through from CompanySearchResult.
+    evidence_signals: dict[str, bool] | None = None
 
 
 class UpdateLeadCommand(Command):
@@ -35,3 +39,23 @@ class DeleteLeadCommand(Command):
     """Command to delete a Lead."""
 
     lead_id: str
+
+
+class SubmitLeadForReviewCommand(Command):
+    """Command to submit a Lead for human review before any future outreach."""
+
+    lead_id: str
+
+
+class ApproveLeadCommand(Command):
+    """Command to approve a pending-review Lead."""
+
+    lead_id: str
+    notes: str | None = None
+
+
+class RejectLeadCommand(Command):
+    """Command to reject a pending-review Lead."""
+
+    lead_id: str
+    notes: str | None = None

@@ -31,6 +31,7 @@ from app.infrastructure.ai.providers.base_provider import BaseAIProvider
 from app.infrastructure.ai.providers.gemini_provider import GeminiProvider
 from app.infrastructure.ai.providers.openai_provider import OpenAIProvider
 from app.infrastructure.ai.usage.ai_budget_guard import AIBudgetGuard
+from app.infrastructure.ai.usage.ai_rate_limiter import AIRateLimiter
 from app.infrastructure.ai.usage.ai_usage_tracker import AIUsageTracker
 from app.infrastructure.configuration.ai_provider_settings import AIProviderSettings
 from app.infrastructure.configuration.azure_openai_settings import AzureOpenAISettings
@@ -108,6 +109,10 @@ def build_ai_execution_service() -> AIExecutionService:
     automatically retries against the next configured provider instead of
     failing the whole request. Every call (success or failure) is logged
     via ``AIUsageTracker`` for budget tracking -- see ``build_ai_budget_guard``.
+    Also wires the shared ``AIRateLimiter`` singleton (see
+    ``get_ai_rate_limiter``) so concurrent fan-out can't burst past a
+    provider's per-minute limit even though this function itself builds a
+    fresh ``ApplicationAIProvider`` on every call.
     """
 
     providers = build_ai_providers()
@@ -118,6 +123,7 @@ def build_ai_execution_service() -> AIExecutionService:
         providers=providers,
         fallback_order=fallback_settings.fallback_list(),
         default_models=default_models,
+        rate_limiter=get_ai_rate_limiter(),
     )
     return AIExecutionService(
         application_provider,
@@ -129,6 +135,22 @@ def build_ai_budget_guard() -> AIBudgetGuard:
     """Assemble an ``AIBudgetGuard`` backed by the same usage log."""
 
     return AIBudgetGuard(tracker=AIUsageTracker())
+
+
+# Loaded once, at process scope, same singleton pattern as
+# get_directory_adapter (app/presentation/api/dependencies/company_research.py)
+# -- unlike AIBudgetGuard (state lives in the DB, safe to rebuild per
+# request), an in-process RPM limiter's state (recent call timestamps) must
+# survive across requests and across one request's concurrent fan-out, or
+# it limits nothing.
+_ai_rate_limiter: AIRateLimiter | None = None
+
+
+def get_ai_rate_limiter() -> AIRateLimiter:
+    global _ai_rate_limiter
+    if _ai_rate_limiter is None:
+        _ai_rate_limiter = AIRateLimiter()
+    return _ai_rate_limiter
 
 
 def default_ai_provider() -> str:

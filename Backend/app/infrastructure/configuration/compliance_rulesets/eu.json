@@ -1,0 +1,9 @@
+{
+  "jurisdiction_code": "EU",
+  "regime_name": "GDPR",
+  "consent_model": "opt-in",
+  "requires_unsubscribe_link": true,
+  "requires_physical_address": false,
+  "cooldown_days": null,
+  "notes": "EU GDPR: affirmative opt-in consent is required before any marketing contact; an unsubscribe mechanism must remain available. Platform default, not legal advice."
+}

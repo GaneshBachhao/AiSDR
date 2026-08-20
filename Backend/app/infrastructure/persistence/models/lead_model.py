@@ -7,10 +7,11 @@ Contact details are owned by the Contact aggregate.
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from sqlalchemy import Boolean, ForeignKey, String
+from sqlalchemy import Boolean, DateTime, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID as PostgreSQLUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -69,6 +70,43 @@ class LeadModel(BaseModel):
         nullable=False,
         default=False,
     )
+
+    review_status: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        default="Not Submitted",
+    )
+
+    review_submitted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    review_decided_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    review_notes: Mapped[str | None] = mapped_column(
+        String(2000),
+        nullable=True,
+    )
+
+    # Buying-signal categories detected at creation time by AI research
+    # (EPIC-12). NULL means "not captured" (e.g. a manually-created Lead
+    # that never went through company_research) -- distinct from False,
+    # which means the category was checked for and absent.
+    signal_hiring: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+
+    signal_growth: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+
+    signal_technology: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+
+    signal_ai: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+
+    signal_process: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+
+    signal_funding: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
 
     company: Mapped[CompanyModel] = relationship(
         "CompanyModel",

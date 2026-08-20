@@ -53,14 +53,29 @@ class DeterministicCandidateGate:
         "whitepaper",
         "brochure",
     )
+    # Nav/filter-UI phrases observed being scraped as a "company name" from
+    # garbled directory-row parses in live testing (EPIC-17), e.g. "Company
+    # search" and "Browse by size: 51-200 employees" -- see
+    # docs/pamacore_aisdr_summary.md's discovery-precision notes.
+    DEFAULT_BLOCKED_NAME_MARKERS = (
+        "company search",
+        "browse by",
+        "search results",
+        "filter by",
+        "sort by",
+        "view all",
+        "see all",
+    )
 
     def __init__(
         self,
         blocked_domains: frozenset[str] | None = None,
         blocked_title_markers: tuple[str, ...] | None = None,
+        blocked_name_markers: tuple[str, ...] | None = None,
     ) -> None:
         self.blocked_domains = blocked_domains or self.DEFAULT_BLOCKED_DOMAINS
         self.blocked_title_markers = blocked_title_markers or self.DEFAULT_BLOCKED_TITLE_MARKERS
+        self.blocked_name_markers = blocked_name_markers or self.DEFAULT_BLOCKED_NAME_MARKERS
 
     def evaluate(self, candidate: CompanyCandidate) -> GateDecision:
         name = candidate.company_name.strip()
@@ -81,6 +96,8 @@ class DeterministicCandidateGate:
             return GateDecision(False, "blocked_document")
         if any(marker in title for marker in self.blocked_title_markers):
             return GateDecision(False, "non_company_result_title")
+        if any(marker in name.casefold() for marker in self.blocked_name_markers):
+            return GateDecision(False, "non_company_result_name")
         if len(name) < 3 or len(name) > 120:
             return GateDecision(False, "invalid_company_name_length")
         return GateDecision(True, "accepted")

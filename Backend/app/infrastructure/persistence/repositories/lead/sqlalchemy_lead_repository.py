@@ -28,6 +28,26 @@ class SqlAlchemyLeadRepository(
     def __init__(self, session: AsyncSession) -> None:
         super().__init__(session=session, mapper=LeadMapper())
 
+    async def update(self, entity: Lead) -> None:
+        """
+        Update the already-persisted ORM row in place.
+
+        The generic base `update()` (`session.merge(mapper.to_model(entity))`)
+        merges a freshly-constructed model that never sets the BaseModel
+        audit-mixin columns (created_by/updated_by/is_deleted/deleted_at),
+        silently clobbering them back to their Python defaults on every
+        save -- the same bug class already found and fixed for
+        Recommendation/Company/Assessment/User. `LeadMapper.update_model()`
+        already existed for exactly this but was never called by anything
+        until now.
+        """
+        model = await self._session.get(LeadModel, entity.id.value)
+
+        if model is None:
+            return
+
+        self.mapper.update_model(model, entity)
+
     async def list(
         self,
         company_id: CompanyId | None = None,

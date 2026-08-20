@@ -116,6 +116,7 @@ class CompanyResearchMapper:
             public_contact_channel=website,
             discovery_metadata=outcome.candidate.discovery_metadata,
             qualification_score=outcome.score.total,
+            evidence_signals=outcome.signals,
             priority_tier=outcome.score.tier,
             recommended_outreach_angle=(
                 f"Because {observation}, {outcome.candidate.company_name} may be worth reviewing "

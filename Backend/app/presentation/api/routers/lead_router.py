@@ -8,12 +8,22 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Query, Response, status
 
+from app.application.compliance.dto.compliance_responses import (
+    LeadComplianceRulesetResponseDTO,
+)
 from app.application.lead.dto.lead_requests import (
     CreateLeadRequestDTO,
+    LeadReviewDecisionRequestDTO,
     UpdateLeadRequestDTO,
 )
 from app.application.lead.dto.lead_responses import LeadResponseDTO
-from app.application.lead.lead_commands import DeleteLeadCommand
+from app.application.lead.dto.lead_review_chain_response import LeadReviewChainResponseDTO
+from app.application.lead.lead_commands import (
+    ApproveLeadCommand,
+    DeleteLeadCommand,
+    RejectLeadCommand,
+    SubmitLeadForReviewCommand,
+)
 from app.application.lead.lead_mapper import LeadMapper
 from app.application.lead.lead_queries import (
     GetLeadQuery,
@@ -21,11 +31,16 @@ from app.application.lead.lead_queries import (
     SearchLeadQuery,
 )
 from app.presentation.api.dependencies.handlers import (
+    ApproveLeadHandlerDependency,
     CreateLeadHandlerDependency,
     DeleteLeadHandlerDependency,
+    GetLeadComplianceRulesetHandlerDependency,
     GetLeadHandlerDependency,
+    GetLeadReviewChainHandlerDependency,
     ListLeadHandlerDependency,
+    RejectLeadHandlerDependency,
     SearchLeadHandlerDependency,
+    SubmitLeadForReviewHandlerDependency,
     UpdateLeadHandlerDependency,
 )
 
@@ -122,6 +137,72 @@ async def update_lead(
     """Update a Lead."""
     return await handler.handle(
         LeadMapper.to_update_command(request, lead_id),
+    )
+
+
+@router.get(
+    "/{lead_id}/review",
+    response_model=LeadReviewChainResponseDTO,
+)
+async def get_lead_review_chain(
+    lead_id: str,
+    handler: GetLeadReviewChainHandlerDependency,
+) -> LeadReviewChainResponseDTO:
+    """Get the full evidence -> hypothesis -> recommendation chain for a Lead."""
+    return await handler.handle(lead_id)
+
+
+@router.get(
+    "/{lead_id}/compliance-ruleset",
+    response_model=LeadComplianceRulesetResponseDTO,
+)
+async def get_lead_compliance_ruleset(
+    lead_id: str,
+    handler: GetLeadComplianceRulesetHandlerDependency,
+) -> LeadComplianceRulesetResponseDTO:
+    """Resolve the jurisdiction-aware compliance ruleset for a Lead."""
+    return await handler.handle(lead_id)
+
+
+@router.post(
+    "/{lead_id}/submit-for-review",
+    response_model=LeadResponseDTO,
+)
+async def submit_lead_for_review(
+    lead_id: str,
+    handler: SubmitLeadForReviewHandlerDependency,
+) -> LeadResponseDTO:
+    """Submit a Lead for human review before any future outreach."""
+    return await handler.handle(SubmitLeadForReviewCommand(lead_id=lead_id))
+
+
+@router.post(
+    "/{lead_id}/approve",
+    response_model=LeadResponseDTO,
+)
+async def approve_lead(
+    lead_id: str,
+    handler: ApproveLeadHandlerDependency,
+    request: LeadReviewDecisionRequestDTO | None = None,
+) -> LeadResponseDTO:
+    """Approve a pending-review Lead."""
+    return await handler.handle(
+        ApproveLeadCommand(lead_id=lead_id, notes=request.notes if request else None),
+    )
+
+
+@router.post(
+    "/{lead_id}/reject",
+    response_model=LeadResponseDTO,
+)
+async def reject_lead(
+    lead_id: str,
+    handler: RejectLeadHandlerDependency,
+    request: LeadReviewDecisionRequestDTO | None = None,
+) -> LeadResponseDTO:
+    """Reject a pending-review Lead. It can be resubmitted afterward."""
+    return await handler.handle(
+        RejectLeadCommand(lead_id=lead_id, notes=request.notes if request else None),
     )
 
 
