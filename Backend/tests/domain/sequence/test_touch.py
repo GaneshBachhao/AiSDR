@@ -22,3 +22,15 @@ def test_allows_zero_wait_days() -> None:
     touch = Touch(channel=TouchChannel.EMAIL, wait_days=0)
 
     assert touch.wait_days == 0
+
+
+def test_content_defaults_to_none() -> None:
+    touch = Touch(channel=TouchChannel.EMAIL, wait_days=0)
+
+    assert touch.content is None
+
+
+def test_accepts_content() -> None:
+    touch = Touch(channel=TouchChannel.EMAIL, wait_days=0, content="Hi there...")
+
+    assert touch.content == "Hi there..."

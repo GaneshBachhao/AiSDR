@@ -38,4 +38,8 @@ export class RecommendationService {
   approve(id: string): Observable<RecommendationResponseDTO> {
     return this.http.post<RecommendationResponseDTO>(`${this.base}/${id}/approve`, {});
   }
+
+  reject(id: string): Observable<RecommendationResponseDTO> {
+    return this.http.post<RecommendationResponseDTO>(`${this.base}/${id}/reject`, {});
+  }
 }

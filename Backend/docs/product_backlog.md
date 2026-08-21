@@ -684,14 +684,17 @@ with this session's ongoing zero-quota discipline. Backend suite:
 | ID | Story | Acceptance Criteria | Pts | Status |
 |---|---|---|---|---|
 | 9.1 | As the platform, I want a `Sequence` aggregate | New `app/domain/sequence`: ordered touches (email/LinkedIn/call-task), wait-time rules, branch on reply/no-reply/bounce | 8 | `[x]` Done — see scope note below |
-| 9.2 | As a sales rep, I want each touch to say something different, not repeat itself | Touch generation varies angle per step (signal-led opener → different proof point → breakup message), grounded in Lead evidence | 8 | `[ ]` Backlog — needs live AI generation |
+| 9.2 | As a sales rep, I want each touch to say something different, not repeat itself | Touch generation varies angle per step (signal-led opener → different proof point → breakup message), grounded in Lead evidence | 8 | `[x]` Done — see scope note below |
 | 9.3 | As the platform, I want channel adapters | Email adapter (SMTP/provider API) at minimum; LinkedIn/call-task per the "engagement channels" decision in the architecture doc | 5 | `[ ]` Backlog — needs real channel credentials |
 
-**Only 9.1 was in scope this pass, deliberately** — 9.2 needs live Gemini calls
-to generate varied touch content and 9.3 needs real third-party channel
-credentials (SMTP/LinkedIn API) this project doesn't have configured. Same
+**9.1 shipped first, deliberately, as its own pass** — 9.2 needed live Gemini
+calls to generate varied touch content, and at the time 9.3 needed real
+third-party channel credentials this project doesn't have configured. Same
 honest-scoping discipline as EPIC-12/EPIC-17: ship the real, useful piece that's
 buildable now, document what's still gated and why, rather than a placeholder.
+9.2 was picked up in a second pass once the user explicitly authorized a
+capped live-AI spend (mirroring the earlier `search_companies` live test) --
+9.3 remains blocked on real credentials this project still doesn't have.
 
 **Why 9.1 is a full vertical slice (domain + persistence + application + API),
 not just domain classes:** a `Sequence` is fully definable today without AI
@@ -746,6 +749,62 @@ already-approved Lead and confirmed both `record_reply()` (→ `Stopped`/
 `"replied"`) and `record_bounce()` (→ `Stopped`/`"bounced"`) branches;
 confirmed `GET /sequences?lead_id=` lists them. Backend suite:
 **828 passing** (up from 775).
+
+**9.2 — Touch content generation (2026-08-21, user-authorized live spend):**
+The first prose-generation AI call site outside `CreateRecommendationHandler`
+(EPIC-04) -- deliberately mirrors that handler's shape (`AIExecutionService`
+injected directly into an application handler, provider/model from the same
+composition helpers, a "refuse to generate from nothing" gate before ever
+calling AI) instead of inventing new AI-calling conventions. Corrects an
+earlier research finding from this same session: outreach prose generation
+via AI was *not* new to this codebase -- `CreateRecommendationHandler`
+already AI-generates `Solution.title`/`description` text; that handler (not
+the classification-only identity-verification adapter) is the real
+precedent this followed, including its `_has_meaningful_content()`-style
+gate, done here via `LeadEvidenceContext.has_meaningful_content()` raising
+`ValidationException` (422) rather than a raw `ValueError` (an inconsistency
+in the older handler this one deliberately didn't copy).
+
+Each touch's angle is derived purely from its position -- touch 0 is always
+the signal-led opener (wins even in a single-touch sequence), the last touch
+(when there's more than one) is the breakup message, everything between is a
+numbered proof point -- and every prompt lists prior touches' angle + content
+so repetition is mechanically avoidable, not just requested. Evidence is
+gathered opportunistically from `Lead.notes`, `Lead.evidence_signals`, and
+-- at zero extra AI cost -- the Discovery/Assessment/Recommendation chain via
+the same repository calls `GetLeadReviewChainHandler` already makes. `Touch`
+gained a `content: str | None` field without reopening EPIC-09.1's "immutable
+list" persistence design: the delete-orphan-diffing problem that design
+avoided was about the touches *collection* changing shape, never about a
+scalar field on an already-positionally-stable child row -- `update_model()`
+now `zip()`s the existing (already `selectin`-loaded) model touches against
+the entity's touches and copies `content` across, a plain scalar update, not
+new orphan-handling logic. `Touch` itself stays a frozen VO; `Sequence.
+set_touch_content()` replaces the list entry via `dataclasses.replace()`.
+
+New `POST /sequences/{id}/generate-content` -- requires the Sequence to
+still be `Draft` (409 otherwise, matching `start()`'s Draft-only gate in
+spirit); pre-flight budget check via the existing `AIBudgetPort.
+ensure_batch_fits()` for the whole batch, same pattern as
+`SearchCompaniesHandler`; `AIRateLimiter` protection comes free through
+`build_ai_execution_service()`, no extra wiring needed. AI failures
+propagate as real errors -- no invented fallback-on-failure template.
+
+**Live-verified (2 real Gemini calls, the full spend for this pass, exactly
+as authorized):** created a real 2-touch Sequence against a real seeded,
+Approved Lead with a genuinely rich real Discovery/Assessment/Recommendation
+chain (`"Dispatch coordinators manually re-key shipment data between the TMS
+and the customer-facing tracking portal"`, `"Estimated 12-15 hours/week of
+coordinator time lost"`). Both touches came back genuinely different --
+touch 1 a signal-led opener naming the real referral and the real re-keying
+pain point; touch 2 a low-pressure breakup acknowledging no response, same
+underlying pain point, no repeated wording -- and neither invented any
+specific fact beyond what was actually in the Lead's real evidence, confirmed
+by reading the real chain back via `GET /leads/{id}/review` and comparing.
+Confirmed a second `generate-content` call against the now-`Active` sequence
+correctly 409s. Also confirmed the 422 "no evidence" gate against a freshly
+-created, evidence-less Lead -- that path costs zero AI quota since it fails
+before any call. Backend suite: **871 passing** (up from 828).
 
 ### EPIC-10 — Reply intelligence & meeting booking (13 pts) · Track 2
 

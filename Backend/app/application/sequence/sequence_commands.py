@@ -47,3 +47,9 @@ class RecordSequenceBounceCommand(Command):
     """Command to stop a Sequence early: a touch bounced."""
 
     sequence_id: str
+
+
+class GenerateSequenceContentCommand(Command):
+    """Command to AI-generate content for every touch in a Sequence."""
+
+    sequence_id: str

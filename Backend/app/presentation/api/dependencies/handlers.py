@@ -11,6 +11,7 @@ from typing import Annotated, Any, TypeVar
 
 from fastapi import Depends
 
+from app.application.ai.ports.ai_budget_port import AIBudgetPort
 from app.application.ai.services.ai_execution_service import AIExecutionService
 from app.application.assessment.handlers.complete_assessment_handler import (
     CompleteAssessmentHandler,
@@ -201,6 +202,9 @@ from app.application.sequence.handlers.advance_sequence_handler import (
 from app.application.sequence.handlers.create_sequence_handler import (
     CreateSequenceHandler,
 )
+from app.application.sequence.handlers.generate_sequence_content_handler import (
+    GenerateSequenceContentHandler,
+)
 from app.application.sequence.handlers.get_sequence_handler import (
     GetSequenceHandler,
 )
@@ -234,7 +238,11 @@ from app.application.suppression.handlers.record_email_event_handler import (
 from app.application.user.handlers.login_handler import LoginHandler
 from app.domain.compliance.services.jurisdiction_resolver import JurisdictionResolver
 from app.domain.compliance.value_objects.compliance_ruleset import ComplianceRuleset
-from app.infrastructure.ai.composition import build_ai_execution_service, default_ai_provider
+from app.infrastructure.ai.composition import (
+    build_ai_budget_guard,
+    build_ai_execution_service,
+    default_ai_provider,
+)
 from app.infrastructure.configuration.compliance_rulesets import load_all_compliance_rulesets
 from app.infrastructure.configuration.jwt_settings import JWTSettings
 from app.infrastructure.security.jwt_service import JWTService
@@ -1318,6 +1326,28 @@ def get_list_sequences_handler(
     return ListSequencesHandler(unit_of_work=uow)
 
 
+def get_ai_execution_service_for_sequence() -> AIExecutionService:
+    return build_ai_execution_service()
+
+
+def get_ai_budget_guard_for_sequence() -> AIBudgetPort:
+    return build_ai_budget_guard()
+
+
+def get_generate_sequence_content_handler(
+    uow: UnitOfWork = Depends(get_unit_of_work),
+    ai_execution_service: AIExecutionService = Depends(get_ai_execution_service_for_sequence),
+    budget_guard: AIBudgetPort = Depends(get_ai_budget_guard_for_sequence),
+) -> GenerateSequenceContentHandler:
+
+    return GenerateSequenceContentHandler(
+        unit_of_work=uow,
+        ai_execution_service=ai_execution_service,
+        budget_port=budget_guard,
+        ai_provider_name=default_ai_provider(),
+    )
+
+
 CreateSequenceHandlerDependency = Annotated[
     CreateSequenceHandler,
     Depends(get_create_sequence_handler),
@@ -1351,4 +1381,9 @@ GetSequenceHandlerDependency = Annotated[
 ListSequencesHandlerDependency = Annotated[
     ListSequencesHandler,
     Depends(get_list_sequences_handler),
+]
+
+GenerateSequenceContentHandlerDependency = Annotated[
+    GenerateSequenceContentHandler,
+    Depends(get_generate_sequence_content_handler),
 ]

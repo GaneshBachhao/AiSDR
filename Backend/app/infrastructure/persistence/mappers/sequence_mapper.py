@@ -1,10 +1,15 @@
 """
 Sequence persistence mapper.
 
-Touches are set once at creation and never mutated afterward, so
-update_model() only ever touches Sequence's own scalar fields -- it never
-rebuilds the touches relationship, avoiding delete-orphan diffing for
-something that's immutable by design.
+Touch channel/wait_days/position are set once at creation and never
+mutated afterward; the touches list itself never changes shape (count/
+order), so update_model() never rebuilds the touches relationship --
+avoiding delete-orphan diffing entirely. Touch.content (EPIC-09.2) is the
+one field that *does* get updated post-creation: since the list is
+positionally stable, update_model() zips the existing (already-loaded)
+model touches against the entity's touches and copies content across,
+which is a plain scalar update on already-persisted child rows, not a
+collection-shape change.
 """
 
 from __future__ import annotations
@@ -28,7 +33,11 @@ class SequenceMapper:
             id=SequenceId(model.id),
             lead_id=LeadId(model.lead_id),
             touches=[
-                Touch(channel=TouchChannel(touch.channel), wait_days=touch.wait_days)
+                Touch(
+                    channel=TouchChannel(touch.channel),
+                    wait_days=touch.wait_days,
+                    content=touch.content,
+                )
                 for touch in model.touches
             ],
             status=SequenceStatus(model.status),
@@ -56,6 +65,7 @@ class SequenceMapper:
                     position=position,
                     channel=touch.channel.value,
                     wait_days=touch.wait_days,
+                    content=touch.content,
                 )
                 for position, touch in enumerate(entity.touches)
             ],
@@ -70,4 +80,13 @@ class SequenceMapper:
         model.started_at = entity.started_at
         model.ended_at = entity.ended_at
         model.stop_reason = entity.stop_reason
+
+        # Touches never change count/order after creation -- model.touches
+        # (already loaded via lazy="selectin", ordered by position) and
+        # entity.touches are always the same length, in the same order.
+        # Only content can differ; everything else is asserted unchanged
+        # by the domain layer itself (Touch's other fields are set once).
+        for model_touch, entity_touch in zip(model.touches, entity.touches, strict=True):
+            model_touch.content = entity_touch.content
+
         return model

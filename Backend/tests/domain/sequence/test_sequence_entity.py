@@ -160,3 +160,26 @@ def test_next_touch_due_at_is_none_once_stopped() -> None:
     sequence.record_reply()
 
     assert sequence.next_touch_due_at() is None
+
+
+def test_set_touch_content_replaces_only_that_touchs_content() -> None:
+    sequence = _sequence()
+
+    sequence.set_touch_content(1, "Second touch content.")
+
+    assert sequence.touches[0].content is None
+    assert sequence.touches[1].content == "Second touch content."
+    assert sequence.touches[2].content is None
+    # Other fields on the replaced touch are untouched.
+    assert sequence.touches[1].channel is TouchChannel.LINKEDIN
+    assert sequence.touches[1].wait_days == 3
+
+
+def test_set_touch_content_out_of_range_raises() -> None:
+    sequence = _sequence()
+
+    with pytest.raises(ValueError, match="out of range"):
+        sequence.set_touch_content(3, "x")
+
+    with pytest.raises(ValueError, match="out of range"):
+        sequence.set_touch_content(-1, "x")

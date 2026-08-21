@@ -91,6 +91,11 @@
           {{ approving() ? 'Approving…' : 'Approve' }}
         </button>
       }
+      @if (r.status === 'Draft' || r.status === 'Under Review') {
+        <button type="button" class="danger" [disabled]="rejecting()" (click)="reject()">
+          {{ rejecting() ? 'Rejecting…' : 'Reject' }}
+        </button>
+      }
     </div>
   }
 </div>

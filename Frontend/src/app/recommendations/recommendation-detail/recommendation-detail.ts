@@ -28,6 +28,7 @@ export class RecommendationDetail implements OnInit {
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly submitting = signal(false);
   protected readonly approving = signal(false);
+  protected readonly rejecting = signal(false);
 
   private get id(): string {
     return this.route.snapshot.paramMap.get('id')!;
@@ -83,6 +84,25 @@ export class RecommendationDetail implements OnInit {
           'Could not approve this recommendation. Check that the API is running.',
         );
         this.approving.set(false);
+      },
+    });
+  }
+
+  reject(): void {
+    const recommendation = this.recommendation();
+    if (!recommendation) return;
+    this.rejecting.set(true);
+    this.errorMessage.set(null);
+    this.service.reject(recommendation.id).subscribe({
+      next: (updated) => {
+        this.recommendation.set(updated);
+        this.rejecting.set(false);
+      },
+      error: () => {
+        this.errorMessage.set(
+          'Could not reject this recommendation. Check that the API is running.',
+        );
+        this.rejecting.set(false);
       },
     });
   }

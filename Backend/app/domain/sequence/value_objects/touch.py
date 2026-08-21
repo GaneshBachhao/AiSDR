@@ -2,8 +2,12 @@
 Touch — one planned step in a Sequence.
 
 Immutable and identity-less: a Touch is a plan line-item owned entirely by
-its Sequence, set once at creation and never mutated afterward (only the
-owning Sequence's own progress fields change as touches actually happen).
+its Sequence, its channel/wait_days set once at creation and never mutated
+afterward (only the owning Sequence's own progress fields change as touches
+actually happen). ``content`` (EPIC-09.2) is the one field that can be set
+after creation -- see Sequence.set_touch_content(), which replaces the list
+entry with a new Touch instance rather than mutating this frozen VO in
+place.
 """
 
 from __future__ import annotations
@@ -24,6 +28,7 @@ class Touch:
 
     channel: TouchChannel
     wait_days: int
+    content: str | None = None
 
     def __post_init__(self) -> None:
         if self.wait_days < 0:

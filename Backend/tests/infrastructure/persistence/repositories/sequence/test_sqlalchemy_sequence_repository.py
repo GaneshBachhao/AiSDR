@@ -65,6 +65,32 @@ async def test_update_changes_scalar_fields_and_leaves_touches_untouched(async_s
 
 
 @pytest.mark.asyncio
+async def test_update_persists_touch_content_without_disturbing_other_touches(async_session):
+    sequence = Sequence(lead_id=LeadId(), touches=_touches())
+    repo = SqlAlchemySequenceRepository(async_session)
+    await repo.add(sequence)
+    await async_session.commit()
+
+    loaded = await repo.get_by_id(sequence.id)
+    loaded.set_touch_content(1, "Second touch: proof point about growth signals.")
+    await repo.update(loaded)
+    await async_session.commit()
+
+    reload_repo = SqlAlchemySequenceRepository(async_session)
+    reloaded = await reload_repo.get_by_id(SequenceId(sequence.id.value))
+
+    assert reloaded.touches[0].content is None
+    assert reloaded.touches[1].content == "Second touch: proof point about growth signals."
+    assert reloaded.touches[2].content is None
+    # Position/channel/wait_days untouched by the content update.
+    assert [(t.channel, t.wait_days) for t in reloaded.touches] == [
+        (TouchChannel.EMAIL, 0),
+        (TouchChannel.LINKEDIN, 3),
+        (TouchChannel.EMAIL, 4),
+    ]
+
+
+@pytest.mark.asyncio
 async def test_list_by_lead_returns_only_that_leads_sequences(async_session):
     lead_id = LeadId()
     other_lead_id = LeadId()

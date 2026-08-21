@@ -1,15 +1,17 @@
 """
 SequenceTouch ORM model.
 
-Owned entirely by SequenceModel -- no independent repository. Touches are
-set once when a Sequence is created and never mutated afterward.
+Owned entirely by SequenceModel -- no independent repository. channel/
+wait_days/position are set once when a Sequence is created and never
+mutated afterward; content (EPIC-09.2) is the one column that gets updated
+in place post-creation, via SequenceMapper.update_model().
 """
 
 from __future__ import annotations
 
 from uuid import UUID
 
-from sqlalchemy import ForeignKey, Integer, String
+from sqlalchemy import ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PostgreSQLUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -43,4 +45,9 @@ class SequenceTouchModel(BaseModel):
     wait_days: Mapped[int] = mapped_column(
         Integer,
         nullable=False,
+    )
+
+    content: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
     )

@@ -15,6 +15,7 @@ class TouchResponseDTO:
 
     channel: TouchChannel
     wait_days: int
+    content: str | None = None
 
 
 @dataclass(slots=True)

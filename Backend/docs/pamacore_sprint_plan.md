@@ -44,7 +44,7 @@ low-effort/independent epics bundled into one sprint (e.g. Sprint 1 below).
 | `[x]` Done | 11 | **Completed early: Aug 20, 2026** (planned Oct 26 – Oct 30) | EPIC-17 | 8 | **Milestone D** ⚙ Mechanism shipped — known-bad candidates now rejected pre-research; third-tier extensibility seam added, no real paid vendor integrated (see gate note below) |
 | `[x]` Done | 12 | **Completed early: Aug 19, 2026** (planned Nov 2 – Nov 6) | EPIC-16 | 13 | Nothing sends autonomously; every Lead has an inspectable evidence trail and a review gate |
 | `[>]` In Progress | 13 | **Sequence aggregate completed early: Aug 20, 2026** (planned Nov 9 – Nov 13) | EPIC-09 (part 1) | 11 | `Sequence` aggregate (8 pts) `[x]` done -- picked out of order, zero-quota; first channel adapter (story 9.3, real SMTP/LinkedIn credentials needed) still Backlog, see Sprint 13 notes below |
-| `[ ]` Planned | 14 | Nov 16 – Nov 20, 2026 | EPIC-09 (part 2) | 10 | Multi-touch variation + remaining channel adapter(s) complete |
+| `[>]` In Progress | 14 | **Touch content generation completed early: Aug 21, 2026** (planned Nov 16 – Nov 20) | EPIC-09 (part 2) | 10 | Multi-touch variation (story 9.2, 8 pts) `[x]` done -- picked out of order, user-authorized capped live-AI spend; remaining channel adapter(s) (story 9.3) still Backlog, see Sprint 14 notes below |
 | `[ ]` Planned | 15 | Nov 23 – Nov 27, 2026 | EPIC-10 | 13 | Replies are classified; meeting booking works for "interested" |
 | `[x]` Done | 16 | **Completed early: Aug 19, 2026** (planned Nov 30 – Dec 4) | EPIC-11 | 13 | **Milestone E** — suppression list, bounce handling, jurisdiction rules live; safe to run real outbound volume |
 | `[x]` Done | 17 | **Completed early: Aug 19, 2026** (planned Dec 7 – Dec 11) | EPIC-12 | 13 | **Milestone F** — outcome events captured; recalibration job built (calendar gate on real data still open, see gate note below) |
@@ -132,6 +132,7 @@ form:
 | 17 | 13 | 13 | Completed **Aug 19**, same day as Sprints 12 and 16 -- picked out of order for the same zero-quota reason (EPIC-12's dev work is CRUD + pure statistics, no AI/Tavily calls). Formally depends on EPIC-10 (still Backlog) and EPIC-11 (Done); only the EPIC-11 half was actually needed for this sprint's scope. See Sprint 17 notes below -- the calendar-gate portion of Story 12.2 remains open regardless of dev completion. |
 | 11 | 8 | 8 | Completed **Aug 20** -- the same epic Sprint 12's notes had deferred as needing real paid-API spend turned out, on rereading the code, to be only half true: EPIC-02 already shipped the cheap→Tavily fallback, so the only remaining zero-quota-buildable piece was the candidate-gate fix (17.2) plus an extensibility seam for a future paid tier (17.1), not a real vendor integration. See Sprint 11 notes below. |
 | 13 | 11 | 8 (partial) | **Sequence aggregate completed Aug 20** -- only story 9.1 (8 pts); story 9.3's channel adapter (part of the remaining 3 pts mapped to this sprint) needs real SMTP/LinkedIn credentials this project doesn't have, so it stays Backlog. First genuinely partial sprint completion this session -- see Sprint 13 notes below. |
+| 14 | 10 | 8 (partial) | **Touch content generation completed Aug 21** -- story 9.2 (8 pts), picked up in a second pass once the user explicitly authorized a capped live-Gemini spend (2 calls total). The remaining channel-adapter work originally mapped to this sprint (part of story 9.3) is unaffected -- still Backlog, still needs real SMTP/LinkedIn credentials. See Sprint 14 notes below. |
 
 Fill in "Actual" as sprints complete. After Sprint 3: compute a real average
 velocity, compare to the 10 pt/week assumption, and re-run the remaining-sprint
@@ -620,6 +621,30 @@ approved via the real EPIC-16 endpoints, advanced through natural completion,
 and separately exercised both the reply and bounce branches on fresh
 sequences. Zero live Tavily/Gemini calls. Backend suite: **828 passing** (up
 from 761).
+
+**Sprint 14 notes (2026-08-21):** Story 9.2 (touch content generation, 8
+pts) shipped -- the second genuinely partial sprint completion this session,
+and the first sprint requiring a deliberate, user-authorized live-AI spend
+(2 real Gemini calls total, capped in advance, not a batch). Full detail is
+in `product_backlog.md`'s EPIC-09 section rather than duplicated here.
+Headline points: corrected an earlier research finding from this same
+session -- AI-generated outreach prose wasn't actually new to this codebase,
+`CreateRecommendationHandler` (EPIC-04) already does it for Solution text;
+this story followed *that* handler's shape (including its "refuse to
+generate from nothing" gate) rather than the classification-only identity-
+verification adapter this session had initially assumed was the closest
+precedent. Each touch's angle (opener / proof point / breakup) is derived
+purely from position, with prior touches' content listed in every later
+prompt so repetition is mechanically avoidable. `Touch` gained a `content`
+field without reopening EPIC-09.1's immutable-list persistence design -- the
+delete-orphan-diffing problem that design avoided was about the touches
+*collection* changing shape, never a scalar field on an already-stable
+child row. Live-verified against a real seeded, Approved Lead with a
+genuinely rich Discovery/Assessment/Recommendation chain: both touches came
+back distinct and faithfully grounded in the real evidence (verified by
+reading the chain back and comparing, not just eyeballing plausibility);
+confirmed the Draft-only 409 gate and the zero-cost "no evidence" 422 gate
+both fire correctly. Backend suite: **871 passing** (up from 828).
 
 ---
 

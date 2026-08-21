@@ -12,6 +12,7 @@ from fastapi.testclient import TestClient
 
 from app.application.common.exceptions.conflict_exception import ConflictException
 from app.application.common.exceptions.not_found_exception import NotFoundException
+from app.application.common.exceptions.validation_exception import ValidationException
 from app.application.sequence.dto.sequence_responses import (
     SequenceResponseDTO,
     TouchResponseDTO,
@@ -21,6 +22,9 @@ from app.application.sequence.handlers.advance_sequence_handler import (
 )
 from app.application.sequence.handlers.create_sequence_handler import (
     CreateSequenceHandler,
+)
+from app.application.sequence.handlers.generate_sequence_content_handler import (
+    GenerateSequenceContentHandler,
 )
 from app.application.sequence.handlers.get_sequence_handler import GetSequenceHandler
 from app.application.sequence.handlers.list_sequences_handler import (
@@ -40,6 +44,7 @@ from app.domain.sequence.enums.touch_channel import TouchChannel
 from app.presentation.api.dependencies.handlers import (
     get_advance_sequence_handler,
     get_create_sequence_handler,
+    get_generate_sequence_content_handler,
     get_list_sequences_handler,
     get_record_sequence_bounce_handler,
     get_record_sequence_reply_handler,
@@ -192,3 +197,38 @@ def test_record_sequence_bounce_success_returns_200(app, client):
 
     assert response.status_code == 200
     assert response.json()["stop_reason"] == "bounced"
+
+
+def test_generate_sequence_content_success_returns_200(app, client):
+    handler = AsyncMock(spec=GenerateSequenceContentHandler)
+    handler.handle.return_value = _dto(
+        touches=[TouchResponseDTO(channel=TouchChannel.EMAIL, wait_days=0, content="Generated copy.")],
+    )
+    app.dependency_overrides[get_generate_sequence_content_handler] = lambda: handler
+
+    response = client.post(f"/sequences/{_SEQUENCE_ID}/generate-content")
+
+    assert response.status_code == 200
+    assert response.json()["touches"][0]["content"] == "Generated copy."
+
+
+def test_generate_sequence_content_not_draft_returns_409(app, client):
+    handler = AsyncMock(spec=GenerateSequenceContentHandler)
+    handler.handle.side_effect = ConflictException(
+        message="Sequence must be in Draft status to generate content."
+    )
+    app.dependency_overrides[get_generate_sequence_content_handler] = lambda: handler
+
+    response = client.post(f"/sequences/{_SEQUENCE_ID}/generate-content")
+
+    assert response.status_code == 409
+
+
+def test_generate_sequence_content_no_evidence_returns_422(app, client):
+    handler = AsyncMock(spec=GenerateSequenceContentHandler)
+    handler.handle.side_effect = ValidationException(message="This Lead has no captured evidence.")
+    app.dependency_overrides[get_generate_sequence_content_handler] = lambda: handler
+
+    response = client.post(f"/sequences/{_SEQUENCE_ID}/generate-content")
+
+    assert response.status_code == 422

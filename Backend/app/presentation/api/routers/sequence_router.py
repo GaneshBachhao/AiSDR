@@ -13,6 +13,7 @@ from app.application.sequence.dto.sequence_requests import CreateSequenceRequest
 from app.application.sequence.dto.sequence_responses import SequenceResponseDTO
 from app.application.sequence.sequence_commands import (
     AdvanceSequenceCommand,
+    GenerateSequenceContentCommand,
     RecordSequenceBounceCommand,
     RecordSequenceReplyCommand,
     StartSequenceCommand,
@@ -21,6 +22,7 @@ from app.application.sequence.sequence_mapper import SequenceMapper
 from app.presentation.api.dependencies.handlers import (
     AdvanceSequenceHandlerDependency,
     CreateSequenceHandlerDependency,
+    GenerateSequenceContentHandlerDependency,
     GetSequenceHandlerDependency,
     ListSequencesHandlerDependency,
     RecordSequenceBounceHandlerDependency,
@@ -81,6 +83,19 @@ async def start_sequence(
 ) -> SequenceResponseDTO:
     """Begin a Sequence's touch cadence. Requires the Lead to be Approved."""
     return await handler.handle(StartSequenceCommand(sequence_id=sequence_id))
+
+
+@router.post(
+    "/{sequence_id}/generate-content",
+    response_model=SequenceResponseDTO,
+)
+async def generate_sequence_content(
+    sequence_id: str,
+    handler: GenerateSequenceContentHandlerDependency,
+) -> SequenceResponseDTO:
+    """AI-generate content for every touch in a Sequence, grounded in the
+    Lead's real evidence. Requires the Sequence to still be Draft."""
+    return await handler.handle(GenerateSequenceContentCommand(sequence_id=sequence_id))
 
 
 @router.post(

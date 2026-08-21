@@ -1,18 +1,18 @@
 """
 Sequence domain aggregate.
 
-An ordered, planned cadence of touches against one Lead. Wait-time rules
-and reply/no-reply/bounce branching (EPIC-09.1) -- deliberately does not
-generate touch content (EPIC-09.2, needs live AI) or actually send
-anything (EPIC-09.3, needs real channel credentials). Nothing in this
-codebase automatically drives advance()/record_reply()/record_bounce()
-yet -- same "forward-looking infrastructure, no automated caller yet"
-shape as Lead's own review gate before EPIC-09 existed to consume it.
+An ordered, planned cadence of touches against one Lead. Wait-time rules,
+reply/no-reply/bounce branching, and per-touch content (EPIC-09.1 + 9.2) --
+deliberately does not actually send anything (EPIC-09.3, needs real channel
+credentials). Nothing in this codebase automatically drives advance()/
+record_reply()/record_bounce() yet -- same "forward-looking infrastructure,
+no automated caller yet" shape as Lead's own review gate before EPIC-09
+existed to consume it.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime, timedelta
 
 from app.domain.lead.identifiers.lead_id import LeadId
@@ -92,6 +92,23 @@ class Sequence(AggregateRoot[SequenceId]):
         self.status = SequenceStatus.STOPPED
         self.stop_reason = reason
         self.ended_at = datetime.now(UTC)
+        self.touch()
+
+    # ---------------------------------------------------------
+    # Content (EPIC-09.2)
+    # ---------------------------------------------------------
+
+    def set_touch_content(self, index: int, content: str) -> None:
+        """Set the generated content for the touch at ``index``.
+
+        Touch is a frozen VO, so this replaces the list entry with a new
+        instance rather than mutating one in place -- the touches list
+        itself never changes shape (count/order), only this one field per
+        entry, so no other invariant is affected.
+        """
+        if not 0 <= index < len(self.touches):
+            raise ValueError(f"Touch index {index} is out of range (0-{len(self.touches) - 1}).")
+        self.touches[index] = replace(self.touches[index], content=content)
         self.touch()
 
     # ---------------------------------------------------------

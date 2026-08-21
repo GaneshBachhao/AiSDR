@@ -45,7 +45,7 @@ class SequenceMapper:
             id=str(sequence.id),
             lead_id=str(sequence.lead_id),
             touches=[
-                TouchResponseDTO(channel=touch.channel, wait_days=touch.wait_days)
+                TouchResponseDTO(channel=touch.channel, wait_days=touch.wait_days, content=touch.content)
                 for touch in sequence.touches
             ],
             status=sequence.status,
