@@ -118,6 +118,9 @@ from app.application.discovery.handlers.update_discovery_handler import (
 from app.application.lead.handlers.approve_lead_handler import (
     ApproveLeadHandler,
 )
+from app.application.lead.handlers.classify_reply_handler import (
+    ClassifyReplyHandler,
+)
 from app.application.lead.handlers.create_lead_handler import (
     CreateLeadHandler,
 )
@@ -245,6 +248,7 @@ from app.infrastructure.ai.composition import (
 )
 from app.infrastructure.configuration.compliance_rulesets import load_all_compliance_rulesets
 from app.infrastructure.configuration.jwt_settings import JWTSettings
+from app.infrastructure.lead.ai_reply_classification_adapter import AiReplyClassificationAdapter
 from app.infrastructure.security.jwt_service import JWTService
 from app.infrastructure.security.password_hasher import PasswordHasher
 from app.presentation.api.dependencies.persistence import (
@@ -505,6 +509,37 @@ def get_lead_review_chain_handler(
 
     return GetLeadReviewChainHandler(
         unit_of_work=uow,
+    )
+
+
+def get_ai_execution_service_for_lead() -> AIExecutionService:
+    return build_ai_execution_service()
+
+
+def get_ai_budget_guard_for_lead() -> AIBudgetPort:
+    return build_ai_budget_guard()
+
+
+def get_reply_classification_port(
+    ai_execution_service: AIExecutionService = Depends(get_ai_execution_service_for_lead),
+) -> AiReplyClassificationAdapter:
+    return AiReplyClassificationAdapter(
+        ai_service=ai_execution_service,
+        provider_name=default_ai_provider(),
+    )
+
+
+def get_classify_reply_handler(
+    uow: UnitOfWork = Depends(get_unit_of_work),
+    budget_guard: AIBudgetPort = Depends(get_ai_budget_guard_for_lead),
+    reply_classification_port: AiReplyClassificationAdapter = Depends(get_reply_classification_port),
+) -> ClassifyReplyHandler:
+
+    return ClassifyReplyHandler(
+        unit_of_work=uow,
+        budget_port=budget_guard,
+        reply_classification_port=reply_classification_port,
+        ai_provider_name=default_ai_provider(),
     )
 
 
@@ -897,6 +932,12 @@ ApproveLeadHandlerDependency = Annotated[
 RejectLeadHandlerDependency = Annotated[
     RejectLeadHandler,
     Depends(get_reject_lead_handler),
+]
+
+
+ClassifyReplyHandlerDependency = Annotated[
+    ClassifyReplyHandler,
+    Depends(get_classify_reply_handler),
 ]
 
 

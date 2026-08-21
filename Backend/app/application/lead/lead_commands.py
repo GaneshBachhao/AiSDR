@@ -59,3 +59,10 @@ class RejectLeadCommand(Command):
 
     lead_id: str
     notes: str | None = None
+
+
+class ClassifyReplyCommand(Command):
+    """Command to classify an inbound reply and apply it to the Lead (EPIC-10.1/10.3)."""
+
+    lead_id: str
+    reply_text: str

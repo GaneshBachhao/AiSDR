@@ -35,3 +35,10 @@ class LeadReviewDecisionRequestDTO:
     """Optional body for approve/reject -- a reviewer's note on the decision."""
 
     notes: str | None = None
+
+
+@dataclass(slots=True)
+class ClassifyReplyRequestDTO:
+    """Request body for classifying an inbound reply."""
+
+    reply_text: str

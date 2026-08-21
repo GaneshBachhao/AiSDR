@@ -50,7 +50,7 @@ Fibonacci (1, 2, 3, 5, 8, 13, 21). Priority uses MoSCoW (**M**ust / **S**hould /
 | `[x]` Done | EPIC-17 | 5 | Enrichment waterfall | 8 | **S** | EPIC-02, EPIC-03 |
 | `[x]` Done | EPIC-16 | 4 | Human-in-the-loop review queue & explainability | 13 | **M** | EPIC-06 |
 | `[>]` In Progress | EPIC-09 | 2 | Multichannel sequencing engine | 21 | **M** | EPIC-16 |
-| `[ ]` Backlog | EPIC-10 | 2 | Reply intelligence & meeting booking | 13 | **M** | EPIC-09 |
+| `[>]` In Progress | EPIC-10 | 2 | Reply intelligence & meeting booking | 13 | **M** | EPIC-09 |
 | `[x]` Done | EPIC-11 | 2 | Deliverability & compliance | 13 | **M** | EPIC-09 |
 | `[x]` Done | EPIC-12 | 3 | Outcome feedback loop | 13 | **S** | EPIC-10, EPIC-11 |
 | `[ ]` Won't-now | EPIC-07 | 1 | Outreach (thin placeholder) | — | **Won't-now** | superseded by EPIC-09–11, see note |
@@ -806,13 +806,51 @@ correctly 409s. Also confirmed the 422 "no evidence" gate against a freshly
 -created, evidence-less Lead -- that path costs zero AI quota since it fails
 before any call. Backend suite: **871 passing** (up from 828).
 
-### EPIC-10 — Reply intelligence & meeting booking (13 pts) · Track 2
+### EPIC-10 — Reply intelligence & meeting booking (13 pts) · Track 2 · `[>]` In Progress
 
-| ID | Story | Acceptance Criteria | Pts |
-|---|---|---|---|
-| 10.1 | As the platform, I want inbound replies classified | New `ReplyClassificationPort`: interested / not now / objection / unsubscribe / OOO / wrong person | 5 |
-| 10.2 | As a prospect, I want a fast, correct scheduling reply when I say yes | On "interested": suggest meeting times (calendar integration) + draft scheduling reply | 5 |
-| 10.3 | As the platform, I want Lead status to reflect real engagement | `Lead.status`/`LeadScore` updated from classified replies, not only internal qualification | 3 |
+| ID | Story | Acceptance Criteria | Pts | Status |
+|---|---|---|---|---|
+| 10.1 | As the platform, I want inbound replies classified | New `ReplyClassificationPort`: interested / not now / objection / unsubscribe / OOO / wrong person | 5 | `[x]` Done |
+| 10.2 | As a prospect, I want a fast, correct scheduling reply when I say yes | On "interested": suggest meeting times (calendar integration) + draft scheduling reply | 5 | `[ ]` Backlog — blocked: no calendar API credentials configured in this project |
+| 10.3 | As the platform, I want Lead status to reflect real engagement | `Lead.status`/`LeadScore` updated from classified replies, not only internal qualification | 3 | `[x]` Done |
+
+**10.1/10.3 finding (2026-08-21, user-authorized live spend):** EPIC-10's
+formal dependency is all of EPIC-09, and EPIC-09.3 (real SMTP/LinkedIn
+channel adapters) is genuinely blocked -- this project has no real
+send-channel credentials, and fabricating one would violate the project's
+"never build a speculative integration" discipline (the same call made for
+EPIC-17's paid-enrichment vendor). But a reply classifier only needs reply
+*text* as input; it doesn't need a real inbound webhook to have delivered
+that text. This mirrors EPIC-12's own documented precedent below for
+pulling a story forward past a formally-listed but practically-irrelevant
+dependency. 10.1 and 10.3 were built as one slice: `ReplyClassificationPort`
++ `AiReplyClassificationAdapter` (mirrors `AiIdentityVerificationAdapter`'s
+JSON-mode-by-convention shape -- fenced-JSON strip, safe sentinel on any
+parse/provider failure) classifies reply text into six categories, and
+`ClassifyReplyHandler` (`POST /leads/{id}/classify-reply`, JWT-gated like
+the rest of `lead_router.py` -- deliberately not the `verify_webhook_secret`
+shared-secret tier, since the caller here is an operator, not an
+unauthenticatable real ESP) applies a documented status/score/sequence
+mapping: `INTERESTED` → `Lead.status=Qualified` + score +20 (capped 100)
++ stop any Active `Sequence`; `NOT_NOW`/`OBJECTION` → `Contacted` (+score
+-5 for `NOT_NOW` only) + stop; `UNSUBSCRIBE`/`WRONG_PERSON` → `Disqualified`
++ stop; `OUT_OF_OFFICE` → no change at all, sequence NOT stopped (an
+auto-responder isn't a real reply from the person -- the one deliberate
+asymmetry in the mapping). A malformed/unparseable AI response degrades to
+`NOT_NOW`/`LOW` confidence rather than a 500, mirroring identity
+verification's fallback discipline.
+
+Live-verified with 3 real Gemini calls against real seeded Leads (capped,
+user-authorized): a clearly "not now" reply on an Approved, Qualified
+(score 82) Lead with two real Active Sequences correctly classified
+`NotNow`/`HIGH`, dropped the Lead to `Contacted`/score 77, and stopped both
+Sequences (`stop_reason: "replied"`, confirmed via `GET /sequences`); a
+clearly "interested" reply on a fresh Lead (score 0) correctly classified
+`Interested`/`HIGH` and moved it to `Qualified`/score 20; an out-of-office
+auto-reply correctly classified `OutOfOffice`/`HIGH` and left status/score
+completely unchanged. 10.2 (calendar integration) stays Backlog, explicitly
+documented as blocked rather than attempted with a fabricated calendar
+adapter. Backend suite: **895 passing** (up from 871).
 
 ### EPIC-11 — Deliverability & compliance (13 pts) · Track 2 · `[x]` Done — Sprint 16
 

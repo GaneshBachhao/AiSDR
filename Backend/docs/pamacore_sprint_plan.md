@@ -45,7 +45,7 @@ low-effort/independent epics bundled into one sprint (e.g. Sprint 1 below).
 | `[x]` Done | 12 | **Completed early: Aug 19, 2026** (planned Nov 2 – Nov 6) | EPIC-16 | 13 | Nothing sends autonomously; every Lead has an inspectable evidence trail and a review gate |
 | `[>]` In Progress | 13 | **Sequence aggregate completed early: Aug 20, 2026** (planned Nov 9 – Nov 13) | EPIC-09 (part 1) | 11 | `Sequence` aggregate (8 pts) `[x]` done -- picked out of order, zero-quota; first channel adapter (story 9.3, real SMTP/LinkedIn credentials needed) still Backlog, see Sprint 13 notes below |
 | `[>]` In Progress | 14 | **Touch content generation completed early: Aug 21, 2026** (planned Nov 16 – Nov 20) | EPIC-09 (part 2) | 10 | Multi-touch variation (story 9.2, 8 pts) `[x]` done -- picked out of order, user-authorized capped live-AI spend; remaining channel adapter(s) (story 9.3) still Backlog, see Sprint 14 notes below |
-| `[ ]` Planned | 15 | Nov 23 – Nov 27, 2026 | EPIC-10 | 13 | Replies are classified; meeting booking works for "interested" |
+| `[>]` In Progress | 15 | **Reply classification completed early: Aug 21, 2026** (planned Nov 23 – Nov 27) | EPIC-10 | 13 | Stories 10.1 + 10.3 (8 pts) `[x]` done -- picked out of order past EPIC-09.3's channel-adapter blocker, user-authorized capped live-AI spend; story 10.2 (calendar integration, 5 pts) still Backlog, blocked on real calendar API credentials, see Sprint 15 notes below |
 | `[x]` Done | 16 | **Completed early: Aug 19, 2026** (planned Nov 30 – Dec 4) | EPIC-11 | 13 | **Milestone E** — suppression list, bounce handling, jurisdiction rules live; safe to run real outbound volume |
 | `[x]` Done | 17 | **Completed early: Aug 19, 2026** (planned Dec 7 – Dec 11) | EPIC-12 | 13 | **Milestone F** — outcome events captured; recalibration job built (calendar gate on real data still open, see gate note below) |
 
@@ -133,6 +133,7 @@ form:
 | 11 | 8 | 8 | Completed **Aug 20** -- the same epic Sprint 12's notes had deferred as needing real paid-API spend turned out, on rereading the code, to be only half true: EPIC-02 already shipped the cheap→Tavily fallback, so the only remaining zero-quota-buildable piece was the candidate-gate fix (17.2) plus an extensibility seam for a future paid tier (17.1), not a real vendor integration. See Sprint 11 notes below. |
 | 13 | 11 | 8 (partial) | **Sequence aggregate completed Aug 20** -- only story 9.1 (8 pts); story 9.3's channel adapter (part of the remaining 3 pts mapped to this sprint) needs real SMTP/LinkedIn credentials this project doesn't have, so it stays Backlog. First genuinely partial sprint completion this session -- see Sprint 13 notes below. |
 | 14 | 10 | 8 (partial) | **Touch content generation completed Aug 21** -- story 9.2 (8 pts), picked up in a second pass once the user explicitly authorized a capped live-Gemini spend (2 calls total). The remaining channel-adapter work originally mapped to this sprint (part of story 9.3) is unaffected -- still Backlog, still needs real SMTP/LinkedIn credentials. See Sprint 14 notes below. |
+| 15 | 13 | 8 (partial) | **Reply classification completed Aug 21** -- stories 10.1 + 10.3 (8 pts), picked out of order past EPIC-10's formal EPIC-09 dependency since a reply classifier only needs reply text, not a real inbound channel; user-authorized capped live-Gemini spend (3 calls total). Story 10.2 (calendar integration, 5 pts) stays Backlog -- needs real calendar API credentials this project doesn't have. See Sprint 15 notes below. |
 
 Fill in "Actual" as sprints complete. After Sprint 3: compute a real average
 velocity, compare to the 10 pt/week assumption, and re-run the remaining-sprint
@@ -645,6 +646,36 @@ back distinct and faithfully grounded in the real evidence (verified by
 reading the chain back and comparing, not just eyeballing plausibility);
 confirmed the Draft-only 409 gate and the zero-cost "no evidence" 422 gate
 both fire correctly. Backend suite: **871 passing** (up from 828).
+
+**Sprint 15 notes (2026-08-21):** Stories 10.1 (reply classification) + 10.3
+(Lead status/score update) shipped together, past EPIC-10's formally-listed
+EPIC-09 dependency -- EPIC-09.3 (real SMTP/LinkedIn channel adapters) is
+genuinely blocked on credentials this project doesn't have, but a reply
+classifier only needs reply *text*, not a real inbound channel to have
+delivered it. Same "ship the genuinely unblocked part, document the honest
+scope gap" move already used for Sprints 12, 16, and 17. New
+`ReplyClassificationPort` + `AiReplyClassificationAdapter` mirror
+`AiIdentityVerificationAdapter`'s JSON-mode-by-convention shape exactly
+(fenced-JSON strip, safe-sentinel degrade on any parse/provider failure --
+here, `NOT_NOW`/`LOW` rather than a 500). `ClassifyReplyHandler`
+(`POST /leads/{id}/classify-reply`) applies a documented status/score/
+Sequence mapping per category, with one deliberate asymmetry: `OUT_OF_
+OFFICE` changes nothing and does not stop an Active Sequence, since an
+auto-responder isn't a real reply from the person. The endpoint is
+JWT-gated like the rest of `lead_router.py`, not the `verify_webhook_
+secret` shared-secret tier used for `POST /webhooks/email-events` --
+the caller here is an operator, not an unauthenticatable real ESP, so
+reusing the webhook-secret mechanism would have reused the wrong
+justification even though the mechanism itself is reusable. Live-verified
+with 3 real Gemini calls (capped, user-authorized) against real seeded
+Leads: a "not now" reply on an Approved/Qualified (score 82) Lead with two
+real Active Sequences correctly dropped it to Contacted/score 77 and
+stopped both Sequences; an "interested" reply on a fresh Lead correctly
+qualified it and boosted score 0 → 20; an out-of-office auto-reply
+correctly left status/score completely unchanged. Story 10.2 (calendar
+integration) stays Backlog, explicitly documented as blocked rather than
+attempted with a fabricated calendar adapter. Backend suite: **895
+passing** (up from 871).
 
 ---
 

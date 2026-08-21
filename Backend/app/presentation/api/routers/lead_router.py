@@ -12,14 +12,19 @@ from app.application.compliance.dto.compliance_responses import (
     LeadComplianceRulesetResponseDTO,
 )
 from app.application.lead.dto.lead_requests import (
+    ClassifyReplyRequestDTO,
     CreateLeadRequestDTO,
     LeadReviewDecisionRequestDTO,
     UpdateLeadRequestDTO,
 )
 from app.application.lead.dto.lead_responses import LeadResponseDTO
 from app.application.lead.dto.lead_review_chain_response import LeadReviewChainResponseDTO
+from app.application.lead.dto.reply_classification_responses import (
+    ReplyClassificationResponseDTO,
+)
 from app.application.lead.lead_commands import (
     ApproveLeadCommand,
+    ClassifyReplyCommand,
     DeleteLeadCommand,
     RejectLeadCommand,
     SubmitLeadForReviewCommand,
@@ -32,6 +37,7 @@ from app.application.lead.lead_queries import (
 )
 from app.presentation.api.dependencies.handlers import (
     ApproveLeadHandlerDependency,
+    ClassifyReplyHandlerDependency,
     CreateLeadHandlerDependency,
     DeleteLeadHandlerDependency,
     GetLeadComplianceRulesetHandlerDependency,
@@ -203,6 +209,21 @@ async def reject_lead(
     """Reject a pending-review Lead. It can be resubmitted afterward."""
     return await handler.handle(
         RejectLeadCommand(lead_id=lead_id, notes=request.notes if request else None),
+    )
+
+
+@router.post(
+    "/{lead_id}/classify-reply",
+    response_model=ReplyClassificationResponseDTO,
+)
+async def classify_reply(
+    lead_id: str,
+    request: ClassifyReplyRequestDTO,
+    handler: ClassifyReplyHandlerDependency,
+) -> ReplyClassificationResponseDTO:
+    """Classify an inbound reply and apply it to the Lead (EPIC-10.1/10.3)."""
+    return await handler.handle(
+        ClassifyReplyCommand(lead_id=lead_id, reply_text=request.reply_text),
     )
 
 
