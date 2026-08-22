@@ -43,16 +43,22 @@ low-effort/independent epics bundled into one sprint (e.g. Sprint 1 below).
 | `[x]` Done | 10 | **Started early: Aug 15, 2026** (planned Oct 19–23) | EPIC-08 | 8 | The full chain is observable and resumable, not silently swallowing failures |
 | `[x]` Done | 11 | **Completed early: Aug 20, 2026** (planned Oct 26 – Oct 30) | EPIC-17 | 8 | **Milestone D** ⚙ Mechanism shipped — known-bad candidates now rejected pre-research; third-tier extensibility seam added, no real paid vendor integrated (see gate note below) |
 | `[x]` Done | 12 | **Completed early: Aug 19, 2026** (planned Nov 2 – Nov 6) | EPIC-16 | 13 | Nothing sends autonomously; every Lead has an inspectable evidence trail and a review gate |
-| `[>]` In Progress | 13 | **Sequence aggregate completed early: Aug 20, 2026** (planned Nov 9 – Nov 13) | EPIC-09 (part 1) | 11 | `Sequence` aggregate (8 pts) `[x]` done -- picked out of order, zero-quota; first channel adapter (story 9.3, real SMTP/LinkedIn credentials needed) still Backlog, see Sprint 13 notes below |
-| `[>]` In Progress | 14 | **Touch content generation completed early: Aug 21, 2026** (planned Nov 16 – Nov 20) | EPIC-09 (part 2) | 10 | Multi-touch variation (story 9.2, 8 pts) `[x]` done -- picked out of order, user-authorized capped live-AI spend; remaining channel adapter(s) (story 9.3) still Backlog, see Sprint 14 notes below |
-| `[>]` In Progress | 15 | **Reply classification completed early: Aug 21, 2026** (planned Nov 23 – Nov 27) | EPIC-10 | 13 | Stories 10.1 + 10.3 (8 pts) `[x]` done -- picked out of order past EPIC-09.3's channel-adapter blocker, user-authorized capped live-AI spend; story 10.2 (calendar integration, 5 pts) still Backlog, blocked on real calendar API credentials, see Sprint 15 notes below |
+| `[x]` Done | 13 | **Completed early: Aug 20, 2026** (planned Nov 9 – Nov 13) | EPIC-09 (9.1 only) | 8 | `Sequence` aggregate — a cadence plan (ordered touches against a real Lead) is definable and useful without AI content or real channel credentials. Sequencing's *execution* half (story 9.3) moved to Sprint 18 — see note below. |
+| `[x]` Done | 14 | **Completed early: Aug 21, 2026** (planned Nov 16 – Nov 20) | EPIC-09 (9.2 only) | 8 | Multi-touch content generation — each touch's angle (opener/proof-point/breakup) varies by position, grounded in real Lead evidence. |
+| `[x]` Done | 15 | **Completed early: Aug 21, 2026** (planned Nov 23 – Nov 27) | EPIC-10 (10.1 + 10.3 only) | 8 | Replies are classified (6 categories) and Lead status/score update accordingly. Meeting-booking's calendar half (story 10.2) moved to Sprint 18 — see note below. |
 | `[x]` Done | 16 | **Completed early: Aug 19, 2026** (planned Nov 30 – Dec 4) | EPIC-11 | 13 | **Milestone E** — suppression list, bounce handling, jurisdiction rules live; safe to run real outbound volume |
 | `[x]` Done | 17 | **Completed early: Aug 19, 2026** (planned Dec 7 – Dec 11) | EPIC-12 | 13 | **Milestone F** — outcome events captured; recalibration job built (calendar gate on real data still open, see gate note below) |
+| `[ ]` Planned — blocked | 18 | Dec 14 – Dec 18, 2026 | EPIC-09 (9.3) + EPIC-10 (10.2) | 10 | **Milestone G** — real outbound send (SMTP/LinkedIn) and real meeting-booking (calendar) go live. Everything in this sprint is customer/lead-outreach *execution* — deliberately bundled last, gated on real third-party credentials this project doesn't have yet. Not started; see note below. |
 
-**Total:** 17 sprints, ~183 points, Aug 17 → Dec 11, 2026 (~17 weeks / ~4 months) as
-originally planned. Sprint 1 actually started Aug 12 (see §5) — sprints 2–17 keep
+**Total:** 18 sprints, ~193 points, Aug 17 → Dec 18, 2026 (~18 weeks / ~4.5 months) as
+originally planned. Sprint 1 actually started Aug 12 (see §5) — sprints 2–18 keep
 their original dates for now rather than shifting the whole plan on one data point;
-revisit after Sprint 2–3 actuals per the recalibration policy below.
+revisit after Sprint 2–3 actuals per the recalibration policy below. Sprint 18 was
+split out of Sprints 13/14/15 on 2026-08-21 at the user's request: every remaining
+customer/lead-outreach-execution story (real send channels, real calendar booking)
+is now consolidated into one final sprint instead of sitting as partial/blocked
+leftovers inside earlier sprints. This is a pure re-sequencing of already-scoped,
+not-yet-startable work -- no new scope was added and no points changed epics.
 
 **EPIC-12 gate:** Sprint 17 shipped the *code* for outcome capture and
 recalibration (completed early, Aug 19). The recalibration itself still needs
@@ -70,12 +76,12 @@ need, per the backlog doc.
 ## 3. Release / Milestone View
 
 ```text
-Aug 17 ───────────────────────────────────────────────────────────────── Dec 11
-  │Sprint1-2│Sprint3-4│Sprint5-9        │Sprint10-11│Sprint12    │Sprint13-16    │S17
-  │Resilience│Trusted │Company Universe │Orchestrated│Review Gate │Trusted        │Learning
-  │Baseline  │Research│MVP (Milestone C)│& Enriched  │(Milestone  │Engagement     │Loop
-  │(Milestone│Core    │                 │(Milestone D)│pre-Track2)│Launch         │begins
-  │A)        │(Milestone B)              │           │            │(Milestone E)  │(Milestone F)
+Aug 17 ──────────────────────────────────────────────────────────────────────── Dec 18
+  │Sprint1-2│Sprint3-4│Sprint5-9        │Sprint10-11│Sprint12    │Sprint13-17    │S18
+  │Resilience│Trusted │Company Universe │Orchestrated│Review Gate │Trusted        │Live
+  │Baseline  │Research│MVP (Milestone C)│& Enriched  │(Milestone  │Engagement     │Outreach
+  │(Milestone│Core    │                 │(Milestone D)│pre-Track2)│Launch (mech.) │Cutover
+  │A)        │(Milestone B)              │           │            │(Milestone E/F)│(Milestone G)
 ```
 
 | Milestone | End of | What's demoable |
@@ -84,8 +90,9 @@ Aug 17 ────────────────────────�
 | **B — Trusted Research Core** ✅ | Reached Aug 13 (planned Sep 11) | Domain Profile + Evidence v2 — company_research's own output quality improves, independent of anything downstream |
 | **C — Company Universe MVP** ⚙ Mechanism shipped | Code shipped Aug 15 (planned Oct 16) | A qualified research candidate becomes a real Company + Contact + Lead, end-to-end, for the first time -- the code path is real, tested, and live-verified, but Contact/Lead creation is dormant until EPIC-17 adds a real email source (see Sprint 9 notes). Full-milestone claim held back deliberately rather than declared reached on a technicality. |
 | **D — Orchestrated & Enriched** ✅ | Reached Aug 20 (planned Oct 30) | The pipeline is observable/resumable (Sprint 10) and less prone to junk candidates (Sprint 11) -- both true today. Note this milestone's claim never depended on a real paid-enrichment vendor, unlike EPIC-06/EPIC-17's separate email-enrichment thread (still open, see Sprint 11 notes) -- so this one is a clean, full reach, not a partial like C/F. |
-| **E — Trusted Engagement Launch** | Sprint 16 (Dec 4) | First real multi-touch outbound campaigns can run safely (review gate + compliance both live) |
+| **E — Trusted Engagement Launch** ⚙ Mechanism shipped | Code shipped Aug 21 (planned Dec 4) | Sequencing, touch content generation, reply classification, suppression, bounce handling, and jurisdiction rules are all real, tested, and live-verified -- a cadence can be planned, its content generated, and a reply correctly classified and acted on. But nothing can actually be *sent* yet (no channel adapter, story 9.3) and "interested" replies can't yet get a real calendar slot (story 10.2) -- both deliberately deferred to Sprint 18/Milestone G, not silently assumed. |
 | **F — Self-Improving Loop** ⚙ Mechanism shipped | Code shipped Aug 19 (planned Dec 11) + 2–4 wks | `OutcomeEvent` capture, `evidence_signals` on `Lead`, and the recalibration script are real, tested, and live-verified -- but the *outcome* (scoring actually being recalibrated from real data) is still gated on 2–4 weeks of live pipeline usage (confirmed live: 0 Leads have captured signals yet). Full-milestone claim held back deliberately, same as Milestone C. |
+| **G — Live Outreach Cutover** | Sprint 18 (Dec 18) | Real send channels (SMTP/LinkedIn, story 9.3) and real calendar booking (story 10.2) go live -- the two remaining pieces of customer/lead-outreach *execution*, both gated on real third-party credentials this project doesn't have configured yet. This is the last sprint by design: every other mechanism (planning, content, classification, compliance, learning loop) is already live and waiting on this. |
 
 ---
 
@@ -131,9 +138,10 @@ form:
 | 16 | 13 | 13 | Completed **Aug 19**, same day as Sprint 12 -- also picked out of order for the same zero-quota reason (EPIC-11 is pure CRUD/domain logic, no AI/Tavily calls). Sprint 16 now precedes Sprints 13-15 in actual completion order even though it's numbered after them -- see Sprint 16 notes below. |
 | 17 | 13 | 13 | Completed **Aug 19**, same day as Sprints 12 and 16 -- picked out of order for the same zero-quota reason (EPIC-12's dev work is CRUD + pure statistics, no AI/Tavily calls). Formally depends on EPIC-10 (still Backlog) and EPIC-11 (Done); only the EPIC-11 half was actually needed for this sprint's scope. See Sprint 17 notes below -- the calendar-gate portion of Story 12.2 remains open regardless of dev completion. |
 | 11 | 8 | 8 | Completed **Aug 20** -- the same epic Sprint 12's notes had deferred as needing real paid-API spend turned out, on rereading the code, to be only half true: EPIC-02 already shipped the cheap→Tavily fallback, so the only remaining zero-quota-buildable piece was the candidate-gate fix (17.2) plus an extensibility seam for a future paid tier (17.1), not a real vendor integration. See Sprint 11 notes below. |
-| 13 | 11 | 8 (partial) | **Sequence aggregate completed Aug 20** -- only story 9.1 (8 pts); story 9.3's channel adapter (part of the remaining 3 pts mapped to this sprint) needs real SMTP/LinkedIn credentials this project doesn't have, so it stays Backlog. First genuinely partial sprint completion this session -- see Sprint 13 notes below. |
-| 14 | 10 | 8 (partial) | **Touch content generation completed Aug 21** -- story 9.2 (8 pts), picked up in a second pass once the user explicitly authorized a capped live-Gemini spend (2 calls total). The remaining channel-adapter work originally mapped to this sprint (part of story 9.3) is unaffected -- still Backlog, still needs real SMTP/LinkedIn credentials. See Sprint 14 notes below. |
-| 15 | 13 | 8 (partial) | **Reply classification completed Aug 21** -- stories 10.1 + 10.3 (8 pts), picked out of order past EPIC-10's formal EPIC-09 dependency since a reply classifier only needs reply text, not a real inbound channel; user-authorized capped live-Gemini spend (3 calls total). Story 10.2 (calendar integration, 5 pts) stays Backlog -- needs real calendar API credentials this project doesn't have. See Sprint 15 notes below. |
+| 13 | 8 | 8 | **Sequence aggregate completed Aug 20** -- story 9.1, a full vertical slice, definable and useful without AI content or real channel credentials. Re-scoped 2026-08-21: story 9.3 (channel adapter) was originally mapped partly to this sprint's points but never this sprint's *work*; it now lives entirely in Sprint 18 with EPIC-10.2, so this sprint's planned/actual both reflect 9.1 alone. See Sprint 13 notes below. |
+| 14 | 8 | 8 | **Touch content generation completed Aug 21** -- story 9.2, picked up in a second pass once the user explicitly authorized a capped live-Gemini spend (2 calls total). Re-scoped 2026-08-21 for the same reason as Sprint 13 -- planned/actual now reflect 9.2 alone; the channel-adapter remainder lives in Sprint 18. See Sprint 14 notes below. |
+| 15 | 8 | 8 | **Reply classification completed Aug 21** -- stories 10.1 + 10.3, picked out of order past EPIC-10's formal EPIC-09 dependency since a reply classifier only needs reply text, not a real inbound channel; user-authorized capped live-Gemini spend (3 calls total). Re-scoped 2026-08-21 -- story 10.2 (calendar integration) now lives in Sprint 18 with EPIC-09.3, so this sprint's planned/actual both reflect 10.1+10.3 alone. See Sprint 15 notes below. |
+| 18 | 10 | — | **Not started.** EPIC-09.3 (channel adapters, 5 pts) + EPIC-10.2 (calendar integration, 5 pts) -- consolidated here 2026-08-21 at the user's request, so every remaining customer/lead-outreach-*execution* story sits in one final sprint instead of scattered as partial leftovers across 13/14/15. Both stories are blocked on the same class of thing: real third-party credentials (SMTP/LinkedIn, calendar API) this project doesn't have configured. Nothing to build until those are supplied. |
 
 Fill in "Actual" as sprints complete. After Sprint 3: compute a real average
 velocity, compare to the 10 pt/week assumption, and re-run the remaining-sprint
@@ -676,6 +684,23 @@ correctly left status/score completely unchanged. Story 10.2 (calendar
 integration) stays Backlog, explicitly documented as blocked rather than
 attempted with a fabricated calendar adapter. Backend suite: **895
 passing** (up from 871).
+
+**Sprint 18 (planned, not started) — re-sequencing note (2026-08-21):** at
+the user's request, every remaining customer/lead-outreach-*execution*
+story was pulled out of Sprints 13/14/15 (where it sat as partial/blocked
+leftovers) and consolidated into one final sprint: EPIC-09.3 (real
+SMTP/LinkedIn channel adapters, 5 pts) + EPIC-10.2 (calendar integration
+for meeting booking, 5 pts). Both are the only two pending stories left in
+the entire 18-sprint plan — everything else is Done. Both are blocked on
+the same class of thing (real third-party credentials this project doesn't
+have configured), and both are, in substance, the same kind of work: making
+the platform actually touch a real customer/lead-facing channel rather than
+plan/generate/classify around one. Grouping them last means every other
+mechanism -- sequencing, content generation, reply classification,
+suppression/compliance, and the outcome-learning loop -- is already fully
+built and live-verified, waiting only on real credentials to flip on. This
+is a pure re-sequencing of already-scoped work; no new scope was added and
+no points moved between epics, only between sprints.
 
 ---
 

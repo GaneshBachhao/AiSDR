@@ -685,7 +685,7 @@ with this session's ongoing zero-quota discipline. Backend suite:
 |---|---|---|---|---|
 | 9.1 | As the platform, I want a `Sequence` aggregate | New `app/domain/sequence`: ordered touches (email/LinkedIn/call-task), wait-time rules, branch on reply/no-reply/bounce | 8 | `[x]` Done — see scope note below |
 | 9.2 | As a sales rep, I want each touch to say something different, not repeat itself | Touch generation varies angle per step (signal-led opener → different proof point → breakup message), grounded in Lead evidence | 8 | `[x]` Done — see scope note below |
-| 9.3 | As the platform, I want channel adapters | Email adapter (SMTP/provider API) at minimum; LinkedIn/call-task per the "engagement channels" decision in the architecture doc | 5 | `[ ]` Backlog — needs real channel credentials |
+| 9.3 | As the platform, I want channel adapters | Email adapter (SMTP/provider API) at minimum; LinkedIn/call-task per the "engagement channels" decision in the architecture doc | 5 | `[ ]` Backlog — needs real channel credentials, scheduled Sprint 18 |
 
 **9.1 shipped first, deliberately, as its own pass** — 9.2 needed live Gemini
 calls to generate varied touch content, and at the time 9.3 needed real
@@ -695,6 +695,13 @@ buildable now, document what's still gated and why, rather than a placeholder.
 9.2 was picked up in a second pass once the user explicitly authorized a
 capped live-AI spend (mirroring the earlier `search_companies` live test) --
 9.3 remains blocked on real credentials this project still doesn't have.
+
+**9.3 scheduling note (2026-08-21):** at the user's request, every remaining
+customer/lead-outreach-*execution* story across the whole backlog (this one
+plus EPIC-10.2) was consolidated into one final sprint (Sprint 18 in
+`pamacore_sprint_plan.md`) rather than left sitting as a partial/blocked
+leftover inside earlier sprints. No scope change -- 9.3 was already the last
+unstarted piece of this epic; this only changes which sprint it's mapped to.
 
 **Why 9.1 is a full vertical slice (domain + persistence + application + API),
 not just domain classes:** a `Sequence` is fully definable today without AI
@@ -811,7 +818,7 @@ before any call. Backend suite: **871 passing** (up from 828).
 | ID | Story | Acceptance Criteria | Pts | Status |
 |---|---|---|---|---|
 | 10.1 | As the platform, I want inbound replies classified | New `ReplyClassificationPort`: interested / not now / objection / unsubscribe / OOO / wrong person | 5 | `[x]` Done |
-| 10.2 | As a prospect, I want a fast, correct scheduling reply when I say yes | On "interested": suggest meeting times (calendar integration) + draft scheduling reply | 5 | `[ ]` Backlog — blocked: no calendar API credentials configured in this project |
+| 10.2 | As a prospect, I want a fast, correct scheduling reply when I say yes | On "interested": suggest meeting times (calendar integration) + draft scheduling reply | 5 | `[ ]` Backlog — blocked: no calendar API credentials, scheduled Sprint 18 with EPIC-09.3 |
 | 10.3 | As the platform, I want Lead status to reflect real engagement | `Lead.status`/`LeadScore` updated from classified replies, not only internal qualification | 3 | `[x]` Done |
 
 **10.1/10.3 finding (2026-08-21, user-authorized live spend):** EPIC-10's
