@@ -52,7 +52,11 @@ from app.infrastructure.company_research.tavily_evidence_adapter import (
 from app.infrastructure.configuration.company_research_settings import (
     CompanyResearchSettings,
 )
+from app.infrastructure.configuration.search_provider_settings import (
+    SearchProviderSettings,
+)
 from app.infrastructure.configuration.solution_catalog import load_existing_offerings
+from app.integrations.ddgs.ddgs_client import DdgsClient
 from app.integrations.tavily.tavily_client import AgneticTavilyClient
 from app.presentation.api.dependencies.handlers import (
     get_create_company_handler,
@@ -66,8 +70,24 @@ def get_company_research_settings() -> CompanyResearchSettings:
     return CompanyResearchSettings()
 
 
-def get_tavily_client() -> AgneticTavilyClient:
+def resolve_search_client(
+    settings: SearchProviderSettings | None = None,
+) -> AgneticTavilyClient | DdgsClient:
+    """Pick the active search provider from ``SEARCH_PROVIDER`` -- the one
+    choke point every adapter's client is resolved through, so flipping the
+    flag swaps the provider for the whole app without touching any adapter.
+    Kept as a plain function (not inline in ``get_tavily_client``) so it's
+    directly unit-testable without FastAPI's DI machinery, mirroring
+    ``app.infrastructure.ai.composition.default_ai_provider``.
+    """
+    resolved = settings or SearchProviderSettings()
+    if resolved.search_provider.strip().lower() == "ddgs":
+        return DdgsClient()
     return AgneticTavilyClient()
+
+
+def get_tavily_client() -> AgneticTavilyClient | DdgsClient:
+    return resolve_search_client()
 
 
 def get_ai_execution_service() -> AIExecutionService:

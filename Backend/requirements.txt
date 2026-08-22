@@ -16,6 +16,10 @@ PyJWT>=2.8,<3
 # The application remains importable and testable without Tavily.
 tavily-python>=0.5,<1
 
+# Optional free/keyless alternative search provider (SEARCH_PROVIDER=ddgs).
+# The application remains importable and testable without ddgs.
+ddgs>=9,<10
+
 # Optional live Gemini AI provider
 # The application remains importable and testable without it.
 google-genai>=1.0,<2
