@@ -8,8 +8,8 @@ contracts in this package, and assembles a ready-to-use, multi-provider
 should depend on to get a working AI provider, instead of constructing
 providers/clients by hand.
 
-Every supported provider (Gemini, OpenAI, Azure OpenAI) is registered
-regardless of whether it currently has real credentials configured -- an
+Every supported provider (Gemini, OpenAI, Azure OpenAI, OpenRouter) is
+registered regardless of whether it currently has real credentials configured -- an
 unconfigured provider's client raises a clear ``AIClientException`` on
 first use rather than being silently absent from routing. Callers select
 a provider per request via ``AIRequest.provider``.
@@ -25,11 +25,13 @@ from app.infrastructure.ai.adapters.application_ai_provider import ApplicationAI
 from app.infrastructure.ai.clients.azure_openai_client import AzureOpenAIClient
 from app.infrastructure.ai.clients.gemini_client import GeminiClient
 from app.infrastructure.ai.clients.openai_client import OpenAIClient
+from app.infrastructure.ai.clients.openrouter_client import OpenRouterClient
 from app.infrastructure.ai.configuration import ProviderSettings
 from app.infrastructure.ai.providers.azure_openai_provider import AzureOpenAIProvider
 from app.infrastructure.ai.providers.base_provider import BaseAIProvider
 from app.infrastructure.ai.providers.gemini_provider import GeminiProvider
 from app.infrastructure.ai.providers.openai_provider import OpenAIProvider
+from app.infrastructure.ai.providers.openrouter_provider import OpenRouterProvider
 from app.infrastructure.ai.usage.ai_budget_guard import AIBudgetGuard
 from app.infrastructure.ai.usage.ai_rate_limiter import AIRateLimiter
 from app.infrastructure.ai.usage.ai_usage_tracker import AIUsageTracker
@@ -37,6 +39,7 @@ from app.infrastructure.configuration.ai_provider_settings import AIProviderSett
 from app.infrastructure.configuration.azure_openai_settings import AzureOpenAISettings
 from app.infrastructure.configuration.gemini_settings import GeminiSettings
 from app.infrastructure.configuration.openai_settings import OpenAISettings
+from app.infrastructure.configuration.openrouter_settings import OpenRouterSettings
 
 
 def build_gemini_provider_settings(
@@ -87,17 +90,35 @@ def build_azure_openai_provider_settings(
     )
 
 
+def build_openrouter_provider_settings(
+    settings: OpenRouterSettings | None = None,
+) -> ProviderSettings:
+    """Build the AI-infrastructure ``ProviderSettings`` for OpenRouter."""
+
+    resolved = settings or OpenRouterSettings()
+    key = resolved.openrouter_api_key
+
+    return ProviderSettings(
+        provider_name="openrouter",
+        api_key=key or None,
+        endpoint=resolved.openrouter_base_url,
+        enabled=bool(key),
+    )
+
+
 def build_ai_providers() -> dict[str, BaseAIProvider]:
     """Build every supported AI provider, keyed by provider name."""
 
     gemini_settings = build_gemini_provider_settings()
     openai_settings = build_openai_provider_settings()
     azure_openai_settings = build_azure_openai_provider_settings()
+    openrouter_settings = build_openrouter_provider_settings()
 
     return {
         "gemini": GeminiProvider(GeminiClient(gemini_settings), gemini_settings),
         "openai": OpenAIProvider(OpenAIClient(openai_settings), openai_settings),
         "azure_openai": AzureOpenAIProvider(AzureOpenAIClient(azure_openai_settings), azure_openai_settings),
+        "openrouter": OpenRouterProvider(OpenRouterClient(openrouter_settings), openrouter_settings),
     }
 
 
@@ -174,6 +195,8 @@ def default_model_for_provider(provider_name: str) -> str:
         return OpenAISettings().openai_model
     if normalized == "azure_openai":
         return AzureOpenAISettings().azure_openai_model
+    if normalized == "openrouter":
+        return OpenRouterSettings().openrouter_model
     raise ValueError(f"No default model configured for provider '{provider_name}'.")
 
 
@@ -186,6 +209,7 @@ class ProviderDiagnostics:
     model: str
     key_fingerprint: str | None
     key_source: str  # "environment_variable" | "dotenv_file" | "not_set"
+    second_key_configured: bool = False
 
 
 def _key_fingerprint(api_key: str) -> str | None:
@@ -219,6 +243,7 @@ def ai_config_diagnostics() -> list[ProviderDiagnostics]:
     gemini = GeminiSettings()
     openai = OpenAISettings()
     azure = AzureOpenAISettings()
+    openrouter = OpenRouterSettings()
 
     return [
         ProviderDiagnostics(
@@ -227,6 +252,7 @@ def ai_config_diagnostics() -> list[ProviderDiagnostics]:
             model=gemini.gemini_model,
             key_fingerprint=_key_fingerprint(gemini.gemini_api_key),
             key_source=_key_source("GEMINI_API_KEY", gemini.gemini_api_key),
+            second_key_configured=bool(gemini.gemini_api_key_2),
         ),
         ProviderDiagnostics(
             provider="openai",
@@ -241,5 +267,12 @@ def ai_config_diagnostics() -> list[ProviderDiagnostics]:
             model=azure.azure_openai_model,
             key_fingerprint=_key_fingerprint(azure.azure_openai_api_key),
             key_source=_key_source("AZURE_OPENAI_API_KEY", azure.azure_openai_api_key),
+        ),
+        ProviderDiagnostics(
+            provider="openrouter",
+            configured=bool(openrouter.openrouter_api_key),
+            model=openrouter.openrouter_model,
+            key_fingerprint=_key_fingerprint(openrouter.openrouter_api_key),
+            key_source=_key_source("OPENROUTER_API_KEY", openrouter.openrouter_api_key),
         ),
     ]

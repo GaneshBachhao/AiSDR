@@ -10,6 +10,7 @@ from .company_research_settings import CompanyResearchSettings
 from .gemini_settings import GeminiSettings
 from .jwt_settings import JWTSettings
 from .openai_settings import OpenAISettings
+from .openrouter_settings import OpenRouterSettings
 from .provider_settings import ProviderSettings
 from .settings_loader import SettingsLoader
 from .tavily_settings import TavilySettings
@@ -22,6 +23,7 @@ __all__ = [
     "AIProviderSettings",
     "GeminiSettings",
     "OpenAISettings",
+    "OpenRouterSettings",
     "AzureOpenAISettings",
     "TavilySettings",
     "CompanyResearchSettings",

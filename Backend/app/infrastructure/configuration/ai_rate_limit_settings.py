@@ -23,6 +23,9 @@ class AIRateLimitSettings(BaseSettings):
     ai_rate_limit_rpm_gemini: int = 5
     ai_rate_limit_rpm_openai: int = 0
     ai_rate_limit_rpm_azure_openai: int = 0
+    # 0 by default (not a guess) -- OpenRouter's real RPM limit varies by
+    # model/account, unlike Gemini's single documented free-tier number.
+    ai_rate_limit_rpm_openrouter: int = 0
 
     def rpm_for(self, provider: str) -> int | None:
         """Return the configured requests-per-minute limit for ``provider``, or ``None`` if unlimited."""

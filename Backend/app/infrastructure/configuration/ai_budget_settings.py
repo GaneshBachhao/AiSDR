@@ -23,6 +23,8 @@ class AIBudgetSettings(BaseSettings):
     ai_daily_request_budget_gemini: int = 20
     ai_daily_request_budget_openai: int = 0
     ai_daily_request_budget_azure_openai: int = 0
+    # 0 by default (not a guess) -- same reasoning as the RPM setting above.
+    ai_daily_request_budget_openrouter: int = 0
 
     def daily_budget_for(self, provider: str) -> int | None:
         """Return the configured daily budget for ``provider``, or ``None`` if unlimited."""

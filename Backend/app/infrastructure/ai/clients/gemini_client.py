@@ -3,6 +3,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from app.infrastructure.configuration.gemini_settings import GeminiSettings
+
 from ..configuration import ProviderSettings
 from ..exceptions.ai_client_exception import AIClientException
 from ..exceptions.ai_rate_limit_exception import AIRateLimitException
@@ -45,12 +47,22 @@ class GeminiClient(BaseAIClient):
     def __init__(
         self,
         settings: ProviderSettings,
+        key_settings: GeminiSettings | None = None,
     ):
         self._settings = settings
         self._sdk_installed = genai is not None
         self._client = (
             genai.Client(api_key=settings.api_key) if self._sdk_installed and settings.api_key else None
         )
+
+        # Optional second key -- GeminiSettings is read directly here rather
+        # than threading a second field through the generic ProviderSettings
+        # (shared with OpenAI/Azure, which have no such concept). Empty/unset
+        # means _client_2 stays None and every code path below behaves
+        # exactly as it did before this key existed.
+        second_key = (key_settings or GeminiSettings()).gemini_api_key_2
+        self._client_2 = genai.Client(api_key=second_key) if self._sdk_installed and second_key else None
+        self._active = 1
 
     async def send_request(
         self,
@@ -60,15 +72,33 @@ class GeminiClient(BaseAIClient):
         Send request to the Gemini API.
 
         Returns a raw response dict with ``content``, ``finish_reason``,
-        ``prompt_tokens`` and ``completion_tokens`` keys.
+        ``prompt_tokens`` and ``completion_tokens`` keys. If a second key is
+        configured and the currently-active one hits a real 429/
+        RESOURCE_EXHAUSTED, automatically retries once against the other key
+        before giving up -- see module docs on why this lives here instead
+        of at the rate-limiter/budget-guard layer.
         """
 
         if not self._sdk_installed:
             raise AIClientException("Gemini request failed: the 'google-genai' package is not installed.")
 
-        if self._client is None:
+        client = self._client if self._active == 1 else self._client_2
+        if client is None:
             raise AIClientException("Gemini request failed: no API key is configured.")
 
+        try:
+            return await self._send_once(client, payload)
+        except AIRateLimitException:
+            other = self._client_2 if self._active == 1 else self._client
+            if other is None:
+                raise
+            failed_key, self._active = self._active, (2 if self._active == 1 else 1)
+            logger.warning(
+                "Gemini key %d rate-limited/exhausted -- failing over to key %d", failed_key, self._active
+            )
+            return await self._send_once(other, payload)
+
+    async def _send_once(self, client: Any, payload: dict[str, Any]) -> dict[str, Any]:
         try:
             config = genai_types.GenerateContentConfig(
                 temperature=payload.get("temperature"),
@@ -80,7 +110,7 @@ class GeminiClient(BaseAIClient):
                 thinking_config=genai_types.ThinkingConfig(thinking_budget=0),
             )
 
-            response = await self._client.aio.models.generate_content(
+            response = await client.aio.models.generate_content(
                 model=str(payload["model"]),
                 contents=str(payload["contents"]),
                 config=config,
@@ -123,4 +153,4 @@ class GeminiClient(BaseAIClient):
         Verify Gemini availability.
         """
 
-        return self._sdk_installed and self._client is not None
+        return self._sdk_installed and (self._client is not None or self._client_2 is not None)

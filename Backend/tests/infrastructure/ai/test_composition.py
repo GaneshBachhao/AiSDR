@@ -10,6 +10,7 @@ from app.infrastructure.ai.composition import (
     build_azure_openai_provider_settings,
     build_gemini_provider_settings,
     build_openai_provider_settings,
+    build_openrouter_provider_settings,
     default_ai_provider,
     default_model_for_provider,
 )
@@ -18,11 +19,12 @@ from app.infrastructure.configuration.ai_provider_settings import AIProviderSett
 from app.infrastructure.configuration.azure_openai_settings import AzureOpenAISettings
 from app.infrastructure.configuration.gemini_settings import GeminiSettings
 from app.infrastructure.configuration.openai_settings import OpenAISettings
+from app.infrastructure.configuration.openrouter_settings import OpenRouterSettings
 
 
-def test_build_ai_providers_registers_all_three():
+def test_build_ai_providers_registers_all_four():
     providers = build_ai_providers()
-    assert set(providers.keys()) == {"gemini", "openai", "azure_openai"}
+    assert set(providers.keys()) == {"gemini", "openai", "azure_openai", "openrouter"}
 
 
 def test_build_ai_execution_service_builds_without_error():
@@ -57,10 +59,25 @@ def test_azure_openai_provider_settings_requires_endpoint_and_key():
     assert fully_configured.endpoint == "https://example.openai.azure.com"
 
 
-def test_default_model_for_provider_covers_all_three():
+def test_default_model_for_provider_covers_all_four():
     assert default_model_for_provider("gemini") == GeminiSettings().gemini_model
     assert default_model_for_provider("openai") == OpenAISettings().openai_model
     assert default_model_for_provider("azure_openai") == AzureOpenAISettings().azure_openai_model
+    assert default_model_for_provider("openrouter") == OpenRouterSettings().openrouter_model
+
+
+def test_openrouter_provider_settings_disabled_without_key():
+    settings = build_openrouter_provider_settings(OpenRouterSettings(openrouter_api_key=""))
+    assert settings.enabled is False
+
+
+def test_openrouter_provider_settings_enabled_with_key():
+    settings = build_openrouter_provider_settings(
+        OpenRouterSettings(openrouter_api_key="secret", openrouter_base_url="https://openrouter.ai/api/v1")
+    )
+    assert settings.enabled is True
+    assert settings.api_key == "secret"
+    assert settings.endpoint == "https://openrouter.ai/api/v1"
 
 
 def test_default_model_for_provider_raises_for_unknown_provider():
@@ -96,9 +113,20 @@ def test_build_ai_execution_service_wires_configured_fallback(monkeypatch):
     assert provider._default_models["openai"] == OpenAISettings().openai_model
 
 
-def test_ai_config_diagnostics_covers_all_three_providers():
+def test_ai_config_diagnostics_covers_all_four_providers():
     diagnostics = {d.provider: d for d in ai_config_diagnostics()}
-    assert set(diagnostics) == {"gemini", "openai", "azure_openai"}
+    assert set(diagnostics) == {"gemini", "openai", "azure_openai", "openrouter"}
+
+
+def test_ai_config_diagnostics_reports_openrouter_key(monkeypatch):
+    monkeypatch.setenv("OPENROUTER_API_KEY", "sk-or-v1-abcdWXYZ")
+
+    diagnostics = {d.provider: d for d in ai_config_diagnostics()}
+    openrouter = diagnostics["openrouter"]
+
+    assert openrouter.configured is True
+    assert openrouter.key_fingerprint == "***WXYZ"
+    assert openrouter.key_source == "environment_variable"
 
 
 def test_ai_config_diagnostics_masks_key_and_flags_env_var_source(monkeypatch):
@@ -121,6 +149,23 @@ def test_ai_config_diagnostics_reports_not_set_when_no_key(monkeypatch):
     assert openai_diagnostics.configured is False
     assert openai_diagnostics.key_fingerprint is None
     assert openai_diagnostics.key_source == "not_set"
+
+
+def test_ai_config_diagnostics_flags_second_gemini_key(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY_2", "another-key")
+
+    diagnostics = {d.provider: d for d in ai_config_diagnostics()}
+
+    assert diagnostics["gemini"].second_key_configured is True
+    assert diagnostics["openai"].second_key_configured is False
+
+
+def test_ai_config_diagnostics_second_key_false_by_default(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY_2", "")
+
+    diagnostics = {d.provider: d for d in ai_config_diagnostics()}
+
+    assert diagnostics["gemini"].second_key_configured is False
 
 
 def test_build_ai_execution_service_wires_a_usage_recorder():

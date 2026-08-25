@@ -15,6 +15,7 @@ class ProviderDiagnosticsSchema(BaseModel):
     model: str
     key_fingerprint: str | None
     key_source: str
+    second_key_configured: bool = False
 
 
 class AIConfigDiagnosticsResponse(BaseModel):

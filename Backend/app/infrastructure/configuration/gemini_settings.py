@@ -19,3 +19,8 @@ class GeminiSettings(BaseSettings):
 
     gemini_api_key: str = ""
     gemini_model: str = "gemini-3.5-flash"
+
+    # Optional second key -- GeminiClient fails over to it automatically on a
+    # real 429/RESOURCE_EXHAUSTED from the first. Empty (default) = the
+    # feature is inert, identical to single-key behavior.
+    gemini_api_key_2: str = ""
