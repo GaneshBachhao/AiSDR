@@ -3,6 +3,13 @@
 The SDK remains optional so the application and unit tests can run without
 Tavily installed. Configure ``TAVILY_API_KEY`` (real environment variable
 or ``.env`` file — see ``TavilySettings``) to enable live discovery.
+
+Optionally configure ``TAVILY_API_KEY_2`` for automatic fail-over on a real
+usage-limit/rate-limit error -- same mechanism and reasoning as
+``GeminiClient``'s dual-key fail-over (see that module's docstring): the
+retry lives entirely inside this client, so every consumer
+(``TavilyDiscoveryAdapter``, ``TavilyEvidenceAdapter``, etc.) keeps working
+unmodified whether one key or two are configured.
 """
 
 from __future__ import annotations
@@ -35,15 +42,28 @@ class AgneticTavilyClient:
         self._key_configured = bool(key)
         self.client = TavilyClient(api_key=key) if self._sdk_installed and self._key_configured else None
 
+        # Optional second key -- read from settings only (no api_key_2
+        # override param, mirroring GeminiClient reading its second key
+        # directly off GeminiSettings rather than a generic override).
+        second_key = resolved_settings.tavily_api_key_2
+        self._client_2 = TavilyClient(api_key=second_key) if self._sdk_installed and second_key else None
+        self._active = 1
+
     def search(
         self,
         query: str,
         max_results: int = 10,
         search_depth: str = "advanced",
     ) -> list[dict[str, object]]:
-        """Execute a search and return normalized Tavily result records."""
+        """Execute a search and return normalized Tavily result records.
+
+        If a second key is configured and the currently-active one hits a
+        real usage-limit error, automatically retries once against the
+        other key before giving up.
+        """
         logger.info("Tavily search: %s", query)
-        if self.client is None:
+        client = self.client if self._active == 1 else self._client_2
+        if client is None:
             if not self._sdk_installed:
                 logger.warning(
                     "Tavily is unavailable: the 'tavily-python' package is not installed. "
@@ -58,7 +78,26 @@ class AgneticTavilyClient:
             return []
 
         try:
-            response = self.client.search(
+            return self._search_once(client, query, max_results, search_depth)
+        except TavilyRateLimitException:
+            other = self._client_2 if self._active == 1 else self.client
+            if other is None:
+                raise
+            failed_key, self._active = self._active, (2 if self._active == 1 else 1)
+            logger.warning(
+                "Tavily key %d rate-limited/exhausted -- failing over to key %d", failed_key, self._active
+            )
+            return self._search_once(other, query, max_results, search_depth)
+
+    def _search_once(
+        self,
+        client: TavilyClient,
+        query: str,
+        max_results: int,
+        search_depth: str,
+    ) -> list[dict[str, object]]:
+        try:
+            response = client.search(
                 query=query,
                 search_depth=search_depth,
                 max_results=max_results,

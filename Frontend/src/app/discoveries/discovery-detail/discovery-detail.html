@@ -67,7 +67,7 @@
     </section>
 
     <div class="actions">
-      <a class="button" [routerLink]="[d.id, 'edit']">Edit</a>
+      <a class="button" [routerLink]="['/discoveries', d.id, 'edit']">Edit</a>
       @if (assessment(); as a) {
         <a class="button secondary" [routerLink]="['/assessments', a.assessment_id]">
           View Assessment ({{ a.status }})

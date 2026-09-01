@@ -73,7 +73,7 @@
           {{ starting() ? 'Starting…' : 'Start Assessment' }}
         </button>
       }
-      <a class="button" [routerLink]="[a.assessment_id, 'edit']">Edit</a>
+      <a class="button" [routerLink]="['/assessments', a.assessment_id, 'edit']">Edit</a>
       <a
         class="button secondary"
         routerLink="/qualifications/new"

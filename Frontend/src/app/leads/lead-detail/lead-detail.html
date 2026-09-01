@@ -45,7 +45,7 @@
     </section>
 
     <div class="actions">
-      <a class="button" [routerLink]="[l.id, 'edit']">Edit</a>
+      <a class="button" [routerLink]="['/leads', l.id, 'edit']">Edit</a>
       <a class="button secondary" routerLink="/discoveries/new" [queryParams]="{ lead_id: l.id }">
         + Add Discovery
       </a>

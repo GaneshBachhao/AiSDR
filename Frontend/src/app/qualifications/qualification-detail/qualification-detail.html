@@ -43,7 +43,7 @@
     </section>
 
     <div class="actions">
-      <a class="button" [routerLink]="[q.qualification_id, 'edit']">Edit</a>
+      <a class="button" [routerLink]="['/qualifications', q.qualification_id, 'edit']">Edit</a>
       <button type="button" class="danger" [disabled]="deleting()" (click)="delete()">
         {{ deleting() ? 'Deleting…' : 'Delete' }}
       </button>
